@@ -1,0 +1,499 @@
+Title: NEURA: An agentic system for autonomous neuroimaging workflows
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.04.27.721217v1.full.pdf
+
+Number of Pages: 32
+
+Markdown Content:
+# NEURA: An agentic system for autonomous neuroimaging workflows 
+
+Authors: Jun Xie, PhD 1,2,3 , Jing Wang, MS 1,2,3 , Xiumei Wu, PhD 1,2,3 , Xinyuan Liu, PhD 1,2,3 ,Yiqi Mi, PhD 1,2,3 , Qinjin Liu, PhD 1,2,3 , Tong Xu, BS 5, Chen Liu, MD 4, # , Huafu Chen, PhD 1,2,3, # ,Jing Guo, MD 1,2,3, # 
+
+#Corresponding authors 1. The Clinical Hospital of Chengdu Brain Science Institute, School of Life Science and Technology, University of Electronic Science and Technology of China, Chengdu 610054, P.R.China. 2. MOE Key Lab for Neuroinformation, High-Field Magnetic Resonance Brain Imaging Key Laboratory of Sichuan Province, University of Electronic Science and Technology of China, Chengdu 610054, P.R.China. 3. Brain-Computer Interface & Brain-Inspired Intelligence Key Laboratory of Sichuan Province, Chengdu 611731, P.R.China. 4. 7T Magnetic Resonance Translational Medicine Research Center, Department of Radiology, Southwest Hospital, Army Medical University (Third Military Medical University), Chongqing 400038, P.R.China. 5. Department of Neurology, Daping Hospital, Army Medical University (Third Military Medical University), Chongqing 400042, P.R.China. 
+
+# Abstract: 
+
+Neuroimaging is essential for studying the human brain; however, the deep interdisciplinary expertise required imposes a very high threshold, limiting its broader clinical and scientific applications. We introduce NEURA—a large language model (LLM)-powered agentic system for automated neuroimaging workflow planning and analysis. NEURA processes free-text research questions and multimodal neuroimaging datasets to generate evidence-grounded analysis plans, executable scripts, validated statistical results and structured reports, with traceable reasoning linked to intermediate 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+artefacts and full execution records. Through extensive evaluations on a curated benchmark, NEURA achieved an 89.5% planning accuracy and substantially outperformed direct LLM queries, with average gains of 30.5% in planning accuracy, 25.6% in tool selection and 36.7% in tool ordering. In case studies of spinocerebellar ataxia type 3, NEURA autonomously identified cerebellar atrophy and abnormal diffusivity patterns consistent with established pathologies and expert manual analyses. Collectively, these results demonstrate that our work advances from pipeline automation to rigorous, scalable and interpretable neuroimaging research systems. 
+
+# 1. Introduction 
+
+Neuroimaging is now widely recognized as a core experimental paradigm for investigating the structural and functional architecture of the human brain 1.
+
+Contemporary neuroimaging provides quantitative, noninvasive biomarkers that are crucial for early diagnosis, prognosis, treatment evaluation, and research on pathological pathways in neurological and psychiatric disorders 2,3 . As the field moves towards population-scale cohorts, higher-resolution acquisition and multimodal integration across structural, functional and diffusion magnetic resonance imaging (MRI), the need for analytical frameworks that are precise, standardized and scalable has become increasingly acute. However, even when investigators rely on mature, community-validated toolchains 4 such as SPM 5, FSL 6,7 , FreeSurfer 8, and AFNI 9 and workflow engines such as Nipype 10 , end-to-end analysis remains technically demanding. In practice, neuroimaging studies require the coordination of heterogeneous software ecosystems, multistage preprocessing, statistical modelling and rigorous quality control, all of which depend on expertise that spans neuroscience, data processing and software engineering 1. These barriers slow mechanistic discovery for researchers without extensive computational training and impede the translation of imaging data into clinically actionable diagnostic and therapeutic frameworks. These challenges highlight the urgent need for analysis systems that are scalable, accurate and interpretable — an area where recent advances in multiagent systems offer 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+transformative potential 11,12 .The development of artificial intelligence (AI) systems for neuroimaging research presents several inherent challenges: (1) multidisciplinary reasoning and workflow composition (effective analyses must map disease concepts onto relevant brain regions, imaging modalities, preprocessing strategies, statistical models and reporting conventions 4), (2) normative execution control (neuroimaging workflows are governed by strict methodological and quality-control standards, whereas open-loop agents often lack explicit structural constraints and fine-grained state governance 4), (3) long-horizon state management (workflows that span dozens or hundreds of actions can suffer domain hallucination 14 , context loss and state drift 15 when long-term memory and goal tracking are weak), (4) continual knowledge updating and tool extensibility (both neuroimaging evidence and the software ecosystem evolve rapidly 4,11 ) and (5) 
+
+transparency and traceability (scientific deployment requires explicit, auditable rationales that support trust, reproducibility and accountability 12 ). Concurrently, large language models (LLMs) have rapidly evolved into general-purpose foundation models that are reshaping scientific computing 16 . Beyond natural-language generation, recent evidence highlights their emergent capacity for algorithmic reasoning and complex problem decomposition 12,17,18 . This evolution has catalysed the rise of “agentic AI", which is a paradigm that has been successfully deployed in software engineering 19 and synergizes LLM-based reasoning with the execution of external tools. This synergy enables systems to plan, act, see what happens, and then improve their methods over time. Architectures such as the ReAct framework 20 , which combines reasoning traces with action execution, perform especially well for tasks that require both knowledge retrieval and multistep reasoning. Here, we present NEURA, which is an LLM-powered agent that is driven by a cognitively inspired architecture designed to emulate the reasoning and learning processes of human researchers. Specifically, NEURA uses advanced LLMs such as Planner, Executor, and Reviewers to autonomously plan and execute multiple tools 
+
+across heterogeneous imaging modalities and review solutions for scientific tasks. 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+The system stands out because of three main architectural innovations that ensure that NEURA is strict and can be expanded. In this study, we first developed a dual knowledge graph framework for grounding automated reasoning. A disease-region knowledge graph (DiseaseKG) encodes pathological associations between neurological conditions and brain structures. Simultaneously, a tool knowledge graph (ToolKG) maps functional dependencies, input/output formats, and usage constraints among heterogeneous software. These graphs have an evolutionary mechanism that automatically expands and changes association weights on the basis of real-time literature retrieval and execution feedback. This structure guides the construction of valid execution chains. Second, inspired by the concept of “skill” 21 learning, we developed an open and extensible tool interface that integrates heterogeneous analysis methodologies and multimodal data formats. This architecture empowers the agent to autonomously distill reusable analytic skills from the methodological literature, thereby dynamically expanding its procedural repertoire to adapt to novel workflows and complex multimodal paradigms without manual reconfiguration. Third, to mitigate the “domain hallucination” prevalent in general-purpose agents, we implemented a MoER mechanism. To overcome the subjective variability and inherent unreliability of using LLMs for self-evaluation, we manually established rigorous normative specifications for each integrated tool. This module routes intermediate outputs to specialized reviewers who strictly cross-reference these human-defined standards to enforce absolute quality control, parameter legality, and statistical validity at every stage of the workflow. Together with a memory-augmented reflection loop, self-healing code generation and a content-addressable memory layer, this design maintains long-horizon consistency, supports recovery from runtime failures and improves computational efficiency 13,15,20 .We also established NeuroEval, an expert-curated benchmark that comprises 110 literature-derived neuroimaging tasks that span multiple disease domains and two levels of workflow complexity. On this benchmark, NEURA achieved 89.5% planning accuracy and substantially outperformed direct LLM queries, with average gains of 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+30.5% in planning accuracy, 25.6% in tool selection and 36.7% in tool ordering. In a clinical case study of spinocerebellar ataxia type 3 (SCA3), the agent autonomously completed structural and diffusion MRI analyses and identified cerebellar atrophy and abnormal diffusivity patterns consistent with established pathology and independent expert manual analyses. 
+
+# 2. Results 2.1 Overview of NEURA 
+
+NEURA is an LLM-powered agent designed to reduce the complexity of neuroimaging analysis. It uses a structure that mimics how human researchers think, reason, and learn. In traditional workflows, neuroimaging analysis requires a deep accumulation of multidisciplinary knowledge. This requirement makes it challenging. NEURA fills the most important gap between theoretical scientific research and practical application. The overall workflow of NEURA is illustrated in Fig. 1 and comprises three principal phases—understanding and planning, execution, and validation and iteration —preceded by an environment-aware parsing step that grounds the entire process in the actual data workspace. Given a research task defined by a natural-language query and a local workspace that contains neuroimaging datasets, NEURA first inspects the computational environment to identify available data modalities, file organization and metadata. This step grounds subsequent reasoning in the actual structure and constraints of the available data, thereby avoiding assumption-driven analysis that is based solely on an abstract task description. In the understanding and planning phase, NEURA aims to transform a research request into a tractable and scientifically defensible analysis strategy. To achieve this, it combines a dual-layer retrieval-augmented generation (RAG) 22 system with a disease-brain region knowledge graph (KG) 23 , which enables the NEURA to assemble domain-specific evidence, connect the question to established neurobiological 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+knowledge, and reason over these resources under the PICO 23 framework. The purpose of this phase is not only to retrieve background information but also to construct an analysis plan that is both biologically informed and methodologically appropriate. 
+
+During the execution phase, the system queries a specialized ToolKG to translate the high-level plan into a precise and ordered sequence of computational tasks. NEURA dynamically synthesizes context-specific code to execute these tasks. The purpose of this phase is to operationalize scientific intent into reproducible computations while preserving flexibility across heterogeneous datasets, software ecosystems and study designs. To support continual capability growth in a rapidly evolving methodological landscape, the system incorporates an extensible tool interface through which new analytical skills can be acquired directly from the literature. In the validation and iteration phase, NEURA evaluates whether each decision and output satisfies the methodological constraints. This function is implemented through the MoER mechanism, which audits intermediate reasoning and execution results against a curated repository of tool-specific human constraints and methodological guidance and determines whether reflective self-correction should be invoked. The purpose of this phase is to maintain analytical rigor, prevent error propagation and enable iterative refinement when the current trajectory is judged to be suboptimal or invalid. In parallel, NEURA's underlying knowledge graphs are designed to evolve dynamically through execution feedback, thereby enabling the system to update its internal knowledge base as new evidence, tool behaviour and task outcomes accumulate over time. 
+
+Ultimately, NEURA preserves the full analytical provenance of the study, including retrieved evidence, plans, scripts, tool outputs and execution logs, and compiles these materials into a final report that contains the resulting analyses, tables and figures. In this way, the system is designed not only to automate neuroimaging analysis but also to render the entire process traceable, reviewable and extensible. Additional details on the system workflow are provided in the Methods section. 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+Fig. 1 Overview of NEURA. The workflow proceeds through three phases: (1) Understanding and planning : NEURA uses a dual-layer RAG system (local and online) and a dynamic DiseaseKG to interpret natural language queries and generate evidence-based research plans by chain-of-thought reasoning. (2) Execution : Guided by a ToolKG, NEURA maps plans to executable toolchains and dynamically generates context-aware code to orchestrate heterogeneous software (e.g., SPM and FSL) through an extensible interface. The MoER mechanism audits intermediate reasoning. (3) Validation and iteration : If quality scores fall below the threshold, the system triggers a memory-augmented reflection cycle for autonomous self-correction. 
+
+# 2.2 Evaluation Settings 
+
+Datasets: To quantitatively evaluate the performance of NEURA, we curated NeuroEval, which is a comprehensive neuroimaging tool evaluation dataset that features 110 varied analysis tasks that span multiple disease domains and complexity levels. The process of dataset construction is elaborated upon in Sec. 4.7. The final dataset was split into two levels: level 1 includes 27 tasks that can be performed with 3–4 tool steps, and level 2 comprises 83 tasks that need more than 5 tool steps with 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+multimodal integration. This dual-level structure enables a more detailed judgement to be made about the ability of an agent to handle both simple and complex neuroimaging workflows. 
+
+Evaluation Metrics: To rigorously assess the effectiveness of NEURA, we used three distinct evaluation metrics: (1) planning accuracy, which is a composite metric that quantifies overall tool planning quality; (2) a tool selection score that measures the alignment between the predicted tool set and reference tools verified by human experts; and (3) a tool order score that evaluates the correctness of the tool execution sequence using longest common subsequence matching. These metrics collectively provide an assessment of the effectiveness of tool selection and the robustness of pipeline construction. 
+
+Baselines: To rigorously assess the efficacy of our system design, we benchmarked NEURA against a “direct LLM query” baseline. In this control setting, foundation models were supplied with identical task descriptions and tool specifications without the comprehensive agentic architecture proposed in our framework. This comparative design effectively isolates the performance gains that are attributable to our holistic system from the intrinsic capabilities of the underlying language models. 
+
+Foundation Models: In our experiments, we used different foundation models for the Planner, Executor and Reviewers, including the state-of-the-art large-scale models Qwen3-235B, DeepSeek-V3.2, GLM-4.6, and Kimi-K2. All the models were accessed through official APIs with standard settings. We also considered smaller but more efficient models such as Qwen2.5-7B for situations in which inference needs to occur more quickly. Because they have fewer parameters, these lightweight models have much lower latency, which makes them good for environments where real-time interactive applications are needed. We also used specialized coding models such as GLM-4.6 and the Qwen3-coder for dynamic code generation to produce executable analysis scripts. NEURA can balance planning accuracy, inference speed, and code generation quality because of this multimodal architecture. This balance ensures that our framework performs well in a variety of deployment scenarios. 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+Analysis of the Results: A performance comparison between NEURA and a direct LLM baseline across different foundation models is shown in Fig. 2a–c. NEURA consistently outperforms direct LLM queries across all the evaluation metrics. Compared with direct LLM queries, NEURA achieved average improvements of 30.5% in planning accuracy, 25.6% in tool selection, and 36.7% in tool ordering. These significant improvements demonstrate the effectiveness of our designed architecture in capturing tool relationships and dependencies in the field of neuroimaging. 
+
+Fig. 2 Comparison of the NEURA and direct LLM queries. (a)–(c) Evaluation metrics that compare NEURA against a direct LLM query baseline across four foundation models: Qwen3-235B, DeepSeek-V3.2, GLM-4.6, and Kimi-K2. NEURA consistently outperformed the direct query approach across all the metrics, thus demonstrating the substantial efficacy of the agent architecture in orchestrating complex neuroimaging workflows compared with unassisted foundation models. 
+
+Fig. 3 Comparison of various foundation models within NEURA. (a)–(c) Performance assessment of NEURA when powered by different state-of-the-art LLMs. (d) Comparison of the average analysis time required to complete the planning process for each model. This comparative analysis highlights the trade-offs between reasoning precision and computational latency and illustrates the adaptability of the system to different underlying architectures. 
+
+The performance of the NEURA stratified by tool category and disease type is 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+shown in Fig. 3a–c. NEURA demonstrated consistent performance across tool categories, with most models achieving above 85% accuracy in each domain. NEURA also maintained high performance across diverse neuropsychiatric conditions. These results validate the utility of our framework for accelerating neuroimaging research workflows across diverse analysis scenarios and clinical domains. 
+
+# 2.3 Case Studies 
+
+To evaluate the effectiveness of NEURA, we applied it in clinical neuroimaging research tasks using data from patients with spinocerebellar ataxia type 3 (SCA3). SCA3 is the most common dominantly inherited spinocerebellar ataxia worldwide. It is characterized by progressive degeneration of the cerebellum, along with motor and cognitive impairments 25 . Although motor manifestations such as gait ataxia, dysarthria, and oculomotor abnormalities are hallmark features, neuroimaging studies have consistently demonstrated widespread structural alterations, including cerebellar atrophy, brainstem degeneration, and subcortical grey matter loss 26,27 .
+
+Data Acquisition: We recruited 44 patients with genetically confirmed SCA3 and 60 age-matched healthy controls (HCs) from the neurology outpatient clinic. All MRI data were obtained on the same day as the clinical evaluation. MRI scans were acquired on a Siemens (Erlangen, Germany) 3T Trio TIM MRI system equipped with a standard Siemens 8-channel head coil. All the subjects were instructed to keep their eyes closed, relax, think of nothing in particular, and avoid falling asleep (as confirmed by all the participants immediately after the scan). The protocol included three-dimensional T1-weighted anatomical, diffusion and resting-state functional MRI. T1-weighted structural imaging was performed using a 3D magnetization-prepared rapid-acquisition gradient echo sequence with the following parameters: repetition time = 1900 ms, echo time = 2.52 ms, flip angle = 9°, slice thickness = 1 mm, field of view = 256 mm × 256 mm, matrix = 256 × 256, and voxel size = 1 mm × 1 mm × 1 mm, with 176 slices and no gap. Diffusion imaging acquisition was performed using an echo planar imaging (EPI) sequence with the following parameters: repetition time = 8000 ms, echo time = 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+80.8 ms, matrix = 128 × 128, voxel size = 2 × 2 × 2 mm, slice thickness = 2 mm, no slice gap, b = 0 and 1000 s/mm 2, 64 directions and a total of 67 slices. Additionally, all the participants completed the Montreal Cognitive Assessment (MoCA) to evaluate global cognitive function 28 .
+
+# 2.3.1 NEURA Facilitates Structural Brain Analysis 
+
+Voxel-based morphometry (VBM) 29 analysis is a basic approach for investigating differences in the volume of grey matter in different areas between groups of patients and HCs. In traditional VBM workflows, researchers have to manually coordinate several preprocessing steps, decide in real time which tools and parameters to use on the basis of intermediate results, and refine analyses repeatedly when initial attempts show problems. NEURA automates this intricate iterative procedure using autonomous planning, execution, reflection, and replanning cycles. Given a user query (Fig. 4), NEURA initiated an autonomous, iterative analysis workflow that spanned 27 hours across two planning cycles. To capture fine-grained anatomical alterations, NEURA orchestrated a comprehensive morphological pipeline that integrated both voxelwise and surface-based metrics. First, it autonomously orchestrated a comprehensive VBM workflow that spanned the planning, execution, and validation phases. To resolve fine-grained anatomical features, NEURA integrates a heterogeneous toolchain in which SPM with DARTEL 30 is used for spatial normalization and the spatially unbiased infratentorial template (SUIT) atlas 31 is used for precise cerebellar parcellation. In the initial iteration, NEURA engaged FreeSurfer to quantify cortical thickness and subcortical volumes, which provided a robust complement to the VBM analysis. The system demonstrated robust methodological rigor by dynamically selecting statistical tests on the basis of data distribution assessments and strictly enforcing Benjamini–Hochberg FDR correction 32 . Notably, the validation module automatically detected missing MoCA clinical scores and autonomously adjusted the sampling strategy to ensure complete-case consistency. 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+Fig. 4 Workflow and results of structural image analysis using NEURA Table 1. Results of a cerebellar ROI analysis in which SCA3 patients and healthy controls were compared. The grey matter volumes are reported in mL. 
+
+Brain Region HC (Mean ±SD) SCA3 (Mean ±SD) Cohen's d PFDR 
+
+Left Cerebellum VI 10.30 ± 0.37 9.94 ± 0.62 0.73 0.002 
+
+Right Cerebellum VI 9.64 ± 0.27 9.31 ± 0.59 0.35 0.007 
+
+Left Cerebellum V 4.69 ± 0.25 4.40 ± 0.37 0.45 <0.001 
+
+Right Cerebellum V 4.66 ± 0.19 4.37 ± 0.42 0.38 0.002 
+
+Left Cerebellum I-IV 3.30 ± 0.26 3.18 ± 0.34 0.41 0.0039 
+
+Right Cerebellum I-IV 3.51 ± 0.27 3.35 ± 0.36 0.50 0.017 
+
+Vermis VI 1.86 ± 0.17 1.85 ± 0.20 0.01 0.940 Left Crus I 12.13 ± 1.16 11.71 ± 1.25 0.35 0.116 Right Crus I 12.25 ± 1.12 11.79 ± 1.28 0.39 0.103 
+
+After two complete planning–execution–validation cycles, NEURA converged onto stable, validated results (Table 1 and Fig. 5). The automated analysis correctly revealed brain atrophy patterns consistent with those of established SCA3 pathology, with widespread grey matter volume reductions across cerebellar subregions. The most pronounced differences were observed in bilateral cerebellar lobules V and VI, with the left lobule VI exhibiting the greatest effect size (Cohen’s d = 0.73), accompanied by significant atrophy in the somatomotor-related anterior lobes (I–IV). With respect to clinical correlations, NEURA revealed a positive association between left Crus I volume and MoCA scores ( r = 0.30). These findings align with known neuropathology 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+in which cerebellar cortical degeneration particularly affects lobules V –VI 32 . VBM meta-analyses have consistently revealed significant volume reductions in cerebellar hemispheric lobules III –VI in SCA3 patients 26 , with lobule VI volume loss specifically associated with cognitive impairment 33 .To corroborate the automated findings, three independent neuroimaging experts performed parallel manual analyses using standard processing pipelines. This human-derived benchmark substantiated the accuracy of the NEURA results. Critically, the system executed the complete workflow with full autonomy. It successfully navigated technical impediments such as incomplete preprocessing artefacts, missing clinical covariates, and the requirement for adaptive statistical test selection without any human intervention. 
+
+# 2.3.2 NEURA facilitates DTI analysis 
+
+Diffusion tensor imaging (DTI) provides quantitative measurements of white matter microstructure through the characterization of water diffusion properties within neural tissue 34 . Key DTI metrics include fractional anisotropy (FA), which reflects the directionality of diffusion and is sensitive to axonal integrity, and mean diffusivity (MD), axial diffusivity (AD), and radial diffusivity (RD), which characterize the magnitude and orientation of water diffusion. Previous studies have reported white matter abnormalities in SCA3, particularly in the brainstem and cerebellar peduncles 35 .To demonstrate the ability of NEURA to perform diffusion imaging analysis, we applied it to DTI data from the same cohort. (Owing to missing modality acquisitions, the sample size was reduced to 49 HCs and 42 SCA3 patients.) 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+Fig. 5 Workflow and results of DTI analysis using NEURA 
+
+Given a user query (Fig. 5), NEURA first parsed the research question and formulated an analysis plan that included preprocessing, tensor fitting, spatial normalization, and statistical comparison. NEURA then orchestrated a multitool pipeline to generate voxelwise FA, MD, AD, and RD maps. For the voxelwise analysis, NEURA implemented tract-based spatial statistics (TBSS) 36 to project FA data onto a mean white matter skeleton, and QSDR reconstruction from DSI Studio was used for whole-brain metric extraction in MNI space. Critically, an autonomous quality control module monitored each stage for excessive head motion and processing failures. During execution, NEURA identified one outlier with aberrant FA values and autonomously excluded it; thus, the final sample was adjusted to 90 subjects (49 HC and 41 SCA3). The complete pipeline required coordination across the FSL and DSI Studio platforms, which demonstrated the ability of NEURA to seamlessly integrate multiple tools. 
+
+Table 2. Whole-brain DTI metrics of SCA3 patients and healthy controls. Diffusivity values are reported in ×10 -3 mm 2/s. 
+
+Metric HC (Mean±SD) SCA3 (Mean±SD) Cohen’s d P
+
+FA 0.327 ± 0.030 0.336 ± 0.016 -0.38 0.079 MD 1.02 ± 0.15 1.14 ± 0.06 -1.06 <0.0001 
+
+RD 0.93 ± 0.11 1.03 ± 0.06 -1.07 <0.0001 
+
+AD 1.22 ± 0.17 1.41 ± 0.06 -1.39 <0.0001 
+
+Group comparisons revealed significantly elevated diffusivity metrics in SCA3 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+patients (Table 2) . MD, RD, and AD all showed large effect sizes (Cohen's d > 1.0; all p < 0.0001), whereas whole-brain FA did not differ significantly between groups (p = 0.079), which likely reflected global averaging across regions with heterogeneous pathology. These findings complement the grey matter atrophy observed in Case 1 and align with previous DTI studies that reported increased diffusivity in SCA3. Similarly, the analysis results were manually processed and analysed by three neuroimaging experts using traditional methods to verify their accuracy. In summary, these two case studies demonstrate the ability of NEURA to perform complex neuroimaging analyses through autonomous planning, multitool collaboration, iterative improvement, and rigorous result validation. 
+
+# 3. Discussion 
+
+NEURA demonstrates that complex, multistep neuroimaging research workflows can be autonomously orchestrated by LLM-powered systems with traceable reasoning and verifiable outputs. This work represents a qualitative shift in the evolving landscape of AI-assisted science: from AI as a computational tool to AI as a research collaborator capable of autonomous decision-making within defined boundaries. The concept of an “AI scientist” has evolved dramatically from early expert systems to contemporary agentic architectures 16 . Traditional neuroimaging workflow systems such as Nipype 10 and BIDS Apps 37,38 provide reproducible pipeline execution but require users to specify complete workflows a priori. In contrast, NEURA accepts natural language research questions and autonomously designs appropriate analysis strategies, thus bridging the gap between domain knowledge and technical implementation. Compared with recent LLM-based scientific assistants such as Coscientist 39 and ChemCrow 39 , NEURA introduces domain-specific innovations. First, we implemented a dynamic dual-layer KG system (DiseaseKG and ToolKG) that not only grounds reasoning in medical evidence but also has an evolutionary mechanism to autonomously update association weights on the basis of real-time literature retrieval 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+and execution feedback. Second, to bridge the gap between abstract planning and concrete execution, we developed a “skill” learning module and an extensible tool interface, which enable NEURA to extract reusable analysis parameters directly from methodological descriptions in papers and integrate heterogeneous software without manual dependency specification. Third, to address the critical need for validity, the system incorporates a MoER mechanism fortified by explicit, human-curated tool specifications. By routing intermediate outputs to specialized reviewer agents that evaluate actions strictly against these normative baselines, combined with a Gibbs reflective cycle for self-correction. This hybrid approach, which combines LLM flexibility with rigid expert rules, effectively bridges the trust gap between automated systems and clinical researchers. A fundamental challenge in neuroimaging research is the “reproducibility crisis” 1,41 , where analytical flexibility and undocumented decisions contribute to inconsistent findings. NEURA addresses this challenge by maintaining a complete, immutable audit trail of every decision, parameter choice, and code execution. The six-level antihallucination auditor of the system cross-validates statistical claims against raw outputs and anatomical atlases to ensure that the generated findings are not only plausible but traceable. The case studies presented demonstrate the ability of NEURA to produce results across imaging modalities. Several limitations constrain the current implementation. First, although the knowledge graph is designed to be self-updating, the quality of these autonomous updates heavily relies on the accuracy of the underlying retrieval algorithms. Second, although the MoER mechanism mitigates hallucinations, subtle statistical misinterpretations may still escape detection, thus necessitating human oversight for high-stakes clinical conclusions. Finally, although NeuroEval covers a diverse range of conditions, the current validation is inevitably constrained by the scale of the available benchmarks. The establishment of robust clinical generalizability will necessitate more extensive testing on large-scale, multimodal datasets that encompass a wider spectrum of pathologies and heterogeneous acquisition protocols. 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+In future work, we will focus on developing domain-specific foundation models trained on extensive corpora of brain imaging data and validated pipelines, which could enable direct visual understanding of scans alongside textual reasoning. We also envision integrating reinforcement learning from human feedback (RLHF) to align NEURA’s decision-making with expert preferences. Beyond neuroimaging, the core components provide a domain-agnostic template that is adaptable to genomics, materials science, and clinical research. Although NEURA accelerates research, it functions as an assistant rather than a replacement for human scientists. By automating complex neuroimaging processing and analysis workflows while rigorously maintaining human-in-the-loop oversight, the system empowers researchers to shift from technical implementation to higher-level hypothesis generation. We strongly advocate for transparent disclosure of such AI assistance 42 to ensure that this paradigm shift accelerates scientific discovery without compromising the integrity that remains the hallmark of human research. 
+
+# 4. Methods 
+
+In this section, the methodology of NEURA, including the implementation details for the overall workflow and the associated LLMs, is presented. 
+
+# 4.1 Problem Formulation 
+
+We formalize the neuroimaging research automation task as a constrained optimization problem. Given a natural language research question Q and aneuroimaging dataset    1
+
+ ， N  
+
+> iii
+
+D x y , where ix represents multimodal brain images and iy denotes subject metadata, the system produces three outputs: a scientific report 
+
+ in IMRAD format, executable analysis scripts  , and validated statistical results 
+
+ .The optimization objective maximizes scientific quality while satisfying ahallucination constraint: 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+##    
+
+> ,
+
+s.t. , 0max f
+
+>  
+
+    (1) where  f  quantifies the report quality through structure completeness, statistical rigor, and logical coherence and  ，   represents the hallucination constraint, which ensures that every claim in  is grounded in the computational results  .
+
+# 4.2 Main Workflow 
+
+The workflow is structured into three distinct phases: semantic understanding and planning, compositional execution, and validation and iteration. Drawing on principles from cognitive architectures for language agents 19 , this tripartite framework systematically transforms natural language queries and raw data into evidence-grounded, executable analyses. During the semantic understanding and planning phase , the system parses the natural language query from the user into a structured analysis specification and extracts critical variables, including target phenotypes, imaging modalities, study cohorts, and comparative conditions. By leveraging a dual-layer retrieval mechanism and a dynamic DiseaseKG, NEURA synthesizes supporting evidence to propose candidate brain regions and effectively grounds disease descriptors in pathology-informed neuroanatomical associations. This specification is subsequently translated into an actionable research plan that adheres to the PICO 24 framework and is operationalized as an ordered tool sequence. For each stage, the system configures modality-compatible workflows with precise parameters and defined intermediate artefacts (e.g., 
+
+preprocessed images and statistical maps), thereby yielding an executable plan that has been rigorously validated against input constraints. During the compositional execution phase , the system transforms the research plan into a precise workflow via a specialized ToolKG. This graph maps the planned steps to specific software dependencies and ensures input/output compatibility. To accommodate novel methodologies, NEURA uses an extensible “skill” learning interface that enables it to autonomously distill reusable analytic parameters directly 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+from the methodological literature. NEURA dynamically synthesizes context-specific code to orchestrate these heterogeneous tools and creates a valid execution chain that persists all intermediate artefacts and logs to a shared workflow state. To guarantee the reliability of the aforementioned processes, a MoER mechanism operates concurrently across the planning and execution phases. This module routes intermediate outputs to domain-specific experts. By enforcing strict evaluation criteria at every decision point, the system ensures methodological rigor and syntactic correctness prior to final validation. During the reflective iteration phase , if validation fails or if the overall quality score falls below the acceptance threshold, the system triggers reflection, revises the plan or parameters, and repeats execution until the criteria are met or a maximum number of iterations is reached. These phases are implemented by cross-cutting components for structured reasoning, reflection-driven refinement, and evidence-based auditing, which are described in the subsequent sections. 
+
+# 4.3 Semantic Understanding and Planning 
+
+In this section, the functional modules that operationalize the semantic understanding and planning phase, spanning structured question interpretation, evidence retrieval, and skill reuse are described. 
+
+# 4.3.1 Structured Reasoning Protocol 
+
+To enable explicit, stepwise reasoning from an input research question to a structured analysis specification, the reasoning agent applies a seven-step chain-of-through protocol 24 . The protocol comprises the following: (1) problem decomposition: decomposing the research question into subquestions; (2) disease identification: extracting the mentioned or implied neurological conditions; (3) brain region prediction: suggesting affected regions on the basis of pathology-informed associations; (4) concept mapping: translating clinical terminology into neuroimaging constructs; (5) 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+method matching: identifying appropriate analyses; (6) hypothesis formation: 
+
+generating testable predictions; and (7) issue anticipation: identifying methodological challenges and constraints that may affect downstream execution. Crucially, to balance exploratory reasoning with strict adherence to the protocol, this process is orchestrated via a multimodel allocation strategy, where higher-temperature models handle initial semantic parsing and lower-temperature models enforce logical consistency in the final specification. 
+
+# 4.3.2 Knowledge Infrastructure 
+
+In this section, the knowledge infrastructure that enables evidence-based research automation, from the literature retrieval to reusable skill accumulation, is described. 
+
+(1) Dual-Layer Retrieval-Augmented Generation. To provide both stable domain knowledge and access to up-to-date external evidence for task-specific reasoning, NEURA implements a dual-layer RAG 22 framework that combines local knowledge bases with real-time literature search. For the local layer, documents are embedded into a shared semantic space: 
+
+ Embed , d local e d d  (2) 
+
+Given a query q, Retrieval computes the cosine similarity and returns the top-k documents: 
+
+  ' '
+
+sim , , arg max sim( , )  
+
+  q dtop k D k d Dq d
+
+e eq d D q d e e (3) 
+
+The real-time layer retrieves additional evidence by querying PubMed and 
+
+extracting titles, abstracts, authors, journals, publication years and DOIs. Local chunks and PubMed records are merged to guide downstream neuroimaging workflow selection and parameterization. 
+
+(2) Dynamic Disease-Region Knowledge Graph. To ground neuroimaging reasoning in structured neuropathological knowledge and support biologically 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+informed analytical planning, a key innovation of NEURA is the disease–brain KG designed by eight neuroimaging experts, which encodes pathological region associations. In the knowledge graph  s , , ,disea e disease region assoc V V E W , the nodes represent diseases and brain regions, the edges represent associations, and the weights W
+
+capture association strength and are derived from evidence from the literature. 
+
+Initially, the graph encodes established mappings for eight neurological conditions. Spinocerebellar ataxia involves the cerebellum, brainstem, and basal ganglia. Similar mappings exist for Alzheimer’s disease, Parkinson’s disease, amyotrophic lateral sclerosis, major depressive disorder, schizophrenia, ADHD, and autism spectrum disorder. Critically, this knowledge graph supports dynamic updates during conversational interactions, which enables it to incorporate information derived from system usage and newly accessed literature. When the system processes new research questions or retrieves novel findings from the literature, the graph evolves through three mechanisms: 
+
+#  1 Update , , ,    eq rt t  (4) 
+
+where q represents query-driven updates, r denotes retrieval-driven updates (relationships extracted from retrieved literature), and e denotes execution-driven updates (statistically significant findings from completed analyses). The associated weights can be updated as follows:    
+
+>  
+
+   1 1 [evidence , , ]     t tij ij i jW W P d r t
+
+ (5) 
+
+where [ ] [0,1]   P denotes the confidence score of the evidence and 0.95 
+
+ balances prior knowledge with new evidence. This update enables the system to accumulate domain knowledge across sessions, thereby progressively improving region recommendations as more research tasks are processed. 
+
+(3) Literature-Derived Skill Library. To support methodological extensibility 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+and continual adaptation to the evolving neuroimaging literature, the system automatically extracts reusable analysis skills from the neuroimaging literature. An analysis skill S comprises four components: 
+
+ , , ,S
+
+   tool (6) 
+
+where tool represents the analysis software, 
+
+ denotes the parameter configuration, 
+
+represents the applicability context (disease and modality), and  captures the quality indicators from source publications. The extraction pipeline implements the processes described in the Methods section in five stages: task identification using structural cues, tool recognition via named entity recognition, parameter extraction by parsing numerical values and thresholds, context encoding to capture disease and modality, and quality assessment on the basis of effect sizes and validation metrics. 
+
+(4) Semantic Skill Matching. When a research task arrives, semantic matching recommends appropriate skills. Both tasks and skills are embedded into the shared space: 
+
+ Embed disease modality   task e Q (7) 
+
+ Embed description context parameters   skill e (8) 
+
+where  denotes concatenation. The matching score integrates semantic similarity with constraint satisfaction: 
+
+    . . .score , cos , [disease ] [modality ]     t st s e e P P rate     (9) 
+
+where [ ] [0,1]   P quantifies the applicability confidence on the basis of the semantic similarity between the task context and the validated domains of the skill and .rate 
+
+reflects historical success. 
+
+(5) Context-Aware Skill Adaptation. When learned skills are applied to new contexts, parameter adaptation addresses source–target differences: 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+#  , ,adapted adapted src src tgt f
+
+   (10) 
+
+where the adaptation function adapted f accepts three inputs to produce context-appropriate parameters, src 
+
+ denotes the original parameters extracted from the literature, src  denotes the source context where the skill was validated, and tgt 
+
+denotes the target context for the current research task. Postexecution validation updates the skill quality via an exponential moving average: 
+
+ . . 1 [validation]     rate rate P
+
+  (11) 
+
+where [validation] [0,1] P reflects the validation quality, with 
+
+ enabling continuous learning from accumulated experience. 
+
+# 4.4 Compositional Execution 
+
+Herein, we explain how our system selects the right tools, builds analysis pipelines, and runs them across different platforms. 
+
+# 4.4.1 Tool Knowledge Graph 
+
+To translate high-level analytical plans into valid, executable tool sequences, we model neuroimaging tools as a knowledge graph  , , ,tool dep io cat V E E E , where V
+
+represents tools, dep E captures dependencies, io E represents input/output compatibility, and cat E encodes categorical relationships. The schema encodes five information categories: functional descriptions, format specifications, categorical labels (preprocessing, analysis, visualization, and QC), software provenance, and safety annotations for irreversible operations. Three dependency types are formalized. Sequential dependencies occur when the output of tool iT serves as an input for 1iT :
+
+> 1
+> 
+
+ output input i iT T (12) 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+Parallel execution enables tools to run simultaneously on independent streams: 
+
+   inputs inputs     i j i jT T T T (13) 
+
+Conditional execution is contingent on upstream evaluation: 
+
+  eval condition,output True    condition i j iT T T (14) 
+
+Similarly, the tool knowledge graph is designed as an open and extensible architecture and is not limited to the currently implemented toolset. Tool extensibility is achieved through two complementary mechanisms. First, literature-driven automatic discovery is performed: When new publications are being processed, the system applies named entity recognition (NER) to identify candidate tools not yet in the graph: 
+
+  NER Methods \candidate tool existing T paper V (15) 
+
+The extracted tools are enriched with parameter configurations from the same source and queued for validation before graph integration. Second, user-defined tool registration is conducted: Researchers can register custom tools by providing interface specification files. After registration, the system automatically infers connectivity by matching input/output formats: 
+
+             , | , |        new io i new out i in new new j out new in jE T T T T T T T T    (16) 
+
+where new 
+
+> io
+
+E denotes the set of new input/output edges that connect the newly registered tool to existing tools,  out iT denotes the set of output formats produced by tool iT ,and  in new T denotes the set of input formats accepted by tool new T . This automatic edge inference ensures that newly registered tools are immediately available for pipeline construction without manual dependency specification. The system checks whether the output of each existing tool matches the input requirements of the new tool and automatically establishes connectivity when compatibility is detected. A unified abstraction layer supports both the Windows and WSL2 Ubuntu environments. The system automatically detects the locations of tool installations and route requests. 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+# 4.4.2 Graph-Guided Tool Selection 
+
+For tool selection, four-step graph-based retrieval is used. First, by full-graph retrieval, semantically similar tools are identified: 
+
+  top- | ,full i iT k T S q T (17) 
+
+where  , iS q T computes the embedding similarity between the query and tool descriptions. Second, subgraph exploration is conducted to identify related tools: 
+
+  | ,  sub j j i i full T T T T T T (18) 
+
+where  iT denotes the neighbourhood set that contains all the tools directly connected to tool iT in the knowledge graph. Intuitively, this step finds all tools that are adjacent to the initially selected tools, thereby capturing functionally complementary tools. For example, if FSL registration (FLIRT) is selected, the neighbourhood includes downstream tools such as FEAT and preprocessing tools. Third, combination and reranking produces the final candidate set: 
+
+#  rank , final full sub combined T T T S (19) 
+
+Fourth, chain-of-tools generation is conducted to synthesize the optimal sequence with respect to dependencies. 
+
+# 4.4.3 Self-Healing Code Generation 
+
+Diverging from template-based paradigms, the execution framework relies on dynamic, context-aware code synthesis. The system generates bespoke scripts tailored to the specific analytic constraints of each task and embeds them within a self-correcting closed-loop protocol. This mechanism enforces robustness through iterative refinement: generated code is first validated by abstract syntax tree (AST) parsing and subsequently subjected to execution monitoring. Upon failure, the system triggers an error-informed regeneration cycle and systematically traverses a hierarchical error taxonomy that resolves syntactic violations, dependency conflicts, runtime exceptions, 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+and data compatibility mismatches. Furthermore, to optimize the computational throughput, we implement a content-addressable memoization layer. By cryptographically hashing task descriptors and input states, the system retrieves cached metadata for recurrent operations, thereby eliminating redundant computations. 
+
+# 4.4.4 Quality Assurance 
+
+(1) Mixture-of-Experts Review (MoER) Constrained by Normative Specifications: To mitigate the subjective variability and hallucinatory tendencies inherent in LLMs, the MoER module is fundamentally governed by a comprehensive, expert-curated normative specification database. Rather than relying on the intrinsic reasoning of the foundation models, the reviewers operate as deterministic auditors and evaluate every intermediate artefact against hard-coded methodological boundaries, quality control (QC) thresholds, and statistical assumptions extracted from established neuroimaging guidelines. 
+
+ 
+
+PlanReviewer if CodeReviewer if route StatReviewer if ReportReviewer if 
+
+    
+
+> plan code stat report
+
+ooo oo
+
+
+
+(20) 
+
+Specifically, the multiagent routing mechanism operates through a suite of domain-specific normative libraries. We constructed dedicated standard specification databases for four specialized expert agents: the PlanReviewer, CodeReviewer, StatReviewer, and ReportReviewer. Within this framework, the PlanReviewer evaluates the methodological rationality, scientific accuracy, and innovation of the research design against predefined research norms, and the CodeReviewer audits generated scripts for programmatic robustness and strict alignment with the approved plan. Crucially, the StatReviewer is governed by an exhaustive, tool-specific guideline library that encompasses rigorous, stepwise output validation protocols for all integrated neuroimaging tools, and the ReportReviewer cross-references the 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+synthesized manuscript against standardized reporting criteria to actively prevent domain hallucinations. By dynamically assigning the appropriate reviewer and invoking its corresponding rulebase immediately after every executed action, the MoER module enforces stringent accuracy throughout the workflow. By inextricably marrying the adaptive flexibility of LLMs with these deterministic, expertly curated constraint protocols, this hybrid architecture ensures that the entire automated pipeline consistently achieves expert-level methodological fidelity. 
+
+(2) Claim-Evidence Auditing: The auditor implements six-level claim validation: (1) statistical cross-validation in which reported values are compared against raw outputs; (2) anatomical terminology verification against standardized brain atlases, including AAL 43 and Desikan-Killiany 44 ; (3) sample size consistency evaluation across sections; (4) p value plausibility checking; (5) citation verification to confirm that sources support claims; and (6) logical consistency evaluation to detect contradictions. 
+
+# 4.5 Reflective Iteration 
+
+In the final phase, namely, the validation and iteration phase, the workflow applies a rigorous quality control mechanism. Whenever validation metrics indicate suboptimal performance or logical inconsistencies, the system autonomously triggers a reflective optimization loop. Central to this adaptive process is the reflection agent, which operationalizes the Gibbs reflective cycle 45 to facilitate systematic learning from execution trajectories. The protocol unfolds through a structured six-phase cognitive sequence: First, state reconstruction (Description) and uncertainty quantification (Feelings) are performed. Next, performance adjudication (Evaluation) and root-cause diagnostics are conducted via a recursive '5-Why' inference mechanism (Analysis). These insights are subsequently synthesized into actionable heuristics (Conclusion), which culminates in the generation of stratified remediation strategies (Action Plans). Crucially, this mechanism enables NEURA to transcend simple parameter tuning; depending on the diagnosis, it can dynamically refine the experimental design, reorient the research trajectory, or adopt superior analytical methods. This feedback cycle is repeated until the identified shortcomings are resolved and rigorous scientific standards 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+are met, thereby ensuring continuous self-optimization. 
+
+# 4.6 Human‒Agent Collaborative Control 
+
+Unlike batch systems, NEURA supports streaming execution with real-time intervention. Each node emits state updates upon completion, thereby enabling monitoring of the dashboards without polling. User intervention is possible at five control points: after plan generation (approve, modify, and replan), before tool execution (override, adjust, and skip), during long tasks (pause, resume, cancel, and checkpoint), after tool completion (accept, retry, and modify), and before report finalization (edit, regenerate, and extend). When users intervene, a formal model ensures consistency: 
+
+          
+
+apply , if valid ,intervene , negotiate , if conflict ,reject , if unsafe ,
+
+             
+
+> tuser tuser tuser tuser tuser tuser tuser
+
+s a s as a s a s as a s a
+
+(21) 
+
+where ts denotes the complete workflow state at time t , including the results, data, parameters, and context information of all the executed steps, and user a denotes the intervention actions or requests proposed by the user at the human–computer interaction point. The system preserves the state before modifications, identifies affected downstream steps, and selectively re-executes only invalidated operations. 
+
+# 4.7 Construction of NeuroEval 
+
+To evaluate the performance of NEURA, we constructed NeuroEval, acomprehensive benchmark that comprises 110 diverse neuroimaging analysis tasks. The curation of NeuroEval followed a strict, expert-driven process that was meant to ensure that it was both scientifically sound and useful in real life. 
+
+(1) Curation methodology: We assembled a multidisciplinary panel of eight neuroimaging specialists to curate the dataset. Guided by a systematic extraction protocol, the experts selected high-quality publications that featured complex, multimodal workflows specific to their subfields. Methodological details were distilled 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+from these sources into standardized task descriptions and precise research inquiries. Finally, to ensure reliability, all the cases were validated through a rigorous peer-review process. 
+
+(2) Dataset stratification: NeuroEval stratifies tasks into two tiers of complexity. Level 1 (27 cases) comprises intermediate workflows that involve 3–4 discrete tool operations, whereas Level 2 (83 cases) targets advanced scenarios that require more than 5 steps and multimodal integration. To evaluate clinical generalization, the benchmark encompasses 11 distinct neurological and psychiatric domains, including those related to neurodegenerative, cerebrovascular, and developmental disorders. We uniformly allocated 10 cases per category to ensure a balanced assessment across diverse pathologies. 
+
+(3) Standardized metadata: For each entry, a standardized schema was used to support reproducible evaluation. The metadata included (1) specific research questions, (2) a validated “ground truth” reference toolchain, (3) the source publication, and (4) specific annotations for complexity, modality, and anatomical regions. This structured format enabled precise, quantitative assessment of the ability of NEURA to translate clinical questions into executable computational pipelines. 
+
+# Data availability 
+
+The data that support the findings of this study are available on request from the corresponding author. The clinical neuroimaging and cognitive data associated with case studies are not publicly available because of genetic privacy restrictions and institutional ethical guidelines regarding patient confidentiality. The expert-curated benchmark dataset, NeuroEval, is publicly available in the NEURA GitHub repository at https://github.com/NeuroScienceLab/NEURA. 
+
+# Code availability 
+
+Code for the NEURA system and for the NeuroEval benchmark evaluations is 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+available in our GitHub repository at https://github.com/NeuroScienceLab/NEURA. 
+
+# Acknowledgements 
+
+We gratefully acknowledge the study participants, as well as the developers of the neuroimaging tools and large language models who made this work possible. This work was supported by the Brain Science and Brain-like Intelligence Technology-National Science and Technology Major Project under grant no. G072022ZD0208903, the Natural Science Foundation of China under grant no. 62503091, and the Sichuan Province Science and Technology Foundation under grant no. 2025ZNSFSC1758. 
+
+# Author contributions 
+
+J.X., J.G. and H.C. conceptualized the study. J.X. implemented NEURA and ran it on the case studies. C.L., X.W., X.L. and Y.M. developed NeuroEval. J.W. benchmarked NEURA against the base LLMs. C.L. and J.G. evaluated the agent's case study results. H.C. supervised the study. All authors contributed to writing the paper. 
+
+# Competing interests 
+
+The authors declare no competing interests. 
+
+# References: 
+
+1. Poldrack, R. A. et al. Scanning the horizon: towards transparent and reproducible neuroimaging research. Nat. Rev. Neurosci. 18 , 115-26 (2017). 2. Woo, C. W. et al. Building better biomarkers: brain models in translational neuroimaging. Nat. Neurosci. 20 , 365-77 (2017). 3. Bullmore, E. & Sporns, O. Complex brain networks: graph theoretical analysis of structural and functional systems. Nat. Rev. Neurosci. 10 , 186-98 (2009). 4. Renton, A. I. et al. Neurodesk: an accessible, flexible and portable data analysis environment for reproducible neuroimaging. Nat. Methods. 21 , 804-8 (2024). 5. Friston, K. J. Neuroscience Databases: A Practical Guide . (Springer US, Boston, MA, 2003). 
+
+6. Jenkinson, M. et al. FSL. Neuroimage. 62 , 782-90 (2012). 7. Smith, S. M. et al. Advances in functional and structural MR image analysis and implementation as FSL. Neuroimage. 23 , S208-19 (2004). 8. Fischl, B. FreeSurfer. Neuroimage. 62 , 774-81 (2012). 9. Cox, R. W. AFNI: Software for Analysis and Visualization of Functional Magnetic Resonance 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+Neuroimages. Computers and Biomedical Research. 29 , 162-73 (1996). 10. Gorgolewski, K. et al. Nipype: A Flexible, Lightweight and Extensible Neuroimaging Data Processing Framework in Python. Front Neuroinform. Volume 5 - 2011. (2011). 11. Qiu, J. N. et al. LLM-based agentic systems in medicine and healthcare. Nat. Mach. Intell. 6, 1418-20 (2024). 12. Zhao, W. K. et al. An agentic system for rare disease diagnosis with traceable reasoning. Nature. 
+
+651, 775-84 (2026). 13. Zhang, Y. B. et al. Exploring the role of large language models in the scientific method: from hypothesis to discovery. NPJ. Artificial. Intelligence. 1, 14 (2025). 14. Huang, L. et al. A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions. ACM. T. Inform. Syst. 43 , 1-55 (2023). 15. Wheeler, S. & Jeunen, O. Procedural Memory Is Not All You Need: Bridging Cognitive Gaps in LLM-Based Agents. Adjunct Proceedings of the 33rd ACM Conference on User Modeling, Adaptation and Personalization. (2025). 16. Wang, H. C. et al. Scientific discovery in the age of artificial intelligence. Nature. 620 , 47-60 (2023). 17. Wei, J. et al. Chain-of-Thought Prompting Elicits Reasoning in Large Language Models. NeurIPS. 
+
+24824-37 (2022). 18. Brown, T. et al. Language Models are Few-Shot Learners. NeurIPS. 1877-901 (2020). 19. Sumers, T. R. et al. Cognitive Architectures for Language Agents. Preprint at https://arxiv.org/abs/2309.02427 (2024). 20. Yao, S. Y. et al. ReAct: Synergizing Reasoning and Acting in Language Models. Preprint at https://arxiv.org/abs/2210.03629 (2023). 21. Wang, G. Z. et al. Voyager: An Open-Ended Embodied Agent with Large Language Models. Preprint at https://arxiv.org/abs/2305.16291 (2023). 22. Lewis, P. et al. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. NeurIPS. 
+
+9459-74 (2020). 23. Wang, Q. et al. Knowledge Graph Embedding: A Survey of Approaches and Applications. IEEE. T. Knowl. Data. En. 29 , 2724-43 (2017). 24. Richardson, W. S. et al. The well-built clinical question: a key to evidence-based decisions. ACP. J. Club. 123 , A12-3 (1995). 25. Klockgether, T. et al. Spinocerebellar ataxia. Nat. Rev. Dis. Primers. 5, 25 (2019). 26. Liu, H., Lin, J. Y. & Shang, H. F. Voxel-based meta-analysis of gray matter and white matter changes in patients with spinocerebellar ataxia type 3. Front. Neurol. Volume 14 - 2023. (2023). 27. Shi, L. F. et al. Gray Matter Asymmetry Alterations in Patients With Spinocerebellar Ataxia Type 3: A Voxel-Based Morphometric Comparison Study. CNS. Neurosci. Ther. 30 , e70171 (2024). 28. Nasreddine, Z. S. et al. The Montreal Cognitive Assessment, MoCA: a brief screening tool for mild cognitive impairment. J. Am. Geriatr. Soc. 53 , 695-9 (2005). 29. Ashburner, J. & Friston, K. J. Voxel-based morphometry--the methods. Neuroimage. 11 , 805-21 (2000). 30. Ashburner, J. A fast diffeomorphic image registration algorithm. Neuroimage. 38 , 95-113 (2007). 31. Diedrichsen, J. et al. A probabilistic MR atlas of the human cerebellum. Neuroimage. 46 , 39-46 (2009). 32. Benjamini, Y. & Hochberg, Y. Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society: Series B (Methodological). 57 ,
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted April 30, 2026. ;https://doi.org/10.64898/2026.04.27.721217 doi: bioRxiv preprint
+
+289-300 (1995). 33. Stefanescu, M. R. et al. Structural and functional MRI abnormalities of cerebellar cortex and nuclei in SCA3, SCA6 and Friedreich’s ataxia. Brain. 138 , 1182-97 (2015). 34. Le Bihan, D. et al. Diffusion tensor imaging: concepts and applications. J. Magn. Reson. Imaging. 
+
+13 , 534-46 (2001). 35. Guimarães, R. P. et al. A multimodal evaluation of microstructural white matter damage in spinocerebellar ataxia type 3. Mov. Disord. 28 , 1125-32 (2013). 36. Smith, S. M. et al. Tract-based spatial statistics: Voxelwise analysis of multi-subject diffusion data. 
+
+Neuroimage. 31 , 1487-505 (2006). 37. Gorgolewski, K. J. et al. BIDS apps: Improving ease of use, accessibility, and reproducibility of neuroimaging data analysis methods. PLOS. Comput. Biol. 13 , e1005209 (2017). 38. Gorgolewski, K. J. et al. The brain imaging data structure, a format for organizing and describing outputs of neuroimaging experiments. Sci. Data. 3, 160044 (2016). 39. Boiko, D. A. et al. Autonomous chemical research with large language models. Nature. 624 , 570-8 (2023). 40. M. Bran, A. et al. Augmenting large language models with chemistry tools. Nat. Mach. Intell. 6,525-35 (2024). 41. Botvinik-Nezer, R. et al. Variability in the analysis of a single neuroimaging dataset by many teams. 
+
+Nature. 582 , 84-8 (2020). 42. Tools such as ChatGPT threaten transparent science; here are our ground rules for their use. Nature. 
+
+613 , 612 (2023). https://doi.org/10.1038/d41586-023-00191-1 43. Tzourio-Mazoyer, N. et al. Automated Anatomical Labeling of Activations in SPM Using a Macroscopic Anatomical Parcellation of the MNI MRI Single-Subject Brain. Neuroimage. 15 , 273-89 (2002). 44. Desikan, R. S. et al. An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest. Neuroimage. 31 , 968-80 (2006). 45. Gibbs, G. Learning by Doing: A Guide to Teaching And Learning Methods. Journal of European industrial training. (1988).
