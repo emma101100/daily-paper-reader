@@ -25,3 +25,127 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: autoresearch
+      description: 自动科研与AI Scientist相关论文，关注端到端科研流程、闭环反馈、记忆维护、工件溯源、声明审计等。
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: autonomous research
+          keyword_cn: 自主科研
+          query: autonomous research agent systems for scientific discovery
+        - keyword: research agent
+          keyword_cn: 科研代理
+          query: research agent for literature review hypothesis generation and experiment
+        - keyword: AI for Science
+          keyword_cn: AI for Science
+          query: AI for Science automated scientific discovery with machine learning
+        - keyword: research artifact
+          keyword_cn: 科研工件
+          query: structured research artifacts and provenance in automated science
+        - keyword: claim evidence grounding
+          keyword_cn: 声明-证据依据
+          query: claim-evidence grounding and support maintenance in research papers
+        - keyword: memory maintenance
+          keyword_cn: 记忆维护
+          query: memory maintenance across research cycles in autonomous systems
+      intent_queries:
+        - query: How do autonomous research agents use experiment outcomes to refine ideas and generate new hypotheses?
+          query_cn: 自主科研代理如何使用实验结果来改进想法并生成新假设？
+          enabled: true
+          source: manual
+          note: ''
+        - query: How is memory maintained across multiple research cycles in AI scientist systems?
+          query_cn: 在AI科学家系统中，如何在多个研究周期之间维护记忆？
+          enabled: true
+          source: manual
+          note: ''
+        - query: How are research artifacts structured and stored with provenance in automated scientific discovery?
+          query_cn: 在自动化科学发现中，如何结构化存储研究工件并记录溯源？
+          enabled: true
+          source: manual
+          note: ''
+        - query: How do AI research agents avoid unsupported claims and metric misuse in scientific papers?
+          query_cn: AI研究代理如何避免在科学论文中出现无支撑的主张和指标滥用？
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-05-28T09:49:38.469Z'
+    - tag: agent-memory
+      description: >-
+        查找关于LLM Agent和Agent
+        Memory的论文，重点关注长程任务、工具使用、多智能体、规划、工作流、状态跟踪、反馈、反思、错误恢复、记忆模块（长时记忆、情节记忆、语义记忆、检索、整合、更新、遗忘、冲突解决、图记忆、状态表示、轨迹到技能、技能库、自演化）等，要求有消融实验或评估。
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: graph memory
+          keyword_cn: 图记忆
+          query: graph memory
+        - keyword: long-horizon agents
+          keyword_cn: 长程任务智能体
+          query: long-horizon agents in long-term tasks with state maintenance
+        - keyword: multi-agent systems
+          keyword_cn: 多智能体系统
+          query: multi-agent systems coordination and memory sharing
+        - keyword: state tracking
+          keyword_cn: 状态跟踪
+          query: state tracking in agent reasoning and execution
+        - keyword: long-term memory
+          keyword_cn: 长期记忆
+          query: long-term memory for agents with retrieval and consolidation
+        - keyword: skill
+          keyword_cn: 技能
+          query: skill library from trajectories for agent improvement
+      intent_queries:
+        - query: papers on long horizon LLM agents using memory and skill reuse
+          query_cn: 关于使用记忆和技能复用的长程LLM智能体的论文
+          enabled: true
+          source: manual
+          note: ''
+        - query: how agents maintain state in long term tasks with episodic memory
+          query_cn: 智能体如何在长期任务中利用情景记忆维护状态
+          enabled: true
+          source: manual
+          note: ''
+        - query: methods for extracting reusable skills from agent trajectories and failures
+          query_cn: 从智能体轨迹和失败中提取可复用技能的方法
+          enabled: true
+          source: manual
+          note: ''
+        - query: agent memory consolidation and forgetting mechanisms for continual learning
+          query_cn: 智能体记忆整合和遗忘机制用于持续学习
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-05-28T09:52:11.852Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
+  biorxiv:
+    papers_table: biorxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_biorxiv_papers_exact
+    vector_rpc_exact: match_biorxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_biorxiv_papers_bm25
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
