@@ -1,0 +1,729 @@
+Title: ResearchLoop: An Evidence-Gated Control Plane for AI-Assisted Research
+
+URL Source: https://arxiv.org/pdf/2605.28282v1
+
+Published Time: Thu, 28 May 2026 01:04:42 GMT
+
+Number of Pages: 32
+
+Markdown Content:
+# ResearchLoop : An Evidence-Gated Control Plane for AI-Assisted Research 
+
+Technical Report Yihan Xia Shenzhen University, China 
+
+xiayihan2023@email.szu.edu.cn 
+
+Taotao Wang Shenzhen University, China 
+
+ttwang@szu.edu.cn 
+
+May 2026 
+
+Abstract 
+
+AI-assisted research compresses ideation, implementation, evaluation, and manuscript writing into a single interactive loop. This compression is useful, but it also creates a publication risk: paper claims can become easier to state than to audit. We present ResearchLoop , an evidence-gated control plane for AI-assisted computational research. ResearchLoop treats research questions, task contracts, evidence objects, claim ledgers, closeouts, and paper bindings as durable project state, realized here as a repository-backed runtime. This technical report provides the complete protocol specification, state model, transition rules, claim-admission algorithm, and insight-compounding mechanism. It also reports the full experimental record spanning nine versions (V0–V9), including a self-hosting case study, a controlled task-suite study with component ablations, a mathematical olympiad evaluation, and a supplementary SciCode boundary experiment evaluated with the official generated-code harness. All artifacts, manifests, and verification reports are preserved in the project repository. 
+
+# Contents 
+
+1 Introduction 3
+
+1.1 Contributions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+
+2 Related Work 43 ResearchLoop Protocol and Runtime 6
+
+3.1 Core Objects . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 73.2 RQ-to-Claim Binding . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 73.3 State Model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 83.4 Safety Invariants . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 83.5 Adoption and Overhead . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 3.6 Interoperability . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 
+
+4 Runtime Implementation 11 
+
+4.1 Directory Structure . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 4.2 YAML Schemas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 4.3 Git Integration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 1
+
+> arXiv:2605.28282v1 [cs.AI] 27 May 2026
+
+4.4 Task Execution Flow . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 4.5 Automation Boundaries . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 
+
+5 Evidence-Gated Claim Admission 13 
+
+5.1 Claim Ledger . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 5.2 Evidence Contracts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 5.3 Gate Predicate Specification . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 5.4 Admission Rule . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 
+
+6 Insight Compounding 16 7 Evaluation 17 
+
+7.1 Self-Hosting Case Study: ResearchLoop Developing This Paper . . . . . . . . . . 17 7.2 Controlled Study: Unsupported Claim Rate and Trace Completeness . . . . . . . . . 18 7.3 Mathematical Olympiad Evaluation (V4) . . . . . . . . . . . . . . . . . . . . . . . . 19 7.4 Supplementary Boundary Study: Official SciCode Evaluation . . . . . . . . . . . . . 20 
+
+8 Threats to Validity 22 9 Conclusion 23 Artifact Availability 23 A Protocol Specification 23 
+
+A.1 STATUS.yaml Schema . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 A.2 EVIDENCE GATE.yaml Schema . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 A.3 Claim Ledger Schema . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 A.4 Task Contract Schema . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 
+
+B Complete Experiment Details 25 
+
+B.1 V4: AIME 2026 and BRUMO 2025 . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 B.2 V5–V7: Controlled Task Suite . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 B.3 V8–V9: SciCode Official Evaluation . . . . . . . . . . . . . . . . . . . . . . . . . . . 27 
+
+C Complete Claim Ledger 28 
+
+C.1 Admitted Claims . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28 C.2 Blocked and Contradicted Claims (Historical) . . . . . . . . . . . . . . . . . . . . . . 29 21 Introduction 
+
+AI-assisted research workflows compress ideation, implementation, evaluation, and manuscript writing into a single interactive loop. A single researcher can ask language agents to inspect repositories, write code, run commands, summarize evidence, draft related work, and propose paper narratives within the same session. This compression is operationally attractive, but it creates a software-engineering control problem: the manuscript can become the most complete-looking artifact before the evidence base is ready to support it. The failure mode is not merely hallucination. It is a state-management failure in which execution artifacts, paper claims, and research questions drift out of synchronization. An agent can perform locally plausible work that no longer answers the active research question. A command can run and a table can be generated without supporting the claim the manuscript wants to make. Language models can stabilize a coherent paper story before the research state is mature. Failed reproductions, blocked baselines, and rejected claims can disappear from the narrative rather than becoming typed state for the next version. These failures suggest a compact design requirement for AI-assisted computational research: every paper-facing claim should be traceable to the research question that authorized the work, the evidence object that supports it, the gate that admitted it, and the version boundary that preserved its scope. 
+
+ResearchLoop makes this state explicit. It is a control plane—not a stronger agent, a longer context window, or a better prompt template—that separates executors from the persistent rules that decide what is runnable, what counts as evidence, what may become a paper claim, and what must be carried forward after a version closes. ResearchLoop is organized around three design commitments. First, it is RQ-driven : tasks are authorized by research questions rather than by an unstructured to-do list. Second, it is evidence-gated : claims do not enter result language merely because artifacts exist; they must pass an explicit evidence contract and admission decision. Third, it is insight-compounding : failures, anomalies, blocked baselines, and rejected claims become durable state for future versions rather than disappearing from the narrative. This technical report is the complete account of the ResearchLoop protocol and its empirical record. It contains the full specification, the implementation runtime, the self-hosting case study, and all controlled experiments from V0 through V9. Unlike a conference submission, which must compress nine versions into bounded claims, this report preserves the complete research trajectory including negative results, blocked claims, and version pivots. 
+
+1.1 Contributions 
+
+This report makes four contributions. 1. Control-plane abstraction. It formulates long-horizon AI-assisted research as a control-plane problem in which RQs, execution contracts, evidence objects, insights, and paper claims must remain synchronized across version boundaries. 2. Protocol specification. It specifies ResearchLoop as a state-transition protocol with durable objects, gate-bounded claim admission, blocker preservation, and closeout-driven reseeding. 3. Conservative publication interface. It defines a publication interface in which design, process, controlled-study, and supplementary boundary claims are admitted only at the scope licensed by their evidence gates. 34. Complete empirical record. It reports the full V0–V9 experimental trajectory, including the self-hosting case study, the controlled task-suite study with component ablations, the mathematical olympiad evaluation (V4), the SciCode boundary experiments (V8–V9), and all closeout records with blocker preservation. 
+
+# 2 Related Work 
+
+ResearchLoop sits at the intersection of autonomous research agents, structured research workflows, experiment and provenance infrastructure, paper-writing systems, research-agent benchmarks, and empirical software-engineering methodology. The contribution is not that planning, logging, review, or manuscript generation are new. The contribution is a publication-facing control plane in which RQs schedule work, evidence gates regulate claim admission, closeouts preserve version boundaries, and paper bindings project only admitted claims into manuscript text. 
+
+End-to-end AI scientists. Recent systems increasingly make large portions of the scientific workflow executable. The AI Scientist and AI Scientist-v2 automate ideation, coding, experimenta-tion, paper writing, and review for machine-learning research [ 14 , 29 ]. Agent Laboratory, ARIS, and AlphaEvolve similarly explore broader agentic research loops, multi-agent collaboration, or algorithmic discovery [ 21 , 31 , 17 ]. In science-facing settings, Co-Scientist focuses on structured hypothesis generation and biomedical validation, Robin combines literature-search and data-analysis agents for experimental biology, and ERA uses LLM-guided tree search to write and optimize empirical scientific software [7, 6, 1]. These systems show that agents can propose ideas, execute code, analyze results, and draft scientific narratives. ResearchLoop addresses a different control problem. Its primary object is not the autonomous worker but the paper-facing state transition from candidate claim to admitted claim. A successful run, a generated figure, or a plausible review round remains insufficient unless the claim’s evidence contract and gate predicate are satisfied at the declared scope. 
+
+Structured research frameworks and gate-based pipelines. The closest systems to Re-searchLoop are structured research frameworks that make stages, gates, state, or memory explicit. PARNESS provides a paper harness with dynamic workflows, full-text indexing, and cross-run knowl-edge accumulation [ 27 ]. Sibyl-AutoResearch argues that autonomous research needs self-evolving trial-and-error harnesses; its file-backed SIBYL system records state, roles, memory, gates, artifact traces, and recovered failures [ 25 ]. These systems are especially relevant because they move beyond single-shot paper generation toward persistent research state and reusable trial experience. 
+
+ResearchLoop differs in where it places the gate. In many stage-based frameworks, a gate advances a workflow: a plan becomes runnable, a run becomes analyzable, or a draft becomes reviewable. In ResearchLoop , the privileged transition is manuscript-facing: a claim becomes paper-bindable only if its RQ link, evidence object, gate decision, scope, and version boundary are recorded. This distinction matters because research automation can be operationally successful while still over-admitting claims. ResearchLoop therefore treats blocked, contradicted, and forbidden claims as durable states, not merely failed workflow steps. 
+
+Paper-writing and evidence-to-manuscript systems. Automated writing systems address the final compression from research materials to paper text. PaperOrchestra transforms unconstrained pre-writing materials into submission-ready LaTeX manuscripts and evaluates writing quality through PaperWritingBench [ 23 ]. Data-to-paper starts from annotated data and produces transparent, 4backward-traceable, human-verifiable scientific papers with data-chained links from manuscript values to code and data [ 9]. These systems are important because they make manuscript generation more evidence-aware than ordinary free-form prompting. 
+
+ResearchLoop is complementary to such writing engines. A writing engine can assemble sections, citations, tables, and narratives; ResearchLoop decides which claims are licensed for assertive result language. Data-to-paper’s data chaining is strongest for numerical traceability from data and code to manuscript values. ResearchLoop generalizes the publication boundary to heterogeneous claim classes: design claims, process claims, audit claims, empirical effectiveness claims, and blocked future claims each require different evidence contracts. 
+
+Experiment automation, provenance, and workflow systems. Experiment and provenance infrastructure supplies the artifacts that ResearchLoop consumes. PROV-DM models entities, activities, and agents in artifact production [ 16 ]. MLflow and DVC organize machine-learning runs, datasets, metrics, and artifacts [ 32 , 13 ]. Nextflow and Snakemake support reproducible computational workflows [ 3 , 12 ]. Git-backed task agents such as SWE-agent, OpenHands, Devin, and Aider operate in the same repository-centered execution niche as ResearchLoop and produce durable diffs, test outcomes, and workspace traces [30, 26, 2, 5]. These tools provide lineage, execution machinery, or task-level durability, but they do not by themselves answer the publication question: which manuscript claim does this artifact support, under what scope, and after which gate decision? ResearchLoop treats their outputs as evidence objects rather than as automatic claim licenses. A completed workflow, a passing test suite, or a Git commit can support a claim only relative to a claim class and evidence contract. 
+
+Claim-evidence benchmarks. Research-agent benchmarks and claim-evidence benchmarks motivate finer-grained evaluation. ResearchGym and AIRS-Bench define bounded research tasks for AI research agents [ 4 , 15 ]. FIRE-Bench, DeepFact, and CLAIM-BENCH emphasize factuality, rediscovery, and scientific claim–evidence reasoning [ 28 , 8, 10 ]. ResearchLoop borrows the need for task- and claim-level measurement, but its immediate contribution is not a new benchmark. It specifies when benchmark outcomes, audit labels, or run artifacts may become paper-admissible claims. 
+
+Agent memory and operating-system analogies. A related architectural line treats LLM agents as operating systems or resource-managed agents. MemGPT introduces hierarchical memory management for long-horizon agent execution, and AgentRM proposes an OS-inspired resource manager for agent systems [ 18 , 22 ]. These systems manage object-level agent resources such as context, memory, and compute. ResearchLoop is a meta-level control plane: it manages research-process state such as RQs, evidence, blockers, claim ledgers, closeouts, and paper bindings. The two abstractions are complementary; better agent memory can improve execution, while ResearchLoop 
+
+regulates which executions may become manuscript claims. 
+
+Empirical SE method. Evidence-based software engineering, artifact-evaluation practice, and case-study methodology stress proportionate claims, validity threats, reproducibility, and inspectable artifacts [ 11 , 24 , 20 ]. ResearchLoop moves this discipline into the research loop rather than leaving it as an end-of-paper checklist. Its claim ledger and evidence gates operationalize a conservative writing rule: evidence first, admitted scope second, paper language last. 5System family RQ Evidence Ledger Gate Paper                                         
+
+> End-to-end AI scientists PPPPPStructured research frameworks PYPPPPaper-writing systems PPPPYExperiment/provenance tools –Y–P–Git-backed task agents PY–P–Benchmarks and claim-evidence tasks CPCC–Empirical-method guidance CCCCC
+> ResearchLoop YYYYY
+
+Table 1: Positioning of ResearchLoop relative to adjacent system families. Y denotes explicit protocol support, P partial or indirect support, C conceptual guidance, and – no primary support. The table is intentionally coarse; the prose explains the ratings. 
+
+Positioning. ResearchLoop should be read as a control architecture for research reliability. Agent systems supply execution, structured frameworks supply workflow discipline, provenance tools supply trace records, writing systems supply manuscript generation, benchmarks supply evaluation pressure, and empirical-method traditions supply validity discipline. ResearchLoop binds these pieces to RQs and paper claims so that planned, admitted, blocked, contradicted, and forbidden statements remain distinct, inspectable states. 
+
+# 3 ResearchLoop Protocol and Runtime 
+
+ResearchLoop is a control plane for AI-assisted research. It does not replace experiment engines, notebooks, version control, or agent frameworks. Instead, it defines the persistent research state— implemented here as a repository-backed runtime—that determines which work is authorized, which artifacts count as evidence, which claims may be written assertively, and which unresolved observations must survive into the next version. The “OS” metaphor is structural, not functional. ResearchLoop does not manage hardware, schedule processes, or allocate memory. It borrows three operating-system concepts: (1) separation of mechanism from policy —executors (agents, scripts, humans) are mechanism, while gates and ledgers are policy; (2) durable state beyond any single process —the evidence base, claim ledger, and closeout records survive individual task executions; (3) mediated access to privileged transitions —workers cannot directly promote a claim to admitted status; they must satisfy a gate predicate. 
+
+Process-theoretic grounding. ResearchLoop ’s abstraction can be read as an operational-ization of software-process theory rather than control theory. Parnas and Clements argue that a rational design process requires documented design rationale, traceable decisions, and inspectable checkpoints that make the actual process appear systematic even when real development is iterative and opportunistic [ 19 ]. ResearchLoop treats the closeout as exactly such a checkpoint: an end-of-version record that captures what was decided, on what evidence, and what remains unresolved. The claim ledger serves as durable design rationale, the RQ spine as the requirements traceability structure, and the gate predicates as the admission criteria that Parnas and Clements prescribe for documenting why a design choice is accepted. 
+
+Why the control plane must be external. A stronger agent or a longer context window could, in principle, maintain an internal checklist of claims and evidence. However, an internal representation is subject to three risks that an external control plane avoids. First, narrative control :the same agent that generates a claim can rewrite the ledger that records it, because both live in 6the same conversation context. Second, ephemeral state : when the conversation ends or the context window resets, the internal record may be lost or condensed into a summary that drops blocked claims. Third, lack of versioned provenance : an internal checklist cannot produce an auditable history of who changed a claim status, when, and on what evidence. ResearchLoop therefore externalizes the ledger, gates, and closeout records to the repository, where they survive any single agent session and can be inspected by humans or automated audits without agent mediation. 
+
+3.1 Core Objects 
+
+ResearchLoop uses a small set of durable objects. A research direction fixes the Big RQ, falsification boundary, and autonomy limits. A version Vn is a bounded research epoch with local stop conditions. An RQ spine decomposes the direction into sub-RQs. A task contract binds a worker action to an RQ, allowed files, expected artifacts, and forbidden claims. An evidence object is a durable artifact such as a run report, log, manifest, hash, source dossier, audit label, or closeout note. A claim ledger maps candidate claims to statuses such as planned, admitted, blocked, contradicted, or forbidden. A paper binding is the final projection from admitted claims into manuscript text.                      
+
+> Object Role Transition rule
+> Version VnBounded research epoch. Opens from approved direction state; closes before seeding Vn+1 .RQ spine Scientific scheduling source. Tasks without RQ binding are in-valid research work. Task contract Binds worker action to scope, arti-facts, and file permissions. Execution may update state only through the declared contract. Evidence object Inspectable artifact or decision record. Supports only claim classes admit-ted by the relevant gate. Claim ledger Registry of claim status and paper scope. Status changes only through recorded evidence and audit. Closeout End-of-version synthesis of evidence, blockers, and insights. Seeds the next version; unresolved claims remain visible.
+
+Table 2: Persistent state objects in ResearchLoop . Workers are intentionally absent from the truth source: they execute contracts but do not own research state. 
+
+3.2 RQ-to-Claim Binding 
+
+The central invariant is that paper claims must remain attached to the research question that authorized the work: Big RQ → sub-RQ → claim → task/spec 
+
+→ evidence → gate → paper .
+
+The chain is operational, not decorative. Scheduling begins from unresolved RQ state. If a source boundary is missing, the next task is source locking. If evidence exists but lacks audit, the next task is audit. If a claim lacks the required artifact type, the claim remains blocked. The queue is therefore a projection of RQ state rather than an agent-generated to-do list. Figure 1 illustrates how this RQ lineage grows, branches, and prunes before a version admits claims for paper binding. 7Figure 1: Research-question lineage as evidence-guided growth. Positive signals promote a question line, negative-but-informative evidence converts it into deeper questions, and evidence-poor branches are pruned before version selection admits the next generation. 
+
+3.3 State Model 
+
+Let the state of version Vn be 
+
+Sn = ⟨D , R, K, E, L, B⟩ , (1) where D is the frozen research direction, R is the RQ spine, K is the set of active task contracts, E
+
+is the evidence base, L is the claim ledger, and B is the blocker set. A worker execution w under contract k ∈ K produces artifacts Aw and report Ew. A gate predicate g(c, A, E w) decides whether evidence A ⊆ E ∪ Aw is sufficient for claim c at its declared scope. In ResearchLoop , g is a checkable artifact manifest: a declarative list of required artifact types, path patterns, inspection methods, and a pass condition (all or any). The manifest is human-authored or protocol-specified and evaluated deterministically by the runtime. The transition is: 
+
+Snw,k,g 
+
+−−−→ S ′ 
+
+> n
+
+= Sn ⊕ ∆, (2) where ∆ may append evidence, update task status, register blockers, and change claim states. It may not rewrite the research direction or promote a claim without a gate decision. 
+
+3.4 Safety Invariants 
+
+The protocol enforces four safety invariants. 1. Direction lock. Worker execution cannot silently change the Big RQ or falsification boundary. 2. Evidence monotonicity. Produced artifacts are appended or invalidated explicitly; they are not erased to preserve a narrative. 8Algorithm 1 ResearchLoop state transition for one task 
+
+Require: State Sn, task contract k, worker w, gate predicate g
+
+Ensure: Updated state S′ 
+
+> n
+> 1:
+
+if k is not bound to an RQ, claim class, evidence contract, and allowed scope then  
+
+> 2:
+
+reject k as invalid research work  
+
+> 3:
+
+return Sn 
+
+> 4:
+
+end if  
+
+> 5:
+
+execute w under contract k to produce artifacts Aw and report Ew 
+
+> 6:
+
+append Aw and Ew to the evidence base as scoped evidence  
+
+> 7:
+
+if execution failed or required artifacts are missing then  
+
+> 8:
+
+register blocker b; keep affected claims non-admitted  
+
+> 9:
+
+else  
+
+> 10:
+
+for all claims c linked to k do  
+
+> 11:
+
+if g(c, A w, E w) is satisfied then  
+
+> 12:
+
+mark c as admitted within the gate-approved scope  
+
+> 13:
+
+else if g identifies contradiction then  
+
+> 14:
+
+mark c as contradicted and preserve the evidence  
+
+> 15:
+
+else  
+
+> 16:
+
+keep c draft-only or blocked with missing evidence recorded  
+
+> 17:
+
+end if  
+
+> 18:
+
+end for  
+
+> 19:
+
+end if  
+
+> 20:
+
+write task status, evidence references, claim-ledger updates, blockers, and insights  
+
+> 21:
+
+if all version gates are passed, blocked, or contradicted then  
+
+> 22:
+
+produce closeout; seed next-version candidates only from closeout state  
+
+> 23:
+
+end if  
+
+> 24:
+
+return S′
+
+> n
+
+93. Gate-bounded admission. A claim becomes paper-bindable only if the gate predicate is satisfied for the required claim class and scope. 4. Blocker conservation. Failed execution, missing artifacts, unaudited evidence, and human-decision gaps become explicit blockers rather than hidden caveats. 
+
+Evidence of enforcement. Each invariant is enforced by a concrete mechanism in the Re-searchLoop runtime, with inspectable evidence in the self-hosting record: 1. Direction lock. The research direction is stored in a versioned file ( RESEARCH DIRECTION.md )that the runtime treats as read-only for workers. During V0–V2, all changes to this file were committed by human authors, not by agent workers. 2. Evidence monotonicity. The runtime appends all produced artifacts to versioned directories and commits them to Git. The Git history shows monotonic growth: no evidence directories were deleted or rewritten during self-hosting. 3. Gate-bounded admission. The claim ledger ( PAPER CLAIM LEDGER.yaml ) contains a gate id 
+
+field for every claim. A claim is marked admitted only if the referenced gate manifest exists and evaluates to true. 4. Blocker conservation. Blockers are recorded in STATUS.yaml and carried forward into closeout files. They are never deleted; instead, they are reclassified with an audit note. The V0–V2 state files show 14 distinct blockers, all of which survive across version boundaries. 
+
+3.5 Adoption and Overhead 
+
+A new project adopting ResearchLoop creates four file types: a research-direction document, an RQ-spine YAML file, a claim-ledger YAML file, and gate-manifest YAML files for each claim class. Task contracts reuse the same template; only the RQ binding, artifact list, and scope change per task. In the V0–V2 self-hosting record, writing a task contract took less than five minutes, gate evaluation was fully automated (deterministic file-system checks), and claim-ledger updates were incremental. The total documentation overhead was a small fraction of execution time because the runtime generates manifests and hashes automatically; the human writes only the RQ, claim scope, and audit rationale. To prevent bureaucratization, the runtime provides default templates, automated manifest generation, and lightweight “fast-path” gates for exploratory work that is not yet paper-facing. 
+
+3.6 Interoperability 
+
+ResearchLoop is not a replacement for existing tools; it is a control plane that consumes their outputs and issues task contracts to them. The data flow is: 1. Upstream ingestion. MLflow or DVC supply run metrics, dataset hashes, and artifact lineage; ResearchLoop ingests these as evidence objects linked to task contracts. Nextflow or Snakemake supply workflow completion manifests; ResearchLoop treats a completed workflow as one evidence artifact that must still pass a claim-specific gate before it licenses a manuscript statement. 2. Downstream dispatch. ResearchLoop writes task contracts (YAML files specifying RQ, allowed files, forbidden claims, and expected artifacts) that agent frameworks (AutoGen, ReAct, custom scripts) read and execute. 10 3. Human-in-the-loop. For claims requiring human adjudication or direction changes, Re-searchLoop produces an evidence package that a human reviewer inspects. The reviewer’s decision is recorded as an explicit gate decision in the ledger. 
+
+# 4 Runtime Implementation 
+
+This section describes the concrete repository-backed runtime that implements the ResearchLoop 
+
+protocol. The runtime is a set of file-system conventions, Git workflows, and lightweight scripts that enforce the state model without requiring a custom database or server. 
+
+4.1 Directory Structure 
+
+A ResearchLoop project uses the following directory layout: Listing 1: ResearchLoop project directory layout.                                                                                        
+
+> docs / research / RESEARCH_DIRECTION . md #Frozen Big RQ and falsification boundary
+> CURRENT #Active version pointer ( e . g . , " V9 ")
+> V0 / , V1 / , ... , Vn / #Version directories
+> STATUS . yaml #Version state , blockers , gate decisions
+> RESEARCH_SPINE . yaml #RQ decomposition and task queue
+> RQ_CALIBRATION . yaml #RQ specifications and evidence contracts
+> TASKS . yaml #Task contracts with RQ bindings
+> EVIDENCE_GATE . yaml #Gate predicates for this version
+> closeout . md #End - of - version synthesis
+> insights / #Admitted and rejected insight files
+> wiki / #Frontier items and design rationale
+> rqs / RQxx / #Per - RQ task artifacts
+> runs / #Evidence objects ( run reports , manifests )
+> experiments / #Experiment harnesses and scripts
+> protocol / #Protocol specification files
+> ledger / #Claim ledger ( PAPER_CLAIM_LEDGER . yaml )
+
+Each version directory is self-contained: it contains all state files needed to understand what was attempted, what evidence was produced, and what claims were admitted or blocked during that epoch. When a version closes, its state is frozen and a new version directory is created from the closeout record. 
+
+4.2 YAML Schemas 
+
+The runtime uses YAML for all state files because YAML is human-readable, diff-friendly, and supported by standard tools. Three core schemas are: 
+
+STATUS.yaml. Records the version status (active, blocked, closed stable, closed negative, pa-per binding ready), current gate, focus RQ, runnable and blocked RQs, and a notes field for observations. 
+
+RESEARCH SPINE.yaml. Decomposes the research direction into RQs, each with a hypothesis, falsification condition, method sketch, and metric specification. It also records the current task queue with status, evidence references, and blocker annotations. 11 EVIDENCE GATE.yaml. Defines a gate predicate as a list of required evidence items, each with an identifier, path, required flag, and inspection check. The gate decision (passed, failed, limited) is recorded along with the allowed and forbidden claims. 
+
+4.3 Git Integration 
+
+ResearchLoop uses Git for version control of state files. The key convention is that state files are committed after every significant state change (task completion, gate evaluation, blocker registration, closeout production). This creates an auditable history of protocol decisions. The runtime enforces two Git rules: 1. Workers may not commit changes to RESEARCH DIRECTION.md without explicit human authoriza-tion. 2. Evidence directories ( runs/ , version directories) are append-only: files may be added, but existing files may not be rewritten or deleted. The self-hosting record (V0–V2) contains 47 Git commits across three versions, with commit messages that record task completions, gate decisions, and blocker resolutions. 
+
+4.4 Task Execution Flow 
+
+A task execution follows this flow: 1. The controller reads the current STATUS.yaml and TASKS.yaml to identify the next runnable task. 2. It validates that the task has an RQ binding, a claim class, an evidence contract, and a list of allowed files. 3. It routes the task to a worker (agent, script, or human) with the task contract. 4. The worker executes and produces artifacts. 5. The runtime appends artifacts to the evidence base and runs any relevant gate predicates. 6. The claim ledger is updated: claims are marked admitted, blocked, contradicted, or unchanged. 7. The task status is updated and committed. This flow is implemented as a set of Python scripts that read YAML state, invoke workers via subprocess calls or agent APIs, and write updated state back to YAML files. 
+
+4.5 Automation Boundaries 
+
+The runtime makes a deliberate distinction between what is automated and what requires human judgment: 
+
+• Automated: manifest generation, hash computation, file existence checks, task status routing, gate predicate evaluation (existence, content match, hash verification). 
+
+• Human: research direction changes, claim scope decisions, blocker resolution strategies, closeout review and approval, paper binding. This boundary prevents automation bias: the system does not decide what is scientifically important; it decides whether the declared evidence contract is satisfied. 12 5 Evidence-Gated Claim Admission 
+
+ResearchLoop treats claim formation as a controlled state transition. A paper-facing claim may be written assertively only after its evidence type, provenance, scope, and audit status match the claim class. Otherwise the statement remains a hypothesis, plan, limitation, blocked claim, or future-work item. This rule is methodological: it specifies how claims are admitted; it does not assert that the protocol improves research quality. 
+
+5.1 Claim Ledger 
+
+The claim ledger records each candidate claim with an identifier, RQ link, claim class, required evidence, current status, and paper destination. Its main function is to prevent scope inflation. A design claim that the protocol records artifact hashes is not an empirical claim that hashes improve reproducibility. A process claim that a blocker was preserved is not a general claim that the protocol reduces unsupported writing. The ledger makes those distinctions inspectable before prose is polished. The ledger schema used in ResearchLoop is: 
+
+claim: id: <string> rq_link: <RQ identifier> claim_class: <class> statement: <text> required_evidence: - artifact_type: <type> gate_id: <gate identifier> status: <state> scope: <paper section or "none"> audit_note: <string> 
+
+Table 3 shows three illustrative entries. The first is an admitted design claim with satisfied evidence. The second is an empirical claim admitted only after controlled-run manifests, baseline locks, metrics, and deterministic audit artifacts exist. The third is a contradicted claim: a pilot run produced a result that conflicted with the original hypothesis, and the ledger preserves both the claim and the contradicting evidence. 
+
+5.2 Evidence Contracts 
+
+Evidence contracts map claim classes to admissible support. Design claims may rely on specifications and protocol files. Process claims may rely on run reports, manifests, hashes, closeouts, and preserved blockers. Audit claims require a prespecified rubric or adjudication record. Empirical effectiveness claims require a stronger contract: controlled tasks, locked baselines, budget parity, preserved transcripts, predefined metrics, and independent audit or human adjudication. 
+
+5.3 Gate Predicate Specification 
+
+A gate predicate is not an uninterpreted oracle. It is a checkable artifact manifest with a declarative pass condition. In the ResearchLoop runtime used here, a gate is a YAML file that lists the artifact types required for a claim class, the path patterns where they must appear, the inspection 13 ID Claim class Statement Status / Reason 
+
+C DES 001 design “The protocol records artifact hashes.” Admitted. Gate G DESIGN 001 passed; spec and ledger entry exist. C EFF 001 empirical “ResearchLoop reduces unsupported claims.” Admitted for deterministic-audit scope. Gate G EMPIRICAL 001 passed with controlled-run manifests, locked baselines, metrics, and audit artifacts. C PIL 003 process “Proxy audit agrees with deterministic audit 100%.” Contradicted. Pilot T03 produced proxy–deterministic disagreement; evidence preserved. 
+
+Table 3: Claim ledger examples. Admitted, blocked, and contradicted statuses are explicit, in-spectable, and scoped. 
+
+Claim class Admissible support Boundary 
+
+Design/protocol Specification, gate file, ledger entry States what the protocol requires; not an outcome claim. Process/self-hosting Run report, manifest, hash, closeout, blocker Supports occurrence and traceabil-ity within the observed process. Audit Locked rubric, deterministic audit, adjudication record Supports the stated label under the stated rubric. Empirical Controlled runs, baselines, metrics, audit/adjudication Admitted only at the satisfied em-pirical scope. Smoke tests None for result admission May test plumbing or planning only. 
+
+Table 4: Claim admission boundaries in ResearchLoop .14 method (existence, content match, or hash verification), and whether all or any of the checks must pass. The schema is: 
+
+gate: id: <string> claim_class: <class> required_artifacts: - type: <artifact kind> path: <glob pattern> check: <method> pass_condition: <all | any> audit_note: <string> 
+
+Example 1: a satisfied design gate. The claim “ ResearchLoop uses durable claim ledgers” is a design claim. Its gate requires the protocol specification and a ledger entry. Both files exist in the repository, so the gate evaluates to true .
+
+gate: G_DESIGN_001 claim_class: design required_artifacts: - type: specification path: "protocol/*.yaml" check: existence - type: ledger_entry path: "ledger/claims.yaml" check: content_match pass_condition: all audit_note: "Registered." 
+
+Example 2: an empirical-effectiveness gate. The claim “ ResearchLoop reduces unsup-ported claims” is an empirical effectiveness claim. Its gate requires controlled-run manifests, a baseline lock, preserved transcripts or reports, predefined metrics, and an audit artifact. During the V0–V2 self-hosting epoch, this gate evaluated to false . In the controlled-study epoch, deterministic audit artifacts and run manifests satisfy the narrower deterministic-audit contract, so the claim is admitted only for that scope. 
+
+gate: G_EMPIRICAL_001 claim_class: empirical_effectiveness required_artifacts: - type: controlled_run_manifest path: "runs/*/manifest.json" check: existence - type: baseline_lock path: "baselines/lock.yaml" check: existence - type: deterministic_audit path: "audits/labels.json" 
+
+15 check: existence pass_condition: all audit_note: "Audit scope only." 
+
+The gate language is intentionally minimal. It does not require theorem proving or static analysis; it requires that the expected evidence artifacts are present, inspectable, and scoped to the claim class. Gate authorship is a human responsibility: the researcher (or a prespecified protocol file) writes the gate, and the runtime evaluates it deterministically. When two gates disagree on the same claim, the more restrictive gate wins by default. Gate evaluation is logged and versioned, so a later audit can reconstruct why a claim was admitted, blocked, or contradicted. 
+
+5.4 Admission Rule 
+
+For every paper-facing claim c, ResearchLoop must record a chain 
+
+c → RQ → evidence contract → artifact(s) 
+
+→ gate decision → paper scope .
+
+If any link is absent, mismatched, or outside scope, c is downgraded or blocked. Blocked claims are retained rather than deleted because they identify missing evidence contracts. This is the publication interface of ResearchLoop : it permits method, runtime, and bounded process claims while preventing preparatory artifacts, smoke tests, or negative pilots from becoming effectiveness results. 
+
+# 6 Insight Compounding 
+
+ResearchLoop distinguishes a result from an insight . A result is an admitted claim about an observed execution, measurement, or inference under a satisfied evidence contract. An insight is a structured update to research state: a failure, anomaly, blocker, design tension, negative observation, or boundary clarification that should influence later work. This distinction matters because unsuccessful work can be scientifically useful without becoming result evidence. Insight compounding is the mechanism that preserves such information across versions. During execution, ResearchLoop records observations in run reports, blockers, audits, closeouts, and frontier maps. At closeout, each observation is classified by consequence: refine an RQ, narrow a claim boundary, add a baseline, revise a task suite, strengthen an audit rubric, escalate to a human decision, or terminate a line of work. The insight is carried forward with provenance rather than copied as informal memory. The protocol prevents two opposite errors. The first is over-admission, where every observation is rhetorically promoted into a finding. The second is under-preservation, where failed attempts are discarded because they are not publishable results. ResearchLoop rejects both. A failed reproduction may be insufficient to invalidate a baseline, but it can still justify a stronger environment specification. A blocked claim may not appear as a result, but it can identify the empirical contract needed for the next version. 1. No silent loss. Failures, blockers, anomalies, and rejected claims are recorded or explicitly ruled irrelevant. 2. No automatic promotion. Insights remain non-result state unless they satisfy a claim contract. 16 3. Provenance preservation. Each carried-forward insight references the artifact, report, audit, or decision that produced it. 4. Versioned consequence. Each insight maps to a next-version action, frontier item, claim-boundary change, or no-action rationale. Thus, insight compounding is a method contribution, not an effectiveness result. It gives 
+
+ResearchLoop a disciplined path from local experience to future RQs: observation, insight, frontier item, research question, evidence contract, execution, audit, admitted claim. Skipping this path is a protocol violation. Repeated anecdotal experience becomes a candidate for controlled study, not a general conclusion. 
+
+# 7 Evaluation 
+
+This section reports the complete empirical record spanning V0 through V9. The evidence is deliber-ately bounded and scoped by the claim ledger. It supports feasibility, auditability, deterministic-audit effectiveness claims, and a limited scientific-coding boundary result; it does not establish universal superiority or generalizability. Figure 2 summarizes the version trajectory that structures this record.      
+
+> V0
+> reproduction lock
+> V1
+> research iteration
+> V2
+> controlled pilot prep
+> V3–V4
+> controlled MVP
+> V5–V7
+> evidence-gated OS eval
+> V8–V9
+> official SciCode gate
+> closed stable closed success closed negative closed stable closed stable paper binding ready
+> Baseline protocol reproduction
+> First arXiv technical report
+> Calibration pilot; negative closeout
+> AIME 2026 and BRUMO 2025 probe
+> Research-representative controlled study
+> Validation-boundary Sci-Code expansion
+
+Figure 2: ResearchLoop version trajectory from initialization to paper binding. The lifecycle records stable epochs, a negative pilot closeout, subsequent controlled-study evolution, and the final paper-binding-ready evidence package. 
+
+7.1 Self-Hosting Case Study: ResearchLoop Developing This Paper 
+
+We dogfood ResearchLoop by using it to manage the development of this paper itself, treating the paper project as a long-running AI-assisted research workflow. The self-hosting record spans three versions (V0–V2) and contains the following inspectable evidence. 
+
+V0: Exploration. The V0 epoch initialized the ResearchLoop protocol and produced the first PRD, research direction, and RQ spine. Its closeout identified the need for a more structured evaluation protocol and seeded V1. 
+
+V1: Technical Report. The V1 epoch produced the first complete manuscript (the arXiv technical report) and the self-hosting case study that appears in this report. The V1 closeout recorded 7 blockers, including the absence of controlled-run evidence and human adjudication, and explicitly blocked all effectiveness claims. 17 V2: Controlled Pilot Preparation. The V2 epoch prepared a controlled-run protocol and executed a calibration pilot. The pilot produced auditable manifests and a deterministic audit layer, but the task suite (algorithmic coding exercises) was judged not representative of software-engineering research work. The V2 closeout (status closed negative ) recorded that the pilot was unsuitable for effectiveness claims and that a proper evaluation must use research-representative tasks. The V2 claim ledger contains 14 distinct blockers, all of which survive across version boundaries. 
+
+What self-hosting demonstrates. The self-hosting record supports three case-study claims: 1. ResearchLoop can manage a real paper project from PRD to paper binding. 2. ResearchLoop preserves a traceable history of research decisions, blockers, pivots, negative results, and claim boundaries. 3. Dogfooding exposes protocol gaps (e.g., task-suite misalignment) that can be repaired through audited version evolution. These claims are single-project, single-author-team evidence only . They do not establish that 
+
+ResearchLoop generally outperforms alternative workflows, nor that it is universally applicable. 
+
+7.2 Controlled Study: Unsupported Claim Rate and Trace Completeness 
+
+To test the effectiveness claims blocked in earlier versions, we designed a controlled experiment comparing ResearchLoop (full protocol) against two baseline agent workflows and three component ablations on a research-representative task suite. 
+
+Task suite. The suite contains 16 tasks (8 simple, 8 complex) drawn from software-engineering research scenarios: benchmark comparison, data format validation, performance regression, cross-module integration, causal inference, multi-experiment synthesis, architecture tradeoff, conflicting results, security impact chain, system design evaluation, and longitudinal drift. Each task provides a workspace with realistic artifacts (CSV logs, YAML configs, benchmark results, dependency manifests) and asks the agent to write an analysis report. 
+
+Conditions. 
+
+• Full : ResearchLoop with RQ Spine, Evidence Gate, and Audit Gate. 
+
+• B01 (Ad-hoc) : Unstructured research assistant prompt. 
+
+• B02 (Linear) : Step-by-step pipeline prompt. 
+
+• B04 (No-gate) : ResearchLoop without Evidence Gate. 
+
+• B05 (No-spine) : ResearchLoop without RQ Spine. 
+
+• B06 (No-audit) : ResearchLoop without Audit Gate. 
+
+Protocol. Each task was run with 3 temperature seeds (0.0, 0.3, 0.7). Reports were audited by a deterministic claim-extraction script that classifies each claim as supported or unsupported based on evidence trace presence. Human adjudication is not used as evidence for the controlled-study numbers reported here; the claim boundary is therefore limited to deterministic audit outcomes. 18 Full B01 B02 B04 B05 B06        
+
+> 0
+> 5
+> 10
+> 15
+> 4.9
+> 13 .313 .4
+> 10 .3
+> 8.3
+> 10 .7
+> Unsupported claims (%)
+> (a) Unsupported claim rate
+> Full B01 B02 B04 B05 B06
+> 0
+> 200
+> 400
+> 600
+> 307
+> 473
+> 569 534
+> 169
+> 467
+> Total claims
+> (b) Extracted claim volume
+
+Figure 3: Controlled study outcomes by condition. Panel (a) reports deterministic-audit unsupported-claim rate; trace completeness is the complementary percentage. Panel (b) reports the number of extracted claims, showing the full protocol’s claim-suppression behavior. Condition definitions appear in the preceding paragraph. n = 48 runs per condition (16 tasks × 3 seeds), except B02 with 47 completed runs due to a seed collision. 
+
+Results. Figure 3 summarizes the primary outcomes. 
+
+Effectiveness claim (C E01). The full protocol reduced unsupported claim rate by 8.43 per-centage points versus B01 (63.3% relative reduction) and by 8.47 pp versus B02 (63.4% relative). The pre-registered threshold ( ≥40% reduction vs B01) was met. Per-task Mann-Whitney U tests showed borderline significance (full vs B01: U = 81 .5, p = 0 .081, r = 0 .363; full vs B02: U = 82 .5, 
+
+p = 0 .088, r = 0 .355), reflecting limited power from n = 16 tasks; the aggregate claim-level effect is large and consistent. 
+
+Ablation claim (C E03). Removing the Evidence Gate (B04) increased UR by +5.41 pp versus Full. Removing the RQ Spine (B05) increased UR by +3.39 pp. Removing the Audit Gate (B06) increased UR by +5.82 pp. All three components showed measurable contribution. 
+
+Task-contingent pattern (V7). Splitting the 16 tasks into simple ( n = 8) and complex ( n = 8) groups revealed a descriptive pattern: the gate benefit was larger on complex tasks ( −6.43 pp) than on simple tasks ( −2.55 pp). However, the difference was not statistically significant (Mann-Whitney U: U = 28 .0, z = −0.42, p = 0 .6744, r = 0 .105) due to low power ( n = 8 per group). 
+
+Cost analysis. Figure 4 reports estimated token usage per condition. The full protocol generated fewer total claims than baselines (claim suppression as a quality filter), resulting in comparable or lower output tokens despite structured overhead. 
+
+7.3 Mathematical Olympiad Evaluation (V4) 
+
+As an external-validity probe before settling on the research-representative task suite, we evaluated 
+
+ResearchLoop on two mathematical olympiad benchmarks. 19 Full B01 B02 B04 B05 B06  
+
+> 0
+> 500
+> 1,000
+> 1,500
+> 2,000
+> 2,500
+> 1854
+> 1164
+> 691
+> 1152
+> 462
+> 691
+> 2309
+> 1618
+> 691
+> 2237
+> 1597
+> 641
+> 1985
+> 1341
+> 644
+> 1512
+> 822
+> 691
+> Mean tokens per run
+> Input Output
+
+Figure 4: Estimated token cost per condition, reported as mean tokens per run. Bars decompose total cost into input and output tokens; numeric labels give total tokens. 
+
+AIME 2026 (RQ01). ResearchLoop ’s 5-phase structured reasoning protocol (Strategy →
+
+Execution → Verification → Audit → Structured Output) was tested on 30 integer-answer problems from AIME 2026. The baseline was ad-hoc direct prompting. 
+
+• Ad-hoc accuracy: 1/30 (3.3%) 
+
+• ResearchLoop accuracy: 20/30 (66.7%) 
+
+• McNemar test: p = 0 .000036 
+
+• Regression cases (ad-hoc correct, Loop incorrect): 0 The 7 “both wrong” problems define the protocol’s capability boundary: it cannot substitute for deep mathematical creativity. 
+
+BRUMO 2025 (RQ02). ResearchLoop ’s 5-phase proof protocol (Hypothesis → Lemma Development → Main Proof → Verification → Structured Output) was tested on 15 Team Round problems from BRUMO 2025. Proof sketches were scored on a 7-point rubric across four dimensions. 
+
+• Ad-hoc mean score: 4.80/7 
+
+• ResearchLoop mean score: 5.73/7 
+
+• Paired t-test: t = 2 .603 
+
+• ResearchLoop won 9/15 head-to-head comparisons 
+
+• Largest improvement dimension: conclusion completeness (+0.93) These results are reported as external-validity probes only. They do not appear in the paper-binding claim ledger because the paper target shifted to software-engineering research tasks before paper binding. 
+
+7.4 Supplementary Boundary Study: Official SciCode Evaluation 
+
+E07 tests whether the same claim-discipline mechanism transfers to scientific coding tasks. This is not the main controlled study and is not reported as a SciCode leaderboard result. It is a boundary experiment on the locked public SciCode validation split. 20 Evaluator lock. The official SciCode repository ( scicode-bench/SciCode , commit e3158ea011 d4235245a547460d3688d7ccbf9900 ) provides the generated-code evaluator. The numeric test file 
+
+test data.h5 (SHA-256: 48b0272a88b17dbd29777c217e1b4fb2b019b92e11cc2add847409db9541 b890 ) is hashed in the artifact manifest. 
+
+V8: 10-substep pilot. The initial official SciCode experiment evaluated 10 selected validation substeps. Table 5: Official SciCode selected-substep result (V8). Cond. Steps Pass Pass Rate Unsup. Claims LR B01 10 5 50.00% 8.57% LR FULL 10 8 80.00% 4.00% A sandboxed rerun with network disabled agreed with the direct evaluator on all 20 condition/-substep labels. 
+
+V9: 50-substep validation expansion. V9 extends V8 to the full locked public SciCode validation split: 50 validation substeps across 15 validation problems. The executor is the PI coding-agent CLI under two conditions: ordinary PI prompting ( LR B01 ) and PI wrapped with the 
+
+ResearchLoop evidence protocol ( LR FULL ). Table 6: Supplementary SciCode validation-boundary result (V9, 50 substeps). These are validation-substep pass rates, not hidden-test or full SciCode benchmark scores. Cond. Steps Pass Pass Rate Unsup. Claims LR B01 50 7 14.00% 9.14% LR FULL 50 24 48.00% 2.56% Statistical significance: 
+
+• Pass rate: Fisher exact p = 0 .000435, odds ratio = 5.67 
+
+• Unsupported claim rate: Fisher exact p = 0 .00222, odds ratio = 0.26 
+
+Verification chain. The V9 result is backed by three independent verification layers: 1. Direct official evaluation. The official SciCode generated-code evaluator executed all 100 condition/substep pairs (50 substeps × 2 conditions). 2. Sandbox rerun. A bubblewrap sandbox with network disabled reran the official evaluator; it agreed with the direct evaluator on 100/100 labels. 3. Independent auditor. An auditor recomputed all metrics from the frozen official artifacts; the recomputation matched the direct official metrics, sandbox labels, and claim-audit metrics exactly. 21 Verification status. The V9 evidence package passed 22/22 checks. The submission-readiness verifier passed 31/31 checks. The final package verifier passed 159/159 checks across state, numeric-data verification, claim-ledger binding, source-artifact existence, pre-submission audit, handoff, checksums, package manifests, anonymous artifact build, tarball verification, smoke rerun, manuscript scope guards, PDF metadata anonymity, artifact README, evidence closeout, LaTeX/PDF format, and submission readiness. This result supports only a supplementary validation-boundary claim: on the locked public validation split, ResearchLoop wrapping improved both official validation-substep pass rate and objective unsupported intermediate claim rate. It does not establish hidden-test SciCode performance, a leaderboard score, or general code-generation improvement. 
+
+# 8 Threats to Validity 
+
+The controlled study (Sec. 7.2) provides empirical evidence for effectiveness and ablation claims, but it has its own limitations. The task suite is research-representative yet synthetic; live-project replication would strengthen external validity. Single-model evaluation (Qwen3.6-27B) limits generalization to other model families. Per-task statistical power is limited ( n = 16 tasks), so Mann-Whitney U tests are borderline ( p ≈ 0.08) despite large aggregate effect sizes ( r ≈ 0.36). The self-hosting record (Sec. 7.1) remains single-project, single-author-team evidence for feasibility and auditability only. The SciCode boundary experiment (Sec. 7.4) uses official pass/fail adjudication over the public validation split and one PI run seed; it must not be read as a hidden-test result, full SciCode score, leaderboard result, or general code-generation result. 
+
+Construct validity. Unsupported-claim rate and trace completeness are plausible measurements for AI-assisted research reliability, but they are incomplete proxies. A trace-complete claim can still be scientifically weak, and an unsupported label can reflect a strict rubric rather than a false statement. The controlled-study labels are deterministic audit labels, not blinded human adjudication. Therefore the admitted effectiveness claims are limited to deterministic-audit outcomes; they do not claim that independent human reviewers would make identical support judgments. 
+
+External validity. ResearchLoop is motivated by computational and software-engineering research, where artifacts, repositories, run logs, and partial oracles are often available. Other scientific domains may require different evidence contracts and slower review cycles. The abstraction may transfer, but the present paper does not establish that transfer. Generalization to broader research tasks (literature synthesis, baseline reproduction, system building, user study) requires a separate task-suite validation study. 
+
+Bureaucratization risk. Evidence gates can become paperwork if they reward documentation volume over critical reasoning. The protocol succeeds only if its artifacts improve the match between claims and evidence. A complete ledger is not a substitute for scientific judgment. Simpler mechanisms such as checklists, continuous-integration checks, or fixed paper-submission templates may be sufficient for some projects; this paper does not establish that ResearchLoop is preferable to those lighter-weight baselines. 
+
+Self-hosting bias. Dogfooding exposes operational friction, but it is not independent evaluation. The authors shaped the tasks, understood the protocol, and benefited from the framing. Self-hosting therefore supports process feasibility and boundary inspection only. 22 Version-trajectory bias. The V0–V9 record is a single research trajectory. Negative results (V2 pilot unsuitable, V6 null-effect gate) are preserved, but the trajectory was authored by the same team with consistent goals. An independent team applying ResearchLoop to a different problem might encounter different blockers and make different design choices. 
+
+# 9 Conclusion 
+
+ResearchLoop formulates long-horizon AI-assisted research as a control-plane problem. The core abstraction is not a stronger agent or a longer prompt; it is a set of persistent, inspectable state objects—research directions, RQ spines, task contracts, evidence objects, claim ledgers, closeouts, and paper bindings—that keep execution, evidence, and manuscript claims aligned across version boundaries. This report makes four contributions. First, it specifies the state model and transition rules that enforce RQ-to-claim binding. Second, it defines the gate-bounded claim-admission algorithm that prevents preparatory artifacts from becoming unsupported results. Third, it introduces insight compounding, a mechanism that preserves failures, blockers, and negative observations as durable state rather than letting them disappear from the narrative. Fourth, it reports the complete empirical record from V0 through V9, including self-hosting, controlled studies, component ablations, mathematical olympiad probes, and official SciCode validation-boundary experiments. The evaluation is deliberately bounded. A self-hosting record demonstrates that the protocol can manage a real paper project end-to-end, preserving traceable decisions and claim boundaries. A controlled task-suite study provides deterministic-audit evidence that the full protocol reduces unsupported-claim rate and improves trace completeness relative to ad-hoc and linear baselines. A supplementary SciCode validation-boundary study shows that the same evidence discipline can be evaluated against an official scientific coding harness, but only on public validation substeps rather than hidden test or leaderboard settings. Future work should replicate these findings on live projects, additional model families, hidden-test benchmark protocols, and blinded human adjudication. The present claims are intentionally scoped to the artifacts admitted by the evidence gates rather than stated as universal agent-performance claims. 
+
+# Artifact Availability 
+
+The project repository, including the protocol implementation, paper artifacts, manifests, and verification records, is available at https://github.com/plan-lab-szu/ResearchLoop .
+
+# A Protocol Specification 
+
+This appendix provides the complete YAML schemas used in the ResearchLoop runtime. 
+
+A.1 STATUS.yaml Schema 
+
+Listing 2: STATUS.yaml schema (version paper binding).     
+
+> schema_version : 1generated_by : controller version : V9 epoch_role : scicode_validation_expansion
+
+23 status : paper_binding_ready direction_ref : ../ RESEARCH_DIRECTION . md source_version : V8 current_gate : G_E09_SCICODE_VALIDATION focus_rq : RQ01 runnable_rqs : [] blocked_rqs : [] completed_rqs : - RQ01 current_task : null last_completed_task : RQ01_T09 paper_binding : allowed : true reason : " V9 official SciCode validation - boundary evidence ... " notes : - " V8 closed as paper_binding_ready ... " 
+
+A.2 EVIDENCE GATE.yaml Schema 
+
+Listing 3: EVIDENCE GATE.yaml schema. 
+
+schema_version : evidence_gate_v1 version : V9 gate_id : G_E09_SCICODE_VALIDATION status : passed_limited blocked_reason : null claim_scope : s upp lem en tar y_v al ida tio n_ bou nda ry _st udy required_evidence : - id : validation_task_lock path : runs / E09_SCICODE_VALIDATION_TASK_LOCK . json required : true check : " locks SciCode validation split ... " - id : pi_generation_manifests path : runs / E09_PI_SCICODE_VALIDATION_ */ required : true check : " contains PI transcripts ... " forbidden_evidence : - " agent - derived generated - code tests " - " gold - code - derived local oracle tests ... " paper_claim_rule : " No V9 SciCode claim is paper - admissible until this gate passes . " gate_decision : passed : true scope : " official public validation split , 50 validation substeps ... " allowed_claim : " In a locked official SciCode validation - boundary experiment ... " verifier_status : " 22/22 checks passed " 
+
+A.3 Claim Ledger Schema 
+
+Listing 4: PAPER CLAIM LEDGER.yaml excerpt. 24 template_family : research_loop paper_target : arxiv_technical_report double_anonymous : true claims : - id : C_DESIGN_001 class : design statement : " ResearchLoop is a control - plane abstraction ... " evidence_status : admitted paper_section : Design - id : C_E01 class : effectiveness statement : " ResearchLoop lowers unsupported claim rate ... " evidence_status : admitted paper_section : Evaluation - id : C_E07_SUPP class : supplementary_boundary_pilot statement : " In a locked official SciCode validation - boundary ... " evidence_status : admitted_limited paper_section : Evaluation Appendix paper_binding : allowed : true admitted_claims : - C_DESIGN_001 - C_PROTOCOL_001 - C_CASE_001 - C_E01 - C_E03 - C_E07_SUPP 
+
+A.4 Task Contract Schema 
+
+Listing 5: Task contract schema. 
+
+schema_version : task_queue_v1 task_id : RQ01_T04 rq_id : RQ01 status : done routed_role : experiment_runner done_condition : " Official generated - code evaluator logs and metrics exist . "result_ref : runs / E09_SCICODE_VALIDATION_metrics . json blocker_reason : null 
+
+# B Complete Experiment Details 
+
+This appendix preserves the full experimental record across all versions. 
+
+B.1 V4: AIME 2026 and BRUMO 2025 
+
+AIME 2026 protocol. The AIME evaluation used 30 integer-answer problems from the 2026 American Invitational Mathematics Examination. Two conditions were compared: 25 • Ad-hoc: Direct prompting with no structured protocol. 
+
+• ResearchLoop : 5-phase protocol (Strategy → Execution → Verification → Audit → Struc-tured Output). Each problem received one attempt per condition. The model was Qwen3.6-27B via local vLLM endpoint. Accuracy was measured by exact integer answer match. 
+
+BRUMO 2025 protocol. The BRUMO evaluation used 15 Team Round problems from the 2025 Brown University Mathematics Olympiad. Proof sketches were scored on a 7-point rubric across four dimensions: hypothesis clarity, logical coherence, conclusion completeness, and mathematical rigor. Scoring was performed by an automated grader with predefined criteria. 
+
+B.2 V5–V7: Controlled Task Suite 
+
+Task suite composition. The 16 tasks were drawn from software-engineering research scenarios: 1. Benchmark comparison with statistical testing 2. Data format validation and schema drift detection 3. Performance regression root-cause analysis 4. Cross-module integration interface verification 5. Causal inference from observational logs 6. Multi-experiment synthesis with conflicting results 7. Architecture tradeoff with latency-vs-throughput 8. Security impact chain analysis 9. System design evaluation with constraint satisfaction 10. Longitudinal drift detection in time-series metrics 11. Dependency conflict resolution 12. API compatibility checking across versions 13. Configuration error propagation tracing 14. Test coverage gap analysis 15. Code smell detection and prioritization 16. Documentation completeness verification Tasks 1–8 were classified as “simple” (straightforward analysis with clear success criteria); tasks 9–16 were classified as “complex” (requiring synthesis, tradeoff reasoning, or multi-step inference). 26 Audit rubric. The deterministic claim-extraction script used these rules: 
+
+• A “claim” is a declarative sentence stating a finding, comparison, or conclusion. 
+
+• A claim is “supported” if it contains a direct reference to a file, table, metric, or computation in the provided workspace. 
+
+• A claim is “unsupported” if it states a conclusion without workspace reference, or if the referenced artifact does not exist. 
+
+• “Trace completeness” is the proportion of claims that are supported. The V7 bug fix corrected an error where introductory sentences (e.g., “Based on the provided workspace...”) were incorrectly counted as claims. These sentences lack specific references and were inflating the unsupported rate, particularly in the No-gate condition. 
+
+B.3 V8–V9: SciCode Official Evaluation 
+
+Task lock (V9). The V9 task lock covers 15 validation problems with 50 total substeps: 
+
+Problem IDs: 1, 3, 4, 6, 7, 10, 19, 29, 38, 44, 47, 49, 51, 70, 78 Dataset fingerprint: 33fdff8916f2f101 Split: validation 
+
+Execution protocol. 
+
+1. The PI coding-agent CLI generated Python code for each locked validation substep under both LR B01 and LR FULL conditions. 2. Generated code was materialized into the official SciCode directory layout. 3. The official evaluator ( eval/scripts/test generated code.py ) executed each generated file against the official test cases in test data.h5 .4. The evaluator emitted pass/fail labels per substep. 5. A bubblewrap sandbox with network disabled reran the evaluator to verify label stability. 6. An independent auditor recomputed all metrics from frozen artifacts. 
+
+Sandbox configuration. 
+
+• Engine: bubblewrap 
+
+• Network: disabled 
+
+• Generated code input: read-only mount 
+
+• Evaluator output directory: writable only during execution 
+
+• HuggingFace dataset cache: available offline 
+
+• Official repository cwd: writable (evaluator creates temporary scripts) 27 C Complete Claim Ledger 
+
+This appendix contains the full claim ledger from the paper-binding epoch. Each claim records its identifier, class, statement, evidence status, required artifacts, and scope limitations. 
+
+C.1 Admitted Claims 
+
+C DESIGN 001: Control-Plane Abstraction. 
+
+• Class: Design 
+
+• Statement: ResearchLoop is a control-plane abstraction for AI-assisted research that separates executors from persistent evidence-gated claim admission. 
+
+• Evidence: V1 design sections (protocol specification, state model, transition rules); V1 safety invariants with concrete file-system enforcement evidence. 
+
+• Scope: Design section. Not an effectiveness claim. 
+
+C PROTOCOL 001: Safety Invariants. 
+
+• Class: Protocol 
+
+• Statement: The ResearchLoop protocol enforces four inspectable safety invariants: direc-tion lock, evidence monotonicity, gate-bounded admission, and blocker conservation. 
+
+• Evidence: Formal invariant definitions; concrete enforcement mechanisms with Git/file-system evidence. 
+
+• Scope: Design section. 
+
+C CASE 001: Self-Hosting Case Study. 
+
+• Class: Case study 
+
+• Statement: ResearchLoop can manage a real paper project end-to-end, preserving traceable research decisions, blockers, negative results, and claim boundaries across version boundaries. 
+
+• Evidence: V0–V2 STATUS.yaml chain; closeout records; claim ledger evolution; task report archive. 
+
+• Scope: Evaluation (Self-Hosting Case Study). Single-project, single-author-team evidence only. 
+
+C E01: Unsupported Claim Reduction. 
+
+• Class: Effectiveness 
+
+• Statement: ResearchLoop lowers unsupported claim rate compared to ad-hoc or linear agent workflows. 
+
+• Evidence: Controlled study (16 tasks × 3 seeds); deterministic audit labels; reproducible metrics; 8.43 pp reduction vs B01. 28 • Scope: Evaluation (Controlled Study). Deterministic-audit scope only. Borderline significance (p ≈ 0.08) due to limited power. 
+
+• Falsification: If a powered replication shows no significant difference, claim is contradicted. 
+
+C E03: Component Ablation. 
+
+• Class: Effectiveness 
+
+• Statement: Evidence Gate, RQ Spine, and Audit Gate each contribute measurable value to claim quality. 
+
+• Evidence: Component ablation study with isolable condition effects; deterministic audit labels. 
+
+• Scope: Evaluation (Controlled Study). 
+
+• Falsification: If ablation shows no measurable degradation in a powered replication, claim is contradicted. 
+
+C E07 SUPP: SciCode Validation Boundary. 
+
+• Class: Supplementary boundary pilot 
+
+• Statement: In a locked official SciCode validation-boundary experiment covering 50 validation substeps, PI coding-agent plus ResearchLoop wrapping reduced objective unsupported intermediate claims and improved official validation-substep pass rate relative to ordinary PI coding-agent. 
+
+• Evidence: Locked SciCode split; official evaluator logs; sandbox rerun (100/100 agreement); independent auditor recomputation; 22/22 verifier checks. 
+
+• Scope: Evaluation Appendix / Supplementary Boundary Pilot. Public validation split only; one PI run seed. 
+
+• Forbidden: Full SciCode benchmark score, leaderboard result, hidden-test result, general code-generation improvement. 
+
+C.2 Blocked and Contradicted Claims (Historical) 
+
+The following claims were blocked or contradicted in earlier versions and are preserved in the ledger as negative-result evidence: 
+
+• C PIL 003 (Contradicted): “Proxy audit agrees with deterministic audit 100%.” V2 pilot T03 produced proxy–deterministic disagreement. 
+
+• C V5 RQ01 UNSUPPORTED CLAIM REDUCTION (Descriptive only): V5 di-rectional trend but non-significant at n = 6 tasks. 
+
+• C V6 GATE EFFECT (Blocked): V6 found null effect of evidence gate on claim quality (225 runs, properly powered negative result). 29 References 
+
+[1] Eser Ayg¨ un, Anastasiya Belyaeva, Gheorghe Comanici, Marc Coram, Hongyuan Cui, Jennifer Garrison, Renee Johnston, Amanda Kast, Cory Y. McLean, Paul Norgaard, et al. An AI system to help scientists write expert-level empirical software. Nature , 2026. [2] Cognition AI. Introducing Devin, the first AI software engineer, 2024. [3] Paolo Di Tommaso, Maria Chatzou, Evan W. Floden, Pablo Prieto Barja, Emilio Palumbo, and Cedric Notredame. Nextflow enables reproducible computational workflows. Nature Biotechnology , 35(4):316–319, 2017. [4] Aniketh Garikaparthi, Manasi Patwardhan, and Arman Cohan. Researchgym: Evaluating language model agents on real-world AI research, 2026. [5] Paul Gauthier. Aider: AI pair programming in your terminal, 2023. [6] Ali Essam Ghareeb, Benjamin Chang, Ludovico Mitchener, Angela Yiu, Caralyn J. Szostkiewicz, Dmytro Shved, Gavin J. Gyimesi, Jon M. Laurent, Samantha M. Wright, Muhammed T. Razzak, et al. A multi-agent system for automating scientific discovery. Nature , 2026. [7] Juraj Gottweis, Wei-Hung Weng, Alexander Daryin, Tao Tu, Petar Sirkovic, Artiom Myaskovsky, Grzegorz Glowaty, Felix Weissenberger, Alessio Orlandi, Dan Popovici, et al. Accelerating scientific discovery with co-scientist. Nature , 2026. [8] Yukun Huang, Leonardo F. R. Ribeiro, Momchil Hardalov, Bhuwan Dhingra, Markus Dreyer, and Venkatesh Saligrama. Deepfact: Co-evolving benchmarks and agents for deep research factuality. arXiv preprint arXiv:2603.05912 , 2026. [9] Tal Ifargan, Lukas Hafner, Maor Kern, Ori Alcalay, and Roy Kishony. Autonomous LLM-driven research—from data to human-verifiable research papers. NEJM AI , 2024. [10] Shashidhar Reddy Javaji, Yupeng Cao, Haohang Li, Yangyang Yu, Nikhil Muralidhar, and Zining Zhu. Can AI validate science? benchmarking LLMs for accurate scientific claim–evidence reasoning. arXiv preprint arXiv:2506.08235 , 2025. [11] Barbara A. Kitchenham, Tore Dyba, and Magne Jorgensen. Evidence-based software engineering. In Proceedings of the 26th International Conference on Software Engineering , pages 273–281, 2004. [12] Johannes K¨ oster and Sven Rahmann. Snakemake—a scalable bioinformatics workflow engine. 
+
+Bioinformatics , 34(20):3600–3600, 2018. [13] Ruslan Kuprieiev, Dmitry Petrov, Ivan Shcheklein, Pawel Redzy´ nski, Casper da Costa-Luis, et al. DVC: Data version control—Git for data & models, 2021. https://dvc.org .[14] Chris Lu, Cong Lu, Robert Tjarko Lange, Jakob Foerster, Jeff Clune, and David Ha. The ai scien-tist: Towards fully automated open-ended scientific discovery. arXiv preprint arXiv:2408.06292 ,2024. [15] Alisia Lupidi, Bhavul Gauri, Thomas Simon Foster, Bassel Al Omari, Despoina Magka, Alberto Pepe, et al. AIRS-bench: a suite of tasks for frontier AI research science agents. arXiv preprint arXiv:2602.06855 , 2026. 30 [16] Luc Moreau and Paolo Missier. PROV-DM: The PROV data model. W3c recommendation, World Wide Web Consortium (W3C), 2013. [17] Alexander Novikov, Marvin Eisenberger, Emilien Dupont, Po-Sen Huang, Adam Zsolt Wagner, Sergey Shirobokov, Borislav Kozlovskii, Francisco J. R. Ruiz, Abbas Mehrabian, M. Pawan Kumar, Abigail See, Swarat Chaudhuri, George Holland, Alex Davies, Sebastian Nowozin, Pushmeet Kohli, and Matej Balog. AlphaEvolve: A coding agent for scientific and algorithmic discovery, 2025. [18] Charles Packer, Vivian Fang, Shishir G. Patil, Kevin Lin, Sarah Wooders, and Joseph E. Gonzalez. MemGPT: Towards LLMs as operating systems, 2024. [19] David Lorge Parnas and Paul C. Clements. A rational design process: How and why to fake it. 
+
+IEEE Transactions on Software Engineering , SE-12(2):251–257, 1986. [20] Per Runeson and Martin H¨ ost. Guidelines for conducting and reporting case study research in software engineering. Empirical Software Engineering , 14(2):131–164, 2009. [21] Samuel Schmidgall, Yusheng Su, Ze Wang, Ximeng Sun, Jialian Wu, Xiaodong Yu, Jiang Liu, Michael Moor, Zicheng Liu, and Emad Barsoum. Agent laboratory: Using LLM agents as research assistants. arXiv preprint arXiv:2501.04227 , 2025. [22] Jianshu She. AgentRM: An OS-inspired resource manager for LLM agent systems, 2026. [23] Yiwen Song, Yale Song, Tomas Pfister, and Jinsung Yoon. Paperorchestra: A multi-agent framework for automated AI research paper writing, 2026. arXiv:2604.05018. [24] Christoph Treude, Christopher M. Poskitt, and Rashina Hoda. Rethinking artifact evaluation for software engineering in the age of generative AI, 2026. [25] Chengcheng Wang, Qinhua Xie, Wei He, Jianyuan Guo, Shiqi Wang, and Chang Xu. Sibyl-autoresearch: Autonomous research needs self-evolving trial-and-error harnesses, not paper generators, 2026. arXiv:2605.22343. [26] Xingyao Wang et al. Openhands: An open platform for AI software developers as generalist agents, 2024. [27] Yuchen Wang and Zhongzhi Luan. PARNESS: A paper harness for end-to-end automated scien-tific research with dynamic workflows, full-text indexing, and cross-run knowledge accumulation, 2026. arXiv:2605.05258. [28] Zhen Wang, Fan Bai, Zhongyan Luo, Jinyan Su, Kaiser Sun, Xinle Yu, Jieyuan Liu, Kun Zhou, Claire Cardie, Mark Dredze, Eric P. Xing, and Zhiting Hu. FIRE-Bench: Evaluating agents on the rediscovery of scientific insights, 2026. [29] Yutaro Yamada, Robert Tjarko Lange, Cong Lu, Shengran Hu, Chris Lu, Jakob Foerster, Jeff Clune, and David Ha. The AI scientist-v2: Workshop-level automated scientific discovery via agentic tree search. arXiv preprint arXiv:2504.08066 , 2025. [30] John Yang, Carlos E. Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik R. Narasimhan, and Ofir Press. SWE-agent: Agent-computer interfaces enable automated software engineering. In The Thirty-eighth Annual Conference on Neural Information Processing Systems ,2024. 31 [31] Ruofeng Yang, Yongcan Li, and Shuai Li. ARIS: Autonomous research via adversarial multi-agent collaboration. arXiv preprint arXiv:2605.03042 , 2026. [32] Matei Zaharia, Andrew Chen, Aaron Davidson, Ali Ghodsi, Sue Ann Hong, Andy Konwinski, Siddharth Murching, Tomas Nykodym, Paul Ogilvie, Mani Parkhe, Fen Xie, and Corey Zumar. MLflow: A platform for the machine learning lifecycle. In Proceedings of the 2nd International Workshop on Data Management for End-to-End Machine Learning , 2018. 32

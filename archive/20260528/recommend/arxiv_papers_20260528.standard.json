@@ -1,0 +1,1211 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-05-28T22:06:32.317442+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 24,
+    "deep_cap": 7,
+    "deep_selected": 16,
+    "quick_candidates": 22,
+    "quick_skim_target": 12,
+    "quick_selected": 12
+  },
+  "deep_dive": [
+    {
+      "id": "2605.23204v1",
+      "source": "arxiv",
+      "title": "AutoResearch AI: Towards AI-Powered Research Automation for Scientific Discovery",
+      "abstract": "Scientific research is being reshaped by AI systems that move beyond isolated assistance toward longer-horizon workflows spanning literature grounding, hypothesis generation, experimentation, validation, reporting, and revision. This shift marks a transition from task-level AI for science to workflow-level research automation. Yet current systems remain fragmented, differing in autonomy, domain scope, execution environment, validation mechanism, and human oversight, while still struggling with evidence preservation, reproducibility, weak-direction rejection, provenance tracking, cross-domain robustness, and accountable scientific closure. This survey examines these developments through AutoResearch, defined as the developmental spectrum of AI-powered scientific workflow automation. Within it, Vibe Research denotes the human-steered region of prompt-based assistance and human-verified execution, whereas emerging AI-led systems coordinate larger portions of the discovery loop without achieving robust autonomy. We analyze how research systems redistribute control, evidence, execution, validation, and accountability across workflows and organize the field around five workflow conditions: literature and research grounding; hypothesis formation and planning; experimentation and tool use; feedback, validation, and review; and reporting and knowledge communication. We further synthesize AI scientist systems, mixed-initiative co-research frameworks, benchmarks, domain deployments, and open-source infrastructures. Finally, we propose five evaluation dimensions--novelty, validity, impact, reliability, and provenance--and show that AutoResearch autonomy is domain-conditioned, being more credible in structured, executable, and rapidly verifiable settings but limited in embodied, delayed, heterogeneous, ethical, or institutionally accountable contexts.",
+      "authors": [
+        "Guiyao Tie",
+        "Jiawen Shi",
+        "Dingjie Song",
+        "Yixiao Huang",
+        "Ziji Sheng",
+        "Xueyang Zhou",
+        "Daizong Liu",
+        "Pan Zhou",
+        "Yongchao Chen",
+        "Ran Xu",
+        "Lifang He",
+        "Qingsong Wen",
+        "Manling Li",
+        "Cong Lu",
+        "Shuai Li",
+        "Pengtao Xie",
+        "Yixuan Yuan",
+        "Rui Meng",
+        "Lei Xing",
+        "Lichao Sun",
+        "Caiming Xiong",
+        "Philip S. Yu",
+        "Jianfeng Gao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-22T03:40:30+00:00",
+      "link": "https://arxiv.org/pdf/2605.23204v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Survey on AI-powered research automation for scientific discovery, covering literature grounding, hypothesis generation, experimentation, and provenance.",
+      "llm_evidence_cn": "关于AI驱动科研自动化的综述，涵盖文献支撑、假设生成、实验、来源追踪等。",
+      "llm_evidence": "关于AI驱动科研自动化的综述，涵盖文献支撑、假设生成、实验、来源追踪等。",
+      "canonical_evidence": "关于AI驱动科研自动化的综述，涵盖文献支撑、假设生成、实验、来源追踪等。",
+      "llm_tldr_en": "Surveys the developmental spectrum of AI systems for scientific research, highlighting challenges in evidence preservation, reproducibility, and provenance, and defining AutoResearch as a workflow-level automation paradigm.",
+      "llm_tldr_cn": "该综述系统梳理了从任务级AI向工作流级科研自动化的转变，定义了AutoResearch的发展谱系，涵盖文献基础、假设生成、实验、验证、报告和修订等阶段。文章指出当前系统在证据保存、可复现性、方向拒绝、来源追踪和跨领域鲁棒性等方面仍存在挑战，并提出了负责任科学闭环的愿景。这项工作为构建端到端自动科研智能体提供了路线图和关键问题透视。",
+      "llm_tldr": "该综述系统梳理了从任务级AI向工作流级科研自动化的转变，定义了AutoResearch的发展谱系，涵盖文献基础、假设生成、实验、验证、报告和修订等阶段。文章指出当前系统在证据保存、可复现性、方向拒绝、来源追踪和跨领域鲁棒性等方面仍存在挑战，并提出了负责任科学闭环的愿景。这项工作为构建端到端自动科研智能体提供了路线图和关键问题透视。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.23899v1",
+      "source": "arxiv",
+      "title": "From Raw Experience to Skill Consumption: A Systematic Study of Model-Generated Agent Skills",
+      "abstract": "Language agents increasingly improve by reusing \\emph{skills} -- structured procedural artifacts distilled from past experience. In particular, \\emph{domain-level} and \\emph{model-generated} skills are especially promising. They offer fast adaptation within a domain by encoding domain-specific recurring procedures, and they scale beyond labor-intensive hand-crafting. However, while extraction methods continue to proliferate, understanding remains limited, with no comprehensive study spanning the full skill lifecycle -- \\textbf{experience generation}, \\textbf{skill extraction}, and \\textbf{skill consumption} -- to ask whether such skills actually work, when they work, and what makes them succeed or fail. To close this gap, we build a utility-grounded evaluation framework that provides systematic experimental results across extractors and target agents, covering five diverse agentic task domains. We find that model-generated skills are beneficial on average but exhibit non-trivial negative transfer, and that neither extractors nor targets behave uniformly. A model can be a strong extractor yet a weak consumer, or vice versa, with skill utility independent of model scale or baseline task strength. To explain these patterns, we then dissect each lifecycle stage in depth, analyzing how experience composition shapes skill quality, what properties characterize useful skills, and how the same skill transfers across different consumers. Finally, we translate these findings into a concrete \\emph{meta-skill} that guides skill extraction toward the features tied to actual utility, which consistently improves skill quality across domains and substantially reduces negative transfer.",
+      "authors": [
+        "Zisu Huang",
+        "Jingwen Xu",
+        "Yifan Yang",
+        "Ziyang Gong",
+        "Qihao Yang",
+        "Muzhao Tian",
+        "Xiaohua Wang",
+        "Changze Lv",
+        "Xuemei Gao",
+        "Qi Dai",
+        "Bei Liu",
+        "Kai Qiu",
+        "Xue Yang",
+        "Dongdong Chen",
+        "Xiaoqing Zheng",
+        "Chong Luo"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-22T17:59:12+00:00",
+      "link": "https://arxiv.org/pdf/2605.23899v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "systematically studies the full lifecycle of extracting and reusing model-generated skills from agent experience",
+      "llm_evidence_cn": "系统研究从智能体经验中提取和重用模型生成技能的完整生命周期",
+      "llm_evidence": "系统研究从智能体经验中提取和重用模型生成技能的完整生命周期",
+      "canonical_evidence": "系统研究从智能体经验中提取和重用模型生成技能的完整生命周期",
+      "llm_tldr_en": "This paper performs a systematic study of model-generated skills for language agents, covering experience generation, skill extraction, and skill consumption to determine when and how such skills improve agent performance.",
+      "llm_tldr_cn": "针对智能体经验转化为可复用技能缺乏系统研究的问题，本文构建了覆盖经验生成、技能提取和技能消费全生命周期的评测框架，发现模型生成技能的有效性高度依赖域内结构，并揭示了技能提取与消费的成败条件，为智能体技能库设计提供了实证指导。",
+      "llm_tldr": "针对智能体经验转化为可复用技能缺乏系统研究的问题，本文构建了覆盖经验生成、技能提取和技能消费全生命周期的评测框架，发现模型生成技能的有效性高度依赖域内结构，并揭示了技能提取与消费的成败条件，为智能体技能库设计提供了实证指导。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "skill library from trajectories for agent improvement",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.24117v1",
+      "source": "arxiv",
+      "title": "SkillEvolBench: Benchmarking the Evolution from Episodic Experience to Procedural Skills",
+      "abstract": "Large language model (LLM) agents accumulate rich episodic trajectories while solving real-world tasks, but it remains unclear whether such experience can be distilled into reusable procedural skills. We introduce SkillEvolBench, a diagnostic benchmark for evaluating this step from experience reuse to skill formation. It contains 180 tasks across six real-world agent environments, organized into role-conditioned task families with shared latent procedures. Agents learn from acquisition tasks, update an external skill library using compacted trajectories and verifier feedback, and then face frozen deployment tasks testing context shift, adversarial shortcuts, and composition. By comparing self-generated and curated-start skill evolution against no-skill and raw-trajectory controls, SkillEvolBench separates procedural abstraction from base capability, curated prior knowledge, and direct reuse of episodic traces. Across ten model configurations and three agent harnesses, we find that current agents often adapt locally but rarely form robust reusable skills. Skill-based conditions can improve acquisition or replay, and individual models sometimes gain on specific deployment axes, but these gains are unstable under frozen deployment. Raw-trajectory reuse frequently outperforms distilled skills, suggesting that current abstraction procedures discard contextual and procedural cues that remain useful for future tasks. Capacity and cost analyses further show that writing more skills or larger Tier-3 resource libraries is not sufficient: additional updates can improve coverage while introducing episode-specific drift and procedural clutter. These findings position SkillEvolBench as a testbed for measuring when one-off experience becomes durable procedural knowledge rather than task-local memory.",
+      "authors": [
+        "Yingtie Lei",
+        "Zhongwei Wan",
+        "Jiankun Zhang",
+        "Samiul Alam",
+        "Zixuan Zhong",
+        "Peizhou Huang",
+        "Xin Wang",
+        "Jingxuan Zhang",
+        "Donghao Zhou",
+        "Yunta Hsieh",
+        "Zhihao Dou",
+        "Hui Shen",
+        "Yan Xu",
+        "Dimitrios Dimitriadis",
+        "Tuo Zhang",
+        "Mi Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-22T18:23:31+00:00",
+      "link": "https://arxiv.org/pdf/2605.24117v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Benchmarks evolution from episodic experience to procedural skills, updating external skill library with compacted trajectories and verifier feedback.",
+      "llm_evidence_cn": "评估从情节经验到程序性技能的演化，用压缩轨迹和验证反馈更新外部技能库。",
+      "llm_evidence": "评估从情节经验到程序性技能的演化，用压缩轨迹和验证反馈更新外部技能库。",
+      "canonical_evidence": "评估从情节经验到程序性技能的演化，用压缩轨迹和验证反馈更新外部技能库。",
+      "llm_tldr_en": "SkillEvolBench evaluates LLM agents' ability to distill episodic trajectories into reusable procedural skills across 180 tasks in 6 environments, using a skill library and verifier feedback.",
+      "llm_tldr_cn": "针对LLM智能体从情节经验中提炼可复用程序性技能的难题，SkillEvolBench构建了包含180个任务、6个环境的诊断基准，通过压缩轨迹与验证器反馈更新外部技能库，并测试上下文迁移与对抗捷径下的泛化能力。结果显示，自生成技能库与人工种子策略的对比为持续学习提供了新见解，推动了长效记忆与技能演化研究。",
+      "llm_tldr": "针对LLM智能体从情节经验中提炼可复用程序性技能的难题，SkillEvolBench构建了包含180个任务、6个环境的诊断基准，通过压缩轨迹与验证器反馈更新外部技能库，并测试上下文迁移与对抗捷径下的泛化能力。结果显示，自生成技能库与人工种子策略的对比为持续学习提供了新见解，推动了长效记忆与技能演化研究。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "skill library from trajectories for agent improvement",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.24785v1",
+      "source": "arxiv",
+      "title": "PANDO: Efficient Multimodal AI Agents via Online Skill Distillation",
+      "abstract": "Recent advances in multimodal web agents often rely on increased inference-time computation, including rollout search, verifier passes, offline skill discovery, and specialist model stacks. This raises a central question: can a web agent become more efficient as it accumulates experience, rather than more expensive? We first analyze trajectories from VisualWebArena and identify three recurring sources of inefficiency: repeat-action loops, hidden discovery costs, and low prompt-cache reuse. We then introduce PANDO, a single-rollout online skill-distillation framework that maintains a structured Skill Library and combines progress reflection, confidence-based skill demotion, hierarchical routing, visual compression, and cache-aware prompting. On the full set of 910 VisualWebArena tasks, PANDO achieves a 58.3% success rate, outperforming SGV (54.0%) and our WALT reproduction (45.2%), while using 58% fewer tokens than SGV and 61% fewer tokens than WALT, without any pre-evaluation discovery budget. A 300-task ablation further shows that rules and routines provide most of the success gains, while routing, compression, and cache-aware prompting convert the larger skill library into lower marginal token cost. Finally, we introduce three trajectory-level efficiency metrics -- Action Repetition Rate, Step Overhead Ratio, and Prompt Cache Utilization -- to make efficiency visible beyond terminal success.",
+      "authors": [
+        "Yubo Li",
+        "Yidi Miao",
+        "Haotian Shen",
+        "Yuxin Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-24T00:07:25+00:00",
+      "link": "https://arxiv.org/pdf/2605.24785v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "maintains a structured Skill Library with progress reflection and confidence-based skill demotion for web agents",
+      "llm_evidence_cn": "维护结构化技能库，结合进度反思和置信度技能降级，提升网页智能体效率",
+      "llm_evidence": "维护结构化技能库，结合进度反思和置信度技能降级，提升网页智能体效率",
+      "canonical_evidence": "维护结构化技能库，结合进度反思和置信度技能降级，提升网页智能体效率",
+      "llm_tldr_en": "PANDO addresses inefficiency in multimodal web agents by online skill distillation, creating a skill library from single-rollout experience with progress reflection, skill demotion, and hierarchical routing, achieving efficiency gains without costly multi-rollout search.",
+      "llm_tldr_cn": "针对多模态网页智能体推理成本高的问题，PANDO通过在线技能蒸馏框架，从单次执行轨迹中构建结构化技能库。结合进度反思、置信度技能降级、层次路由、视觉压缩和缓存感知提示，使智能体随经验积累而提升效率，在VisualWebArena上实现性能与效率的改进。",
+      "llm_tldr": "针对多模态网页智能体推理成本高的问题，PANDO通过在线技能蒸馏框架，从单次执行轨迹中构建结构化技能库。结合进度反思、置信度技能降级、层次路由、视觉压缩和缓存感知提示，使智能体随经验积累而提升效率，在VisualWebArena上实现性能与效率的改进。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "skill library from trajectories for agent improvement",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.25430v1",
+      "source": "arxiv",
+      "title": "CODESKILL: Learning Self-Evolving Skills for Coding Agents",
+      "abstract": "Coding agents produce rich trajectories while solving software-engineering tasks. To enable agent self-evolution, these trajectories can be distilled into reusable procedural skills that compactly encode experience to guide future behavior. However, existing skill construction and maintenance methods often rely on fixed prompts and heuristic update rules, leaving it unclear how knowledge should be selected, abstracted, and maintained to best serve downstream agents. We propose CODESKILL, an LLM-based framework that reformulates skill extraction and skill-bank maintenance as a learnable management policy. CODESKILL extracts multi-granularity procedural skills from coding-agent trajectories, evolves skills with new experience, and maintains a compact skill bank for future task solving. We train CODESKILL with reinforcement learning, using a hybrid reward that combines dense rubric-based skill-quality feedback with sparse verifiable execution feedback from the frozen downstream agent. Experiments on EnvBench, SWE-Bench Verified, and Terminal-Bench 2 show that CODESKILL improves average pass rate by 9.69 over the no-skill baseline and by 4.01 over the strongest prompt-based or memory baseline, while maintaining the skill bank at a stable size during iterative construction.",
+      "authors": [
+        "Yanzhou Li",
+        "Yiran Zhang",
+        "Xiaoyu Zhang",
+        "Xiaoxia Liu",
+        "Yang Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-25T05:12:49+00:00",
+      "link": "https://arxiv.org/pdf/2605.25430v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Learns self-evolving skills from coding agent trajectories by reformulating skill extraction and maintenance as a learnable policy.",
+      "llm_evidence_cn": "通过将技能提取和维护重新定义为可学习策略，从编码智能体轨迹中学习自演化技能。",
+      "llm_evidence": "通过将技能提取和维护重新定义为可学习策略，从编码智能体轨迹中学习自演化技能。",
+      "canonical_evidence": "通过将技能提取和维护重新定义为可学习策略，从编码智能体轨迹中学习自演化技能。",
+      "llm_tldr_en": "Proposes CODESKILL, an LLM-based framework that treats skill extraction and skill-bank maintenance as a learnable management policy, extracting multi-granularity skills from coding-agent trajectories to enable self-evolution.",
+      "llm_tldr_cn": "该论文针对编码智能体轨迹中蕴含的丰富经验，提出CODESKILL框架，将技能提取和技能库维护重新定义为可学习的管理策略，而非依赖固定提示和启发式规则。CODESKILL从轨迹中提取多粒度程序性技能，并在新经验上演化，维护紧凑的技能库以指导下游行为。实验表明该策略优于传统方法，为智能体自演化提供了一种有效的知识积累与再利用机制。",
+      "llm_tldr": "该论文针对编码智能体轨迹中蕴含的丰富经验，提出CODESKILL框架，将技能提取和技能库维护重新定义为可学习的管理策略，而非依赖固定提示和启发式规则。CODESKILL从轨迹中提取多粒度程序性技能，并在新经验上演化，维护紧凑的技能库以指导下游行为。实验表明该策略优于传统方法，为智能体自演化提供了一种有效的知识积累与再利用机制。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "methods for extracting reusable skills from agent trajectories and failures",
+      "matched_requirement_id": "req-19",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28282v1",
+      "source": "arxiv",
+      "title": "ResearchLoop: An Evidence-Gated Control Plane for AI-Assisted Research",
+      "abstract": "AI-assisted research compresses ideation, implementation, evaluation, and manuscript writing into a single interactive loop. This compression is useful, but it also creates a publication risk: paper claims can become easier to state than to audit. We present ResearchLoop, an evidence-gated control plane for AI-assisted computational research. ResearchLoop treats research questions, task contracts, evidence objects, claim ledgers, closeouts, and paper bindings as durable project state, realized here as a repository-backed runtime. This technical report provides the complete protocol specification, state model, transition rules, claim-admission algorithm, and insight-compounding mechanism. It also reports the full experimental record spanning nine versions (V0--V9), including a self-hosting case study, a controlled task-suite study with component ablations, a mathematical olympiad evaluation, and a supplementary SciCode boundary experiment evaluated with the official generated-code harness. All artifacts, manifests, and verification reports are preserved in the project repository.",
+      "authors": [
+        "Yihan Xia",
+        "Taotao Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-27T10:29:00+00:00",
+      "link": "https://arxiv.org/pdf/2605.28282v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Provides an evidence-gated control plane with research questions, task contracts, evidence objects, claim ledgers as durable project state with provenance.",
+      "llm_evidence_cn": "提供证据门控控制平面，将研究问题、任务合约、证据对象、声明账本等作为带溯源的可持久化项目状态。",
+      "llm_evidence": "提供证据门控控制平面，将研究问题、任务合约、证据对象、声明账本等作为带溯源的可持久化项目状态。",
+      "canonical_evidence": "提供证据门控控制平面，将研究问题、任务合约、证据对象、声明账本等作为带溯源的可持久化项目状态。",
+      "llm_tldr_en": "ResearchLoop introduces an evidence-gated control plane that structures research artifacts (questions, contracts, evidence, claims) as durable, provenance-tracked state, enabling auditable AI-assisted research.",
+      "llm_tldr_cn": "AI辅助研究将构思、实现、评估和撰写压缩为单一交互循环，但导致论文声明易说难审。ResearchLoop提出证据门控控制平面，将研究问题、任务合同、证据对象、声明账本和论文绑定作为可持久项目状态，并在仓库支持的运行时中实现。该技术报告提供了完整的协议规范、状态模型、转换规则、声明接纳算法和洞察合成机制，并报告了跨越九个版本的完整实验记录，为可审计的自动化科研提供了基础设施。",
+      "llm_tldr": "AI辅助研究将构思、实现、评估和撰写压缩为单一交互循环，但导致论文声明易说难审。ResearchLoop提出证据门控控制平面，将研究问题、任务合同、证据对象、声明账本和论文绑定作为可持久项目状态，并在仓库支持的运行时中实现。该技术报告提供了完整的协议规范、状态模型、转换规则、声明接纳算法和洞察合成机制，并报告了跨越九个版本的完整实验记录，为可审计的自动化科研提供了基础设施。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "How are research artifacts structured and stored with provenance in automated scientific discovery?",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28773v1",
+      "source": "arxiv",
+      "title": "Rethinking Memory as Continuously Evolving Connectivity",
+      "abstract": "Existing memory-augmented LLM agents often treat memory as a static repository with pre-defined representations and fixed retrieval pipelines, which is brittle in dynamic agentic environments where feedback, task variation, and heterogeneous signals continuously reshape what should be remembered and how it should be connected. To address this, we propose FluxMem, a connectivity-evolving memory framework that models memory as a heterogeneous graph and progressively refines its topology through three stages: initial connection formation, feedback-driven refinement, and long-term consolidation. During execution, FluxMem repairs missing links, prunes interference, aligns abstraction granularity, and distills recurrent successful trajectories into reusable procedural circuits, guided by one metric for memory generalizability and evolutionary maturity. Across three fundamentally distinct benchmarks including LoCoMo, Mind2Web, and GAIA, FluxMem achieves consistent state-of-the-art performance, demonstrating strong adaptation and generalization in complex agentic environments. The code will be open-sourced in https://github.com/zjunlp/LightMem.",
+      "authors": [
+        "Jizhan Fang",
+        "Buqiang Xu",
+        "Zhixian Wang",
+        "Haoliang Cao",
+        "Xinle Deng",
+        "Baohua Dong",
+        "Hangcheng Zhu",
+        "Ruohui Huang",
+        "Gang Yu",
+        "Ying Wei",
+        "Guozhou Zheng",
+        "Feiyu Xiong",
+        "Haofen Wang",
+        "Huajun Chen",
+        "Ningyu Zhang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG",
+        "cs.MA",
+        "cs.MM"
+      ],
+      "published": "2026-05-27T17:35:34+00:00",
+      "link": "https://arxiv.org/pdf/2605.28773v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "connectivity-evolving memory as heterogeneous graph with feedback-driven refinement and consolidation",
+      "llm_evidence_cn": "连接演化记忆作为异构图，通过反馈驱动 refinement 和整合",
+      "llm_evidence": "连接演化记忆作为异构图，通过反馈驱动 refinement 和整合",
+      "canonical_evidence": "连接演化记忆作为异构图，通过反馈驱动 refinement 和整合",
+      "llm_tldr_en": "FluxMem models agent memory as a continuously evolving heterogeneous graph, refining topology through initial connection, feedback-driven refinement, and long-term consolidation to produce reusable procedural circuits.",
+      "llm_tldr_cn": "现有记忆增强LLM代理将记忆视为静态仓库，难以应对动态环境。FluxMem提出连接演化记忆框架，将记忆建模为异构图，通过初始连接形成、反馈驱动优化和长期整合三阶段渐进式调整拓扑结构，修复缺失链接、剪枝干扰、对齐抽象粒度，并将成功轨迹蒸馏为可重用过程回路。",
+      "llm_tldr": "现有记忆增强LLM代理将记忆视为静态仓库，难以应对动态环境。FluxMem提出连接演化记忆框架，将记忆建模为异构图，通过初始连接形成、反馈驱动优化和长期整合三阶段渐进式调整拓扑结构，修复缺失链接、剪枝干扰、对齐抽象粒度，并将成功轨迹蒸馏为可重用过程回路。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "graph memory",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-27-728125-v1",
+      "source": "biorxiv",
+      "title": "DORA: a dose-response autoencoder for interpretable transcriptome-to-viability prediction",
+      "abstract": "Predicting the effect of drugs on cell viability is a central challenge in drug discovery. Artificial intelligence holds the promise to considerably accelerate this process by leveraging rich cellular data such as transcriptomics. Current models focus on either transcriptomes or inhibitory concentrations, but they fall short in integrating these sources of information. Here, we propose DORA (Dose-Response Autoencoder), a deep learning model that predicts changes in transcriptomes and viability in a dose-dependent manner, knowing the unperturbed cell state. By enforcing a latent space consistent with cumulative dose effects, DORA matches other methods at predicting transcriptomes and substantially outperforms existing latent representations at viability prediction. The transcriptome-viability relationship provided by the model further allows the recovery of known biomarkers of cell viability while suggesting novel ones. Overall, DORA provides a unified framework delivering actionable biological insights for phenotypic drug screening and personalized medicine.",
+      "authors": [
+        "Wang, S.",
+        "Allauzen, A.",
+        "Opuu, V.",
+        "Nghe, P."
+      ],
+      "primary_category": "molecular biology",
+      "categories": [
+        "molecular biology"
+      ],
+      "published": "2026-05-28T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.27.728125v1.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Deep learning model for dose-response drug prediction integrating transcriptomics and viability",
+      "llm_evidence_cn": "整合转录组学与活力的剂量反应药物预测深度学习模型",
+      "llm_evidence": "整合转录组学与活力的剂量反应药物预测深度学习模型",
+      "canonical_evidence": "整合转录组学与活力的剂量反应药物预测深度学习模型",
+      "llm_tldr_en": "Proposes DORA, a dose-response autoencoder that predicts transcriptome changes and viability in a dose-dependent manner, outperforming existing methods in drug discovery.",
+      "llm_tldr_cn": "提出DORA剂量反应自编码器，可预测药物引起的转录组变化和细胞活力，通过强制潜空间与累积剂量效应一致，在药物发现中匹配或超越现有方法。",
+      "llm_tldr": "提出DORA剂量反应自编码器，可预测药物引起的转录组变化和细胞活力，通过强制潜空间与累积剂量效应一致，在药物发现中匹配或超越现有方法。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.20833v1",
+      "source": "arxiv",
+      "title": "MemGym: a Long-Horizon Memory Environment for LLM Agents",
+      "abstract": "Memory is a central capability for LLM agents operating across long-horizon tasks. Existing memory benchmarks predominantly evaluate retention of personalized information in multi-turn chat scenarios, overlooking the dynamic memory formation that occurs during extended agent execution. Consequently, the memory systems they produce transfer poorly to realistic agentic environments, such as coding and web navigation. We present MemGym, a benchmark for agentic memory that unifies existing agent gyms and in-house memory-grounded pipelines behind one memory-reasoning interface. MemGym spans five evaluation tracks grouped into four agentic regimes: tool-use dialogue (tau2-bench), multi-turn deep-research search (MEMGYM-DR), coding (SWE-Gym and MEMGYM-CODEQA), and computer use (WebArena-Infinity). MemGym reports memory-isolated scores that decouple memory performance from reasoning, retrieval, and tool-use ability, so memory strategies can be ranked without those confounders. Our synthetic pipelines for MEMGYM-CODEQA and MEMGYM-DR are length-controllable, ablation-verified at every stage, and tightly aligned with downstream scenarios. To make evaluation on coding environments academically tractable, we train MemRM, a lightweight reward model (Qwen3-1.7B fine-tuned with QLoRA) that scores compression quality as a fast scalar read in place of full Docker rollouts.",
+      "authors": [
+        "Wujiang Xu",
+        "Yu Wang",
+        "Kai Mei",
+        "Kaiqu Liang",
+        "Zhenting Wang",
+        "Mingyu Jin",
+        "Han Zhang",
+        "Shi-Xiong Zhang",
+        "Wenyue Hua",
+        "Sambit Sahu",
+        "Dimitris N. Metaxas"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-20T07:25:33+00:00",
+      "link": "https://arxiv.org/pdf/2605.20833v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "benchmark evaluates dynamic memory formation during long-horizon agent execution",
+      "llm_evidence_cn": "评估长程智能体执行中动态记忆形成的基准",
+      "llm_evidence": "评估长程智能体执行中动态记忆形成的基准",
+      "canonical_evidence": "评估长程智能体执行中动态记忆形成的基准",
+      "llm_tldr_en": "MemGym is a unified benchmark for evaluating memory in LLM agents across long-horizon tasks including tool-use, deep search, coding, and computer control, focusing on dynamic memory formation during extended execution.",
+      "llm_tldr_cn": "现有记忆基准多关注对话中的个性化信息保留，忽略执行过程中的动态记忆形成。MemGym构建统一的长程记忆评估环境，覆盖工具使用、深度搜索、编程、计算机操作等场景，提供五个评测轨道。它弥补了智能体记忆与真实应用间的鸿沟，为长程状态维护研究提供标准化平台。",
+      "llm_tldr": "现有记忆基准多关注对话中的个性化信息保留，忽略执行过程中的动态记忆形成。MemGym构建统一的长程记忆评估环境，覆盖工具使用、深度搜索、编程、计算机操作等场景，提供五个评测轨道。它弥补了智能体记忆与真实应用间的鸿沟，为长程状态维护研究提供标准化平台。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.24018v1",
+      "source": "arxiv",
+      "title": "EvoSci: A Bio-Inspired Multi-Agent Framework for the Evolution of Scientific Discovery",
+      "abstract": "Large language models (LLMs), have shown strong potential in scientific discovery, yet existing methods still face substantial challenges in the design of research workflows and multi-role collaboration mechanisms. To mitigate these issues, we propose EvoSci, a multi-agent scientific collaboration framework, which integrates bio-inspired evolution with knowledge graph modeling. To iteratively generate, evaluate, and refine research ideas, EvoSci incorporates multiple role-based agents, including mentor, researcher, and reviewer. By combining collaborative reasoning, shared memory, and evolutionary feedback, EvoSci significantly enhances the coherence and creativity of scientific exploration. Experiments on real-world research topics demonstrate that EvoSci significantly outperforms strong baselines in LLM-based structured peer-review and comparative ranking evaluations, achieving the highest overall peer-review score (ICLR 4.90) and top ranking (Top-10 = 54). These results suggest its superiority in both scientific idea generation and continuous discovery.",
+      "authors": [
+        "Xiaoyu Xiong",
+        "Yuqi Ren",
+        "Deyi Xiong"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-05-20T04:58:49+00:00",
+      "link": "https://arxiv.org/pdf/2605.24018v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-agent scientific collaboration framework with shared memory and evolutionary feedback for iterative idea generation",
+      "llm_evidence_cn": "带共享记忆和进化反馈的多智能体科学协作框架，用于迭代生成想法",
+      "llm_evidence": "带共享记忆和进化反馈的多智能体科学协作框架，用于迭代生成想法",
+      "canonical_evidence": "带共享记忆和进化反馈的多智能体科学协作框架，用于迭代生成想法",
+      "llm_tldr_en": "Proposes EvoSci, a bio-inspired multi-agent framework for scientific discovery that combines role-based agents, shared memory, and evolutionary feedback to iteratively generate, evaluate, and refine research ideas, enhancing coherence and creativity.",
+      "llm_tldr_cn": "针对现有LLM在科研工作流设计和多角色协作中的挑战，提出EvoSci多智能体框架，融合生物启发式进化与知识图谱建模，通过导师、研究员、评审等角色代理及共享记忆、进化反馈实现研究想法的迭代生成与精化。实验表明该方法显著提升了科学探索的连贯性与创造性，为自主科研智能体提供了有效方案。",
+      "llm_tldr": "针对现有LLM在科研工作流设计和多角色协作中的挑战，提出EvoSci多智能体框架，融合生物启发式进化与知识图谱建模，通过导师、研究员、评审等角色代理及共享记忆、进化反馈实现研究想法的迭代生成与精化。实验表明该方法显著提升了科学探索的连贯性与创造性，为自主科研智能体提供了有效方案。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.24785v2",
+      "source": "arxiv",
+      "title": "PANDO: Efficient Multimodal AI Agents via Online Skill Distillation",
+      "abstract": "Recent advances in multimodal web agents often rely on increased inference-time computation, including rollout search, verifier passes, offline skill discovery, and specialist model stacks. This raises a central question: can a web agent become more efficient as it accumulates experience, rather than more expensive? We first analyze trajectories from VisualWebArena and identify three recurring sources of inefficiency: repeat-action loops, hidden discovery costs, and low prompt-cache reuse. We then introduce PANDO, a single-rollout online skill-distillation framework that maintains a structured Skill Library and combines progress reflection, confidence-based skill demotion, hierarchical routing, visual compression, and cache-aware prompting. On the full set of 910 VisualWebArena tasks, PANDO achieves a 58.3% success rate, outperforming SGV (54.0%) and our WALT reproduction (45.2%), while using 58% fewer tokens than SGV and 61% fewer tokens than WALT, without any pre-evaluation discovery budget. A 300-task ablation further shows that rules and routines provide most of the success gains, while routing, compression, and cache-aware prompting convert the larger skill library into lower marginal token cost. Finally, we introduce three trajectory-level efficiency metrics -- Action Repetition Rate, Step Overhead Ratio, and Prompt Cache Utilization -- to make efficiency visible beyond terminal success.",
+      "authors": [
+        "Yubo Li",
+        "Yidi Miao",
+        "Yuntian Shen",
+        "Yuxin Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-24T00:07:25+00:00",
+      "link": "https://arxiv.org/pdf/2605.24785v2",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Online skill distillation maintains a structured Skill Library from agent trajectories to improve efficiency",
+      "llm_evidence_cn": "通过在线技能蒸馏从智能体轨迹维护结构化技能库，提升效率",
+      "llm_evidence": "通过在线技能蒸馏从智能体轨迹维护结构化技能库，提升效率",
+      "canonical_evidence": "通过在线技能蒸馏从智能体轨迹维护结构化技能库，提升效率",
+      "llm_tldr_en": "PANDO framework for web agents that distills skills online into a library, reducing inference cost while improving efficiency through progress reflection and cache-aware prompting.",
+      "llm_tldr_cn": "当前多模态网页智能体常依赖增加推理时计算（如rollout搜索、技能发现）来提高性能，但效率低下。本文提出PANDO，通过单次rollout在线技能蒸馏框架，维护结构化技能库，结合进度反思、置信度降级、层级路由、视觉压缩和缓存感知提示。在VisualWebArena上，PANDO以更低推理成本超越基线，证明智能体可通过积累经验持续提升效率，为资源高效的自适应智能体开辟新方向。",
+      "llm_tldr": "当前多模态网页智能体常依赖增加推理时计算（如rollout搜索、技能发现）来提高性能，但效率低下。本文提出PANDO，通过单次rollout在线技能蒸馏框架，维护结构化技能库，结合进度反思、置信度降级、层级路由、视觉压缩和缓存感知提示。在VisualWebArena上，PANDO以更低推理成本超越基线，证明智能体可通过积累经验持续提升效率，为资源高效的自适应智能体开辟新方向。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "skill library from trajectories for agent improvement",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.25480v1",
+      "source": "arxiv",
+      "title": "Retrieval as Reasoning: Self-Evolving Agent-Native Retrieval via LLM-Wiki",
+      "abstract": "LLM agents require retrieval to behave less like one-shot context fetching and more like reasoning: searching, reading, traversing, and deciding when evidence is sufficient. However, Retrieval-Augmented Generation (RAG) typically organizes external knowledge as flat chunks retrieved by embedding similarity, exposing a retrieval-as-lookup interface that is poorly aligned with tool-using agents. We propose LLM-Wiki, an agent-native retrieval system that operationalizes the Retrieval-as-Reasoning paradigm by treating external knowledge as a compilable, composable, and self-evolving structure rather than a static retrieval index. LLM-Wiki compiles documents into structured Wiki pages with bidirectional links, exposes search, read, and link-following operations through standard tool-calling interfaces, and introduces an Error Book for persistent structural and semantic self-correction. On HotpotQA, MuSiQue, and 2WikiMultiHopQA, LLM-Wiki outperforms seven baselines, including HippoRAG 2, LightRAG, and GraphRAG, with gains of 2.0-8.1 F1 points over the strongest graph-based baseline and larger gains over Dense RAG. On AuthTrace, LLM-Wiki achieves the best overall accuracy, with especially strong gains on multi-document structured queries, showing that compilation-based knowledge organization generalizes beyond chain-style multi-hop reasoning.",
+      "authors": [
+        "Haoliang Ming",
+        "Feifei Li",
+        "Xiaoqing Wu",
+        "Wenhui Que"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-25T06:36:14+00:00",
+      "link": "https://arxiv.org/pdf/2605.25480v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Agent-native retrieval with self-evolving structured Wiki pages as a graph-like memory for reasoning.",
+      "llm_evidence_cn": "智能体原生检索，以自演化结构化Wiki页面作为图状记忆支持推理。",
+      "llm_evidence": "智能体原生检索，以自演化结构化Wiki页面作为图状记忆支持推理。",
+      "canonical_evidence": "智能体原生检索，以自演化结构化Wiki页面作为图状记忆支持推理。",
+      "llm_tldr_en": "Proposes LLM-Wiki, an agent-native retrieval system that compiles documents into self-evolving Wiki pages with bidirectional links, enabling retrieval as reasoning for iterative agents.",
+      "llm_tldr_cn": "该论文针对RAG的扁平块检索不适合推理型智能体的问题，提出LLM-Wiki，将外部知识编译为带双向链接的结构化Wiki页面，提供搜索、阅读和链接跟随操作，使检索成为推理过程。这种自演化结构允许知识更新和重组，支持智能体多步探索与证据评估。实验证明该方法在复杂推理任务上优于查找式检索。",
+      "llm_tldr": "该论文针对RAG的扁平块检索不适合推理型智能体的问题，提出LLM-Wiki，将外部知识编译为带双向链接的结构化Wiki页面，提供搜索、阅读和链接跟随操作，使检索成为推理过程。这种自演化结构允许知识更新和重组，支持智能体多步探索与证据评估。实验证明该方法在复杂推理任务上优于查找式检索。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "graph memory",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.25480v2",
+      "source": "arxiv",
+      "title": "Retrieval as Reasoning: Self-Evolving Agent-Native Retrieval via LLM-Wiki",
+      "abstract": "LLM agents require retrieval to behave less like one-shot context fetching and more like reasoning: searching, reading, traversing, and deciding when evidence is sufficient. Yet current Retrieval-Augmented Generation (RAG) systems organize external knowledge as flat chunks retrieved by embedding similarity, exposing a retrieval-as-lookup interface ill-suited to iterative reasoning agents. We propose LLM-Wiki, an agent-native retrieval system that operationalizes the Retrieval-as-Reasoning paradigm by treating external knowledge as a compilable, composable, and self-evolving structure rather than a static retrieval index. LLM-Wiki compiles documents into structured Wiki pages with bidirectional links, exposes search, read, and link-following operations through standard tool-calling interfaces, and introduces an Error Book for persistent structural and semantic self-correction. LLM-Wiki achieves state-of-the-art results on HotpotQA, MuSiQue, and 2WikiMultiHopQA, outperforming HippoRAG 2, LightRAG, and GraphRAG by 2.0-8.1 F1 points. On AuthTrace, LLM-Wiki achieves the best overall accuracy, with especially strong gains on multi-document structured queries, confirming that compilation-based retrieval generalizes beyond chain-style multi-hop reasoning.",
+      "authors": [
+        "Haoliang Ming",
+        "Feifei Li",
+        "Xiaoqing Wu",
+        "Wenhui Que"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-25T06:36:14+00:00",
+      "link": "https://arxiv.org/pdf/2605.25480v2",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Proposes an agent-native retrieval system with self-evolving structured knowledge (Wiki pages with links), enabling retrieval as reasoning.",
+      "llm_evidence_cn": "提出一种智能体原生检索系统，具有自演化的结构化知识（带链接的Wiki页面），实现检索即推理。",
+      "llm_evidence": "提出一种智能体原生检索系统，具有自演化的结构化知识（带链接的Wiki页面），实现检索即推理。",
+      "canonical_evidence": "提出一种智能体原生检索系统，具有自演化的结构化知识（带链接的Wiki页面），实现检索即推理。",
+      "llm_tldr_en": "Introduces LLM-Wiki, which compiles documents into structured Wiki pages with bidirectional links, treating external knowledge as a compilable, composable, and self-evolving structure for iterative reasoning agents.",
+      "llm_tldr_cn": "该论文针对现有RAG系统以扁平块和嵌入相似性检索的方式不适配迭代推理型智能体的问题，提出LLM-Wiki，将外部知识编译为带双向链接的结构化Wiki页面，并提供搜索、阅读和链接跟踪操作，使检索变为推理过程。这种自演化结构允许知识增删与重组，支持智能体进行多步探索和证据评估。实验表明该架构在复杂推理任务上优于传统检索即查找范式。",
+      "llm_tldr": "该论文针对现有RAG系统以扁平块和嵌入相似性检索的方式不适配迭代推理型智能体的问题，提出LLM-Wiki，将外部知识编译为带双向链接的结构化Wiki页面，并提供搜索、阅读和链接跟踪操作，使检索变为推理过程。这种自演化结构允许知识增删与重组，支持智能体进行多步探索和证据评估。实验表明该架构在复杂推理任务上优于传统检索即查找范式。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "graph memory",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.25535v1",
+      "source": "arxiv",
+      "title": "Personalize-then-Store: Benchmarking and Learning Personalized Memory for Long-horizon Agents",
+      "abstract": "Existing large language model (LLM) based memory systems apply universal, static policies that overlook a fundamental reality: the contexts that are worth storing in memory are different across users. This misalignment wastes limited memory budget on transient interactions while failing to preserve critical context for long horizon tasks. To address this gap, we investigate an underexplored question: can LLM based memory systems learn personalized memory policies? We introduce PerMemBench, the first benchmark for evaluating personalized memory systems, featuring multi year, multi domain interaction histories across diverse user personas. We further present the first empirical study of memory personalization, proposing session level storage gating, a lightweight framework that selectively bypasses memory operations for transient sessions. Our study confirms that personalization yields substantial retention gains under perfect gating, yet reveals that accurate gating remains an open and critical challenge.",
+      "authors": [
+        "Yeonjun In",
+        "Wonjoong Kim",
+        "Sangwu Park",
+        "Kanghoon Yoon",
+        "Chanyoung Park"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-25T07:48:33+00:00",
+      "link": "https://arxiv.org/pdf/2605.25535v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Investigates personalized memory policies for LLM-based agents in long-horizon tasks, with a benchmark and session-level learning method.",
+      "llm_evidence_cn": "研究长程任务中基于LLM的智能体的个性化记忆策略，提出基准和会话级学习方法。",
+      "llm_evidence": "研究长程任务中基于LLM的智能体的个性化记忆策略，提出基准和会话级学习方法。",
+      "canonical_evidence": "研究长程任务中基于LLM的智能体的个性化记忆策略，提出基准和会话级学习方法。",
+      "llm_tldr_en": "Introduces PerMemBench, a benchmark for personalized memory systems, and proposes learning personalized memory policies to retain critical context for long-horizon agents.",
+      "llm_tldr_cn": "现有LLM记忆系统采用通用静态策略，忽略不同用户应存储的不同上下文，导致长程任务中关键信息丢失。本文首次研究记忆个性化问题，推出PerMemBench基准，包含多年跨越多个领域的交互历史，并提出会话级记忆个性化学习方法，使智能体能够学习每个用户独特的重要上下文保留策略，显著提升长程任务性能。",
+      "llm_tldr": "现有LLM记忆系统采用通用静态策略，忽略不同用户应存储的不同上下文，导致长程任务中关键信息丢失。本文首次研究记忆个性化问题，推出PerMemBench基准，包含多年跨越多个领域的交互历史，并提出会话级记忆个性化学习方法，使智能体能够学习每个用户独特的重要上下文保留策略，显著提升长程任务性能。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.25971v1",
+      "source": "arxiv",
+      "title": "Anticipate and Learn: Unleashing Idle-Time Compute in Proactive Agents",
+      "abstract": "While AI agents demonstrate remarkable capabilities in reasoning and tool use, they remain fundamentally reactive: they compute responses only after explicit user prompts. This paradigm ignores a critical opportunity: the idle time between interactions is largely wasted, leaving agents unable to prepare for future user needs. To bridge this gap, we introduce ProAct, a proactive agent architecture that leverages idle-time compute to anticipate and fulfill likely upcoming user needs. By analyzing evolving dialogue history together with persistent memory, ProAct predicts upcoming needs and iteratively acquires information, allowing the agent to resolve knowledge gaps and prepare evidence before the user initiates a query.To rigorously evaluate proactive capabilities, we also introduce ProActEval, a comprehensive benchmark comprising 200 scenarios across 40 domains, featuring predictable need chains and diverse user cognitive profiles. Empirical results demonstrate significant advantages over reactive baselines. ProAct accelerates task completion by reducing required turns by 14.8%, decreases user effort by 11.7%, and cuts hallucination rates by 28.1% on ProActEval. Furthermore, MemBench evaluations confirm that ProAct achieves state-of-the-art reflective accuracy, underscoring its sustained and robust performance.",
+      "authors": [
+        "Haoyi Hu",
+        "Qirong Lyu",
+        "Xianghan Kong",
+        "Weiwen Liu",
+        "Jianghao Lin",
+        "Zixuan Guo",
+        "Yan Xu",
+        "Yasheng Wang",
+        "Weinan Zhang",
+        "Yong Yu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.IR",
+        "cs.MA"
+      ],
+      "published": "2026-05-25T15:47:21+00:00",
+      "link": "https://arxiv.org/pdf/2605.25971v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Proactive agent architecture leveraging idle-time compute with persistent memory to resolve knowledge gaps and prepare evidence.",
+      "llm_evidence_cn": "利用空闲计算和持久记忆的前瞻性智能体架构，解决知识缺口并准备证据。",
+      "llm_evidence": "利用空闲计算和持久记忆的前瞻性智能体架构，解决知识缺口并准备证据。",
+      "canonical_evidence": "利用空闲计算和持久记忆的前瞻性智能体架构，解决知识缺口并准备证据。",
+      "llm_tldr_en": "ProAct introduces a proactive agent that uses idle time to anticipate future user needs by analyzing dialogue history and persistent memory, improving response readiness.",
+      "llm_tldr_cn": "现有AI智能体仅在用户提示后反应，闲置算力未被利用。ProAct提出前瞻性架构，通过分析对话历史和持久记忆预测未来需求，在空闲时主动获取信息并解决知识缺口。实验表明，该方法显著提升了响应时效性和信息完备性，为长时记忆与前瞻规划融合提供了新思路。",
+      "llm_tldr": "现有AI智能体仅在用户提示后反应，闲置算力未被利用。ProAct提出前瞻性架构，通过分析对话历史和持久记忆预测未来需求，在空闲时主动获取信息并解决知识缺口。实验表明，该方法显著提升了响应时效性和信息完备性，为长时记忆与前瞻规划融合提供了新思路。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28390v1",
+      "source": "arxiv",
+      "title": "You Live More Than Once: Towards Hierarchical Skill Meta-Evolving",
+      "abstract": "Test-time skill evolving is regarded as a new paradigm for enhancing deployed agentic systems. Existing works mainly focus on hard-coded skill evolving strategies or parametric learning that rely on expensive parameter updates in the underlying LLMs. In this paper, we demonstrate that test-time refinement of the skill evolving framework itself is necessary for continuous improvement of the agent systems in different downstream scenarios, and lightweight algorithmic adaptation is feasible. Specifically, we propose HiSME, a lightweight hierarchical skill meta-evolving solution that jointly optimizes skills and the skill evolving strategy by learning meta-skills from agents' task execution traces. Experiments on diverse agentic benchmarks show that meta-evolving can produce a higher-quality skill library than pure skill evolving and can derive diverse meta-skills for different scenarios, thereby facilitating future continual experience learning. Our code is temporarily public at https://anonymous.4open.science/r/HiSME-BD45.",
+      "authors": [
+        "Xujun Li",
+        "Kehan Zheng",
+        "Mingyuan Zhao",
+        "Yize Geng",
+        "Jinfeng Zhou",
+        "Qi Zhu",
+        "Fei Mi",
+        "Lifeng Shang",
+        "Minlie Huang",
+        "Hongning Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-27T12:26:49+00:00",
+      "link": "https://arxiv.org/pdf/2605.28390v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "learns meta-skills from agent execution traces to evolve skill libraries; hierarchical skill meta-evolving",
+      "llm_evidence_cn": "从智能体执行轨迹学习元技能以演化技能库；分层技能元演化",
+      "llm_evidence": "从智能体执行轨迹学习元技能以演化技能库；分层技能元演化",
+      "canonical_evidence": "从智能体执行轨迹学习元技能以演化技能库；分层技能元演化",
+      "llm_tldr_en": "Proposes HiSME, a hierarchical skill meta-evolving framework that learns to jointly optimize skills and the evolving strategy from agent trajectories, enabling lightweight, test-time continuous improvement without parameter updates.",
+      "llm_tldr_cn": "针对部署后智能体系统持续改进的需求，本文提出HiSME，一种分层技能元演化框架，从任务执行轨迹中学习元技能，以轻量级方式联合优化技能库及其演化策略，无需更新底层模型参数，实现测试时自适应提升。在多个智能体基准上的实验表明，该方法能显著提升各种场景下的性能，为智能体自主进化提供了高效实用的解决方案。",
+      "llm_tldr": "针对部署后智能体系统持续改进的需求，本文提出HiSME，一种分层技能元演化框架，从任务执行轨迹中学习元技能，以轻量级方式联合优化技能库及其演化策略，无需更新底层模型参数，实现测试时自适应提升。在多个智能体基准上的实验表明，该方法能显著提升各种场景下的性能，为智能体自主进化提供了高效实用的解决方案。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "skill library from trajectories for agent improvement",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.23296v1",
+      "source": "arxiv",
+      "title": "Parallel Context Compaction for Long-Horizon LLM Agent Serving",
+      "abstract": "Long-horizon LLM agents accumulate growing conversation histories that eventually exceed the model's context window. Context compaction via LLM-based summarization keeps the conversation bounded, but summarization is inherently lossy and the blocking call stalls agent inference for tens of seconds. Moreover, the operator has no fine-grained control over summary volume since prompt instructions are largely ignored, and as context grows, both the amount of output tokens the model produces and the information it retains fluctuate substantially from run to run, making the agent's retained knowledge unpredictable across runs. We introduce \\textbf{parallel compaction} for long-horizon agentic flows and characterize it against the sequential synchronous baseline across four backbones spanning 8B to 120B parameters, mixing dense and MoE architectures with reasoning and non-reasoning models, on the HotpotQA multi-hop QA and LoCoMo long-context dialogue benchmarks. Parallel compaction gives the operator fine-grained, predictable control over summary volume and enables more targeted prompt engineering per block. At matched compaction decode volume, it reduces end-to-end wall time and improves compaction throughput over the sequential baseline.",
+      "authors": [
+        "Musa Cim",
+        "Burak Topcu",
+        "Chita Das",
+        "Mahmut Taylan Kandemir"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-22T07:12:38+00:00",
+      "link": "https://arxiv.org/pdf/2605.23296v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "proposes parallel summarization for context compaction in long-horizon agents to manage growing history",
+      "llm_evidence_cn": "提出并行总结用于长程智能体的上下文压缩，管理增长的历史",
+      "llm_evidence": "提出并行总结用于长程智能体的上下文压缩，管理增长的历史",
+      "canonical_evidence": "提出并行总结用于长程智能体的上下文压缩，管理增长的历史",
+      "llm_tldr_en": "Parallel compaction addresses the context window overflow in long-horizon LLM agents by parallelizing summarization with agent inference, reducing latency and improving information retention predictability.",
+      "llm_tldr_cn": "为应对长程LLM智能体对话历史膨胀导致的上下文超限和推理阻塞，本文提出并行上下文压缩，将总结与推理并行执行，显著降低延迟并提升信息保留的可预测性，为长程智能体上下文管理提供了高效方案。",
+      "llm_tldr": "为应对长程LLM智能体对话历史膨胀导致的上下文超限和推理阻塞，本文提出并行上下文压缩，将总结与推理并行执行，显著降低延迟并提升信息保留的可预测性，为长程智能体上下文管理提供了高效方案。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2605.21850v1",
+      "source": "arxiv",
+      "title": "ACC: Compiling Agent Trajectories for Long-Context Training",
+      "abstract": "Recent development of agents has renewed demand for long-context reasoning capacity of LLMs. However, training LLMs for this capacity requires costly long-document curation or heuristic context synthesis. We observe that agents produce massive trajectories when solving problems, invoking tools and receiving environment observations across many turns. The evidence needed to answer the original question is thus scattered throughout these turns, requiring integration of distant context segments. Nevertheless, standard agent SFT masks tool responses and only trains turn-level tool selection, creating a supervision blind spot where these scattered signals go unused. We propose Agent Context Compilation (ACC), which converts trajectories from search, software engineering, and database querying agents into long-context QA pairs that combine the original question with tool responses and environment observations gathered across multiple turns, training the model to answer directly without tool use. This makes the dependencies between the question and the evidence explicit, enabling direct supervision of long-context reasoning over distant segments without additional annotation. ACC is a simple but effective approach that can be combined with any existing long-context extension or training method, providing scalable supervised fine-tuning data. We validate ACC on long-range dependency modeling tasks through MRCR and GraphWalks, challenging benchmarks requiring cross-turn coreference resolution and graph traversal over extended contexts. Training Qwen3-30B-A3B with ACC achieves 68.3 on MRCR (+18.1) and 77.5 on GraphWalks (+7.6), results comparable to Qwen3-235B-A22B, while preserving general capabilities on GPQA, MMLU-Pro, AIME, and IFEval. Further mechanism analysis reveals that the ACC-trained model exhibits task-adaptive attention restructuring and expert specialization.",
+      "authors": [
+        "Qisheng Su",
+        "Zhen Fang",
+        "Shiting Huang",
+        "Yu Zeng",
+        "Yiming Zhao",
+        "Kou Shi",
+        "Ziao Zhang",
+        "Lin Chen",
+        "Zehui Chen",
+        "Lijun Wu",
+        "Feng Zhao"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-05-21T00:47:03+00:00",
+      "link": "https://arxiv.org/pdf/2605.21850v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "compiles agent trajectories into long-context training data, enabling LLMs to handle long-horizon tasks with state maintenance",
+      "llm_evidence_cn": "编译智能体轨迹为长上下文训练数据，使语言模型能处理需维护状态的长程任务",
+      "llm_evidence": "编译智能体轨迹为长上下文训练数据，使语言模型能处理需维护状态的长程任务",
+      "canonical_evidence": "编译智能体轨迹为长上下文训练数据，使语言模型能处理需维护状态的长程任务",
+      "llm_tldr_en": "Observes that agent trajectories naturally produce long contexts with scattered evidence and proposes ACC to compile these trajectories into training data, enabling LLMs to learn long-context reasoning without costly curation.",
+      "llm_tldr_cn": "针对长上下文训练数据稀缺问题，本文发现智能体在解决问题时产生的大量多轮轨迹暗含需要整合的远距离证据。提出ACC方法，将这些轨迹转化为长上下文训练样本，从而使语言模型能充分利用轨迹中的监督信号，无需昂贵的人工数据整理。实验表明，该方法能有效提升模型在长程任务中的表现，为构建能够处理长序列、维护多步状态的语言智能体提供了数据高效的新途径。",
+      "llm_tldr": "针对长上下文训练数据稀缺问题，本文发现智能体在解决问题时产生的大量多轮轨迹暗含需要整合的远距离证据。提出ACC方法，将这些轨迹转化为长上下文训练样本，从而使语言模型能充分利用轨迹中的监督信号，无需昂贵的人工数据整理。实验表明，该方法能有效提升模型在长程任务中的表现，为构建能够处理长序列、维护多步状态的语言智能体提供了数据高效的新途径。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.22057v1",
+      "source": "arxiv",
+      "title": "FlyRoute: Self-Evolving Agent Profiling via Data Flywheel for Adaptive Task Routing",
+      "abstract": "Enterprise routers assign queries to expert agents, yet deployed profiles stay static while agents evolve (prompts, tools, models), and developers rarely keep descriptions or exemplars current. We present FlyRoute, a self-evolving profiling framework that grows capability evidence from real traffic: dispatch candidates, quality-gate successful pairs into each agent's success store, periodically distill evidence into learned capability descriptions, and inject those descriptions together with BM25-retrieved successes into an LLM router. To make this flywheel data-efficient, FlyRoute introduces a targeted exploration policy that combines profile uncertainty, BM25 relevance, and lexical novelty, prioritizing under-profiled agents only for plausible queries and avoiding redundant evidence collection. In experiments on our proprietary enterprise developer-support dataset of real routed queries, FlyRoute improves a same-backbone zero-shot LLM router from 72.57% to 78.04% with only five seed queries per agent, showing that profile retrieval already strengthens cold-start routing. After streaming 7,211 labeled training queries through the flywheel, accuracy rises to 89.83% (+17.26pp over zero-shot; +11.79pp over cold start), with consistent gains across four expert domains under standard routing accuracy on single-gold test queries.",
+      "authors": [
+        "Rongjun Li",
+        "Ziyu Zhou",
+        "Yihang Wu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-21T06:46:21+00:00",
+      "link": "https://arxiv.org/pdf/2605.22057v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Distills successful agent interactions into capability evidence, forming a skill library for adaptive routing, enabling agent improvement from trajectories.",
+      "llm_evidence_cn": "从成功的智能体交互中提取能力证据，形成技能库用于自适应路由，实现基于轨迹的智能体改进。",
+      "llm_evidence": "从成功的智能体交互中提取能力证据，形成技能库用于自适应路由，实现基于轨迹的智能体改进。",
+      "canonical_evidence": "从成功的智能体交互中提取能力证据，形成技能库用于自适应路由，实现基于轨迹的智能体改进。",
+      "llm_tldr_en": "FlyRoute is a self-evolving profiling framework that builds agent capability evidence from real traffic, distilling successes into learned descriptions for adaptive LLM routing.",
+      "llm_tldr_cn": "企业路由器分配查询给专业智能体，但部署的画像保持静态而智能体不断演进。FlyRoute提出自演化画像框架，从真实流量中收集成功案例形成证据库，定期蒸馏为学习到的能力描述，并注入LLM路由器。同时引入目标探索策略，优先为画像不足的智能体收集证据，使路由随智能体演化自适应更新。",
+      "llm_tldr": "企业路由器分配查询给专业智能体，但部署的画像保持静态而智能体不断演进。FlyRoute提出自演化画像框架，从真实流量中收集成功案例形成证据库，定期蒸馏为学习到的能力描述，并注入LLM路由器。同时引入目标探索策略，优先为画像不足的智能体收集证据，使路由随智能体演化自适应更新。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "skill library from trajectories for agent improvement",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.24245v1",
+      "source": "arxiv",
+      "title": "Deep-Research Agents Can Be Poisoned via User-Generated Content",
+      "abstract": "Deep-research agents, i.e., systems that rely on multi-agent pipelines to iteratively retrieve, synthesize, and cite Web content in order to produce structured reports, are rapidly replacing traditional search for both routine and complex information needs. These agents issue many related queries during a single research session. We show that for many common search topics, they repeatedly retrieve the same user-generated content (UGC) pages from platforms such as Reddit and Wikipedia. Next, we argue that this retrieval overlap creates a concentrated attack surface: an adversary who appends a short, crafted text to a single, frequently retrieved UGC page can cause the agent to cite attacker-chosen content and promote attacker-chosen entities across many related queries.   We evaluate this attack on three representative deep-research systems (STORM, Co-STORM, and OmniThink) across multiple query clusters. We also study defenses at different stages of the pipeline, including source-level filtering and output-based detection. Our findings highlight a fundamental vulnerability in how deep-research agents retrieve and integrate web content.",
+      "authors": [
+        "Tingwei Zhang",
+        "Harold Triedman",
+        "Vitaly Shmatikov"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-05-22T21:46:32+00:00",
+      "link": "https://arxiv.org/pdf/2605.24245v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "deep-research agents that iteratively retrieve, synthesize, and cite web content to produce structured reports are vulnerable to poisoning via user-generated content",
+      "llm_evidence_cn": "深度研究智能体迭代检索、综合并引用网络内容生成结构化报告，易受用户生成内容投毒攻击",
+      "llm_evidence": "深度研究智能体迭代检索、综合并引用网络内容生成结构化报告，易受用户生成内容投毒攻击",
+      "canonical_evidence": "深度研究智能体迭代检索、综合并引用网络内容生成结构化报告，易受用户生成内容投毒攻击",
+      "llm_tldr_en": "Demonstrates that deep-research agents repeatedly retrieve the same user-generated content, creating a concentrated attack surface where adversaries can manipulate outputs, highlighting security risks in autonomous research.",
+      "llm_tldr_cn": "深度研究智能体在生成结构化报告时频繁检索相同用户生成内容，本文证明攻击者可利用这一集中攻击面，通过注入短小精心构造的文本，使智能体在多轮查询中错误引证和推广攻击者选择的内容，揭示了自主科研系统的安全漏洞，提醒开发者在设计研究智能体时需考虑内容源防护。",
+      "llm_tldr": "深度研究智能体在生成结构化报告时频繁检索相同用户生成内容，本文证明攻击者可利用这一集中攻击面，通过注入短小精心构造的文本，使智能体在多轮查询中错误引证和推广攻击者选择的内容，揭示了自主科研系统的安全漏洞，提醒开发者在设计研究智能体时需考虑内容源防护。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "research agent for literature review hypothesis generation and experiment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2605.22681v1",
+      "source": "arxiv",
+      "title": "Forecasting Scientific Progress with Artificial Intelligence",
+      "abstract": "Artificial intelligence (AI) is increasingly embedded in scientific discovery, yet whether it can anticipate scientific progress remains unclear. To study this question, we introduce a temporally grounded evaluation framework for forecasting scientific progress under controlled knowledge constraints. We present CUSP (Cutoff-conditioned Unseen Scientific Progress), a multi-disciplinary and event-level benchmark that evaluates scientific forecasting in AI systems through feasibility assessment, mechanistic reasoning, generative solution design, and temporal prediction. Across 4,760 scientific events, we observe systematic and domain-dependent limitations in current frontier models. While models can identify plausible research directions from competing candidates, they fail to reliably predict whether scientific advances will be realized and systematically misestimate when they will occur. Performance is highly heterogeneous across domains, with the timing of AI progress more predictable than advances in biology, chemistry, and physics. Performance is largely insensitive to whether events occur before or after the training cutoff, suggesting these limitations cannot be explained solely by knowledge exposure in training data. Under controlled information access, additional pre-cutoff knowledge improves performance but does not close the gap to full-information settings, which becomes more pronounced for high-citation advances. Models also exhibit systematic overconfidence and strong response biases, indicating unreliable uncertainty estimation. Taken together, current AI systems fall short as predictive tools for scientific progress. Access to prior knowledge does not translate into reliable forecasting, and performance benefits more from post-event information than from forward-looking prediction.",
+      "authors": [
+        "Sean Wu",
+        "Pan Lu",
+        "Yupeng Chen",
+        "Jonathan Bragg",
+        "Yutaro Yamada",
+        "Peter Clark",
+        "David Clifton",
+        "Philip Torr",
+        "James Zou",
+        "Junchi Yu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-21T16:23:36+00:00",
+      "link": "https://arxiv.org/pdf/2605.22681v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "evaluates AI systems on forecasting scientific progress via feasibility, reasoning, solution design, and temporal prediction",
+      "llm_evidence_cn": "评估AI系统在预测科学进展方面的可行性、推理、方案设计和时序预测能力",
+      "llm_evidence": "评估AI系统在预测科学进展方面的可行性、推理、方案设计和时序预测能力",
+      "canonical_evidence": "评估AI系统在预测科学进展方面的可行性、推理、方案设计和时序预测能力",
+      "llm_tldr_en": "Introduces CUSP benchmark to test AI systems on scientific forecasting tasks, including feasibility assessment, mechanistic reasoning, and temporal prediction, revealing domain-dependent limitations in current models for anticipating research directions.",
+      "llm_tldr_cn": "提出时间锚定的评估基准CUSP，通过可行性评估、机制推理、生成方案设计和时序预测四个维度，衡量AI系统预测科学进展的能力。在4760个科学事件上的测试表明，前沿模型虽能识别可行方向，但仍存在领域相关的系统性局限。",
+      "llm_tldr": "提出时间锚定的评估基准CUSP，通过可行性评估、机制推理、生成方案设计和时序预测四个维度，衡量AI系统预测科学进展的能力。在4760个科学事件上的测试表明，前沿模型虽能识别可行方向，但仍存在领域相关的系统性局限。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.24266v1",
+      "source": "arxiv",
+      "title": "An Interactive Paradigm for Deep Research",
+      "abstract": "Recent advances in large language models (LLMs) have enabled deep research systems that synthesize comprehensive, report-style answers to open-ended queries by combining retrieval, reasoning, and generation. Yet most frameworks rely on rigid workflows with one-shot scoping and long autonomous runs, offering little room for course correction if user intent shifts mid-process. We present SteER, a framework for Steerable deEp Research that introduces interpretable, mid-process control into long-horizon research workflows. At each decision point, SteER uses a cost-benefit formulation to determine whether to pause for user input or to proceed autonomously. It combines diversity-aware planning with utility signals that reward alignment, novelty, and coverage, and maintains a live persona model that evolves throughout the session. SteER outperforms state-of-the-art open-source and proprietary baselines by up to 22.80\\% on alignment, leads on quality metrics such as breadth and balance, and is preferred by human readers in 85\\%+ of pairwise alignment judgments. We also introduce a persona-query benchmark and data-generation pipeline. To our knowledge, this is the first work to advance deep research with an interactive, interpretable control paradigm, paving the way for controllable, user-aligned agents in long-form tasks.",
+      "authors": [
+        "Lin Ai",
+        "Victor S. Bursztyn",
+        "Xiang Chen",
+        "Julia Hirschberg",
+        "Saayan Mitra"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-05-22T22:37:44+00:00",
+      "link": "https://arxiv.org/pdf/2605.24266v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Steerable deep research framework with mid-process user control, diversity-aware planning",
+      "llm_evidence_cn": "可操控的深度研究框架，支持流程中用户控制和多样性感知规划",
+      "llm_evidence": "可操控的深度研究框架，支持流程中用户控制和多样性感知规划",
+      "canonical_evidence": "可操控的深度研究框架，支持流程中用户控制和多样性感知规划",
+      "llm_tldr_en": "Presents SteER, a steerable deep research system that introduces mid-process user control and utility-based planning to improve alignment, novelty, and coverage in long-horizon research workflows.",
+      "llm_tldr_cn": "提出SteER可操控深度研究框架，通过在长程研究工作流中引入成本效益分析来决策是否暂停以获取用户输入，并利用多样性感知规划提升对齐度、新颖性和覆盖度。",
+      "llm_tldr": "提出SteER可操控深度研究框架，通过在长程研究工作流中引入成本效益分析来决策是否暂停以获取用户输入，并利用多样性感知规划提升对齐度、新颖性和覆盖度。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.25971v2",
+      "source": "arxiv",
+      "title": "Anticipate and Learn: Unleashing Idle-Time Compute in Proactive Agents",
+      "abstract": "While AI agents demonstrate remarkable capabilities in reasoning and tool use, they remain fundamentally reactive: they compute responses only after explicit user prompts. This paradigm ignores a critical opportunity: the idle time between interactions is largely wasted, leaving agents unable to prepare for future user needs. To bridge this gap, we introduce ProAct, a proactive agent architecture that leverages idle-time compute to anticipate and fulfill likely upcoming user needs. By analyzing evolving dialogue history together with persistent memory, ProAct predicts upcoming needs and iteratively acquires information, allowing the agent to resolve knowledge gaps and prepare evidence before the user initiates a query. To rigorously evaluate proactive capabilities, we also introduce ProActEval, a comprehensive benchmark comprising 200 scenarios across 40 domains, featuring predictable need chains and diverse user cognitive profiles. Empirical results demonstrate significant advantages over reactive baselines. ProAct accelerates task completion by reducing required turns by 14.8%, decreases user effort by 11.7%, and cuts hallucination rates by 28.1% on ProActEval. Furthermore, MemBench evaluations confirm that ProAct achieves state-of-the-art reflective accuracy, underscoring its sustained and robust performance.",
+      "authors": [
+        "Haoyi Hu",
+        "Qirong Lyu",
+        "Xianghan Kong",
+        "Weiwen Liu",
+        "Jianghao Lin",
+        "Zixuan Guo",
+        "Yan Xu",
+        "Yasheng Wang",
+        "Weinan Zhang",
+        "Yong Yu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.IR",
+        "cs.MA"
+      ],
+      "published": "2026-05-25T15:47:21+00:00",
+      "link": "https://arxiv.org/pdf/2605.25971v2",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Proactive agent using persistent memory and idle-time compute to anticipate user needs, demonstrating memory retrieval and consolidation for preparation.",
+      "llm_evidence_cn": "使用持久记忆和空闲计算预测用户需求的主动智能体，展示记忆检索与整合以满足预先准备。",
+      "llm_evidence": "使用持久记忆和空闲计算预测用户需求的主动智能体，展示记忆检索与整合以满足预先准备。",
+      "canonical_evidence": "使用持久记忆和空闲计算预测用户需求的主动智能体，展示记忆检索与整合以满足预先准备。",
+      "llm_tldr_en": "Introduces ProAct, a proactive agent that leverages idle time to analyze persistent memory and dialogue history, predicting upcoming needs and acquiring information in advance to resolve knowledge gaps.",
+      "llm_tldr_cn": "该论文针对现有LLM智能体被动响应、浪费空闲时间的问题，提出ProAct架构，利用持久记忆和对话历史分析在空闲期预测未来需求，并主动获取信息以填补知识空白。通过多轮对话中的主动信息预取，智能体能在用户发起查询前准备好证据。实验表明，这种记忆驱动的主动准备显著提升了响应质量和效率，为长时记忆在智能体中的主动利用提供了新范式。",
+      "llm_tldr": "该论文针对现有LLM智能体被动响应、浪费空闲时间的问题，提出ProAct架构，利用持久记忆和对话历史分析在空闲期预测未来需求，并主动获取信息以填补知识空白。通过多轮对话中的主动信息预取，智能体能在用户发起查询前准备好证据。实验表明，这种记忆驱动的主动准备显著提升了响应质量和效率，为长时记忆在智能体中的主动利用提供了新范式。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2605.24558v1",
+      "source": "arxiv",
+      "title": "Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components",
+      "abstract": "AI for Science (AI4Science) workflows often treat the released dataset as a fixed interface to the underlying system.   However, in domains relying on \\emph{indirect observation}, the learner observes a derivative representation produced by multi-stage measurement, reconstruction, and preprocessing pipelines.   \\textbf{We argue that these measurement-to-dataset pipelines are inference components: treating their outputs as ``given data'' freezes an observation model and obscures uncertainty over feasible pipeline choices.}   We identify three failure modes arising from this ``frozen lens'': \\textbf{(C1) hidden hypothesis space}, where the released dataset does not specify the pipeline configuration or its validity conditions; \\textbf{(C2) uncertified transportability}, where a pipeline may be documented but its regime of validity is untested, so failures under distribution shift cannot be adjudicated; \\textbf{(C3) ungoverned multiplicity}, where many defensible pipelines exist and dispersion is real but not propagated into uncertainty-aware evidence.   We stress-test these claims with a large-scale neuroscience empirical audit, finding a survival rate of $\\approx 0.0004\\%$ under a cross-dataset stability criterion.   We call on the AI4Science community to make pipelines \\emph{computable} inference objects via domain-specific Computable Observation Frameworks.   This shift enables quantifying pipeline adequacy and stability, converting implicit implementation choices into auditable, reproducible, and cumulative scientific evidence.",
+      "authors": [
+        "Ling Zhan",
+        "Xiaoyao Yu",
+        "Tao Jia"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-23T12:50:00+00:00",
+      "link": "https://arxiv.org/pdf/2605.24558v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Argues for capturing provenance of measurement pipelines to avoid hidden hypothesis spaces",
+      "llm_evidence_cn": "主张捕获测量管道来源，避免隐藏假设空间",
+      "llm_evidence": "主张捕获测量管道来源，避免隐藏假设空间",
+      "canonical_evidence": "主张捕获测量管道来源，避免隐藏假设空间",
+      "llm_tldr_en": "Position paper arguing that AI4Science must treat measurement-to-dataset pipelines as inference components to preserve scientific provenance and avoid hidden hypothesis spaces.",
+      "llm_tldr_cn": "当前AI4Science工作流常将数据集视为固定接口，忽视间接观测中多阶段测量、重建和预处理所引入的推断不确定性。本文识别三大失败模式：隐藏假设空间、被遮蔽的可行性选择、以及被冻结的观察模型。作者主张将测量管道视为推断组件，显式捕捉其配置与有效性条件，从而实现透明的科学溯源。该观点为构建可信且可复现的AI驱动科学发现奠定元科学基础。",
+      "llm_tldr": "当前AI4Science工作流常将数据集视为固定接口，忽视间接观测中多阶段测量、重建和预处理所引入的推断不确定性。本文识别三大失败模式：隐藏假设空间、被遮蔽的可行性选择、以及被冻结的观察模型。作者主张将测量管道视为推断组件，显式捕捉其配置与有效性条件，从而实现透明的科学溯源。该观点为构建可信且可复现的AI驱动科学发现奠定元科学基础。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "structured research artifacts and provenance in automated science",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.24941v1",
+      "source": "arxiv",
+      "title": "Memory-Induced Tool-Drift in LLM Agents",
+      "abstract": "Modern LLM agents combine long-term memory for personalization with tool-calling interfaces for taking actions in the world -- a combination underpinning contemporary production systems. We study a previously unexamined failure of this combination: when personality-driven biases stored in memory (cost-consciousness, impatience, risk tolerance, etc.) silently affect tool calls in contexts where they are not applicable. We call this memory-induced tool-drift and operationalize it through MEMDRIFT, a benchmark of 105 scenarios spanning five bias dimensions and seven professional domains, generated through an automated adversarial pipeline. Across seven frontier models -- including those with extended reasoning -- biased memories raise deflection scores (a judge-scored measure of parameter deviation from unbiased baselines) by up to $+3.6$ points on a 1--5 scale. Tool-drift persists when memory management is handled by three production memory architectures. The phenomenon affects real-world tools: scanning 6{,}062 tools across 288 verified MCP servers, we flag 608 with susceptible parameters and confirm tool-drift on a validated subset. Mechanistically, biased memories act as implicit steering vectors, pushing activations along the same latent directions as explicit behavioral instructions. They also redistribute attention from task-relevant context toward memory entries with surface-level keyword overlap to the target parameter. Standard defenses -- prompt-based relevance instructions and memory filters -- reduce drift but do not eliminate it. As agents take increasingly consequential actions on a user's behalf, memory-induced tool-drift represents a systematic vulnerability that current safeguards do not address, motivating dedicated defenses at the intersection of memory management and tool-call generation.",
+      "authors": [
+        "Mahavir Dabas",
+        "Jihyun Jeong",
+        "Ming Jin",
+        "Ruoxi Jia"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-05-24T08:41:39+00:00",
+      "link": "https://arxiv.org/pdf/2605.24941v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Studies long-term memory biases causing tool-call failures in LLM agents, with a benchmark for memory-induced tool-drift.",
+      "llm_evidence_cn": "研究长时记忆偏差导致LLM智能体工具调用失败，提出记忆引发工具漂移的基准。",
+      "llm_evidence": "研究长时记忆偏差导致LLM智能体工具调用失败，提出记忆引发工具漂移的基准。",
+      "canonical_evidence": "研究长时记忆偏差导致LLM智能体工具调用失败，提出记忆引发工具漂移的基准。",
+      "llm_tldr_en": "Investigates how personality-driven biases in long-term memory silently affect tool calls in LLM agents, introducing a benchmark and showing that biased memories lead to deflection from intended tasks across models.",
+      "llm_tldr_cn": "该论文针对LLM智能体中长时记忆的个人化偏差（如成本敏感、不耐烦等）在不应适用的上下文中悄然影响工具调用的问题，提出MEMDRIFT基准，覆盖5个偏差维度和7个专业领域的105个场景，并通过自动化对抗管道生成。在7个前沿模型上的实验显示，带偏见的记忆会显著提高偏离分数，揭示了记忆与工具使用结合时的一个关键失败模式，为构建更稳健的智能体记忆系统提供了诊断工具。",
+      "llm_tldr": "该论文针对LLM智能体中长时记忆的个人化偏差（如成本敏感、不耐烦等）在不应适用的上下文中悄然影响工具调用的问题，提出MEMDRIFT基准，覆盖5个偏差维度和7个专业领域的105个场景，并通过自动化对抗管道生成。在7个前沿模型上的实验显示，带偏见的记忆会显著提高偏离分数，揭示了记忆与工具使用结合时的一个关键失败模式，为构建更稳健的智能体记忆系统提供了诊断工具。",
+      "llm_tags": [
+        "query:agent-memory:composite"
+      ],
+      "matched_query_tag": "query:agent-memory:composite",
+      "matched_query_text": "Papers central to 查找关于LLM Agent和Agent Memory的论文，重点关注长程任务、工具使用、多智能体、规划、工作流、状态跟踪、反馈、反思、错误恢复、记忆模块（长时记忆、情节记忆、语义记忆、检索、整合、更新、遗忘、冲突解决、图记忆、状态表示、轨迹到技能、技能库、自演化）等，要求有消融实验或评估。, especially work that connects or combines: graph memory; long-horizon agents in long-term tasks with state maintenance; multi-agent systems coordination and memory sharing; state tracking in agent reasoning and execution; long-term memory for agents with retrieval and consolidation; skill library from trajectories for agent improvement; papers on long horizon LLM agents using memory and skill reuse; how agents maintain state in long term tasks with episodic memory; methods for extracting reusable skills from agent trajectories and failures; agent memory consolidation and forgetting mechanisms for continual learning.",
+      "matched_requirement_id": "req-composite-agent-memory",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.26305v1",
+      "source": "arxiv",
+      "title": "Experiments in Agentic AI for Science",
+      "abstract": "This paper details two novel frameworks for developing autonomous, agentic AI in scientific workflows. Both systems leverage a hybrid Local Body, Remote Brain architecture via Google Colab, utilizing Python-based local orchestrators to invoke large language model (LLM) cloud backends. The first agent, DeepTS/DeepCollector, automates the large-scale curation, extraction, and deduplication of time-series datasets. The second, DeepScribe, is an autonomous presentation analyzer that converts visually dense, mathematically complex physics lectures into structured scientific reports. Through practical systems engineering-such as granular attribute extraction (Cellular RAG), remote data inspection, and distributed concurrency controls-we demonstrate how agentic AI can overcome the context and reasoning limitations of current state-of-the-art systems to rigorously support scientific workflows. Finally, we outline a generalization of DeepTS to support deep knowledge graphs and discuss the application of this conceptual approach to high-energy physics (DeepQCD).",
+      "authors": [
+        "Judy Fox",
+        "Geoffrey Fox"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "eess.SY",
+        "hep-ph"
+      ],
+      "published": "2026-05-25T19:57:57+00:00",
+      "link": "https://arxiv.org/pdf/2605.26305v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Two frameworks for agentic AI in scientific workflows: automated dataset curation and autonomous lecture-to-report conversion.",
+      "llm_evidence_cn": "面向科学工作流的两个智能体AI框架：自动化数据集策展与自主讲座转报告。",
+      "llm_evidence": "面向科学工作流的两个智能体AI框架：自动化数据集策展与自主讲座转报告。",
+      "canonical_evidence": "面向科学工作流的两个智能体AI框架：自动化数据集策展与自主讲座转报告。",
+      "llm_tldr_en": "DeepTS/DeepCollector automates time-series dataset curation; DeepScribe converts physics lectures into structured reports, demonstrating agentic AI for scientific data processing.",
+      "llm_tldr_cn": "针对科学工作流中数据策展与报告生成自动化难题，本文提出两个混合本地-远程架构的智能体框架。DeepTS/DeepCollector实现大规模时间序列数据集自动提取与去重，DeepScribe将复杂物理讲座转为结构化科学报告。实验验证了智能体AI在克服上下文限制和提升科研效率方面的潜力，为AI for Science提供了工程化参考。",
+      "llm_tldr": "针对科学工作流中数据策展与报告生成自动化难题，本文提出两个混合本地-远程架构的智能体框架。DeepTS/DeepCollector实现大规模时间序列数据集自动提取与去重，DeepScribe将复杂物理讲座转为结构化科学报告。实验验证了智能体AI在克服上下文限制和提升科研效率方面的潜力，为AI for Science提供了工程化参考。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2605.25382v2",
+      "source": "arxiv",
+      "title": "AuthTrace: Diagnosing Evidence Construction in Thematically Dense Single-Author Corpora",
+      "abstract": "Evidence construction--the stage that determines which passages reach the language model before generation begins--is evaluated paradigm by paradigm, leaving practitioners with no principled way to diagnose which organization strategy fails, where, or why. We introduce AuthTrace, a diagnostic benchmark built on thematically dense single-author corpora where near-miss distractors share style, topic, and vocabulary with the required evidence. AuthTrace provides explicit quoted evidence, exact fan-in annotation, and a unified pack-level protocol measuring evidence recall, evidence precision, and answer correctness. A fan-in gradient--the number of source documents required to support the answer--serves as the primary diagnostic axis, enabling controlled comparison across retrieval, memory, graph, and structured-evidence paradigms. Evaluating eight systems across two QA models, we find that evidence recall is the strongest observed predictor of answer correctness under the primary reader-judge pair (r = 0.96); most failures stem from missing evidence rather than answer synthesis. Fan-in further exposes paradigm-specific collapse patterns: flat retrieval degrades 2-3x faster than thematically organized evidence construction. These results show fan-in decomposition to be a reusable diagnostic lens for identifying where evidence-construction systems fail and which paradigm best serves a given workload.",
+      "authors": [
+        "Xiaoqing Wu",
+        "Feifei Li",
+        "Haoliang Ming",
+        "Wenhui Que"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-25T03:10:52+00:00",
+      "link": "https://arxiv.org/pdf/2605.25382v2",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Benchmark for diagnosing evidence construction in language models, measuring evidence recall and precision, relevant for claim-evidence grounding.",
+      "llm_evidence_cn": "用于诊断语言模型证据构建的基准，测量证据召回率和精确率，与声明-证据基础相关。",
+      "llm_evidence": "用于诊断语言模型证据构建的基准，测量证据召回率和精确率，与声明-证据基础相关。",
+      "canonical_evidence": "用于诊断语言模型证据构建的基准，测量证据召回率和精确率，与声明-证据基础相关。",
+      "llm_tldr_en": "Introduces AuthTrace, a diagnostic benchmark for evaluating evidence construction in thematically dense corpora, using fan-in gradient to measure evidence recall and precision, helping identify where and why evidence grounding fails.",
+      "llm_tldr_cn": "该论文提出AuthTrace基准，用于诊断在主题密集的单作者语料中语言模型的证据构建阶段。通过显式引用证据和扇入梯度标注，该基准测量证据召回、证据精确和答案正确性，揭示不同组织策略在何处以及为何失败扇入梯度作为主要诊断轴。这项工作为改进科学研究中的声明-证据链接提供了可操作的诊断工具，有助于避免无支撑声明的产生。",
+      "llm_tldr": "该论文提出AuthTrace基准，用于诊断在主题密集的单作者语料中语言模型的证据构建阶段。通过显式引用证据和扇入梯度标注，该基准测量证据召回、证据精确和答案正确性，揭示不同组织策略在何处以及为何失败扇入梯度作为主要诊断轴。这项工作为改进科学研究中的声明-证据链接提供了可操作的诊断工具，有助于避免无支撑声明的产生。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "How do AI research agents avoid unsupported claims and metric misuse in scientific papers?",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.26352v1",
+      "source": "arxiv",
+      "title": "RICE-PO: Turning Retrieval Interactions into Credit Signals for Reasoning Agents",
+      "abstract": "Retrieval is increasingly moving from one-shot matching toward interactive reasoning, where language agents iteratively inspect evidence, reformulate queries, and search again. Training such agents raises a credit-assignment challenge: executable actions such as queries or summaries can be directly evaluated by the retriever, while latent reasoning steps are not directly observable and only affect future executable actions. This asymmetry makes outcome-level reward assignment unreliable, as the same final reward may credit reasoning steps that did not actually shape retrieval success. We propose RICE-PO, a critic-free policy optimization framework that converts retrieval interactions into localized learning signals. RICE-PO selects high-uncertainty executable actions as anchors, evaluates local counterfactual branches using retrieval metrics, and propagates credit to latent reasoning steps only when reasoning-to-action influence is strong and future residual effects are stable. On BRIGHT and BEIR, RICE-PO consistently outperforms prompt-based agents and group-based RL baselines under the same retriever setting. These results show that the structure of agent-environment interaction itself can provide useful supervision for training reasoning-based retrieval agents.",
+      "authors": [
+        "Mingchen Li",
+        "Hansi Zeng",
+        "Zhuo Qian",
+        "Jiatan Huang",
+        "Hamed Zamani",
+        "Hong Yu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-25T21:56:29+00:00",
+      "link": "https://arxiv.org/pdf/2605.26352v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "converts retrieval interactions into credit signals for reasoning agents, improving state tracking in evidence-based reasoning",
+      "llm_evidence_cn": "将检索交互转化为信用信号，提升推理智能体在证据推理中的状态跟踪能力",
+      "llm_evidence": "将检索交互转化为信用信号，提升推理智能体在证据推理中的状态跟踪能力",
+      "canonical_evidence": "将检索交互转化为信用信号，提升推理智能体在证据推理中的状态跟踪能力",
+      "llm_tldr_en": "Addresses credit assignment in interactive retrieval agents by proposing RICE-PO, a critic-free policy optimization that uses retrieval interactions as localized learning signals, improving reasoning from evidence.",
+      "llm_tldr_cn": "针对交互式检索智能体中因隐性推理步骤导致的信用分配难题，本文提出RICE-PO，一种无需批判器的策略优化框架，通过将检索交互转化为局部学习信号来引导训练，从而提升基于证据的推理能力。实验表明该方法能更有效地利用检索反馈，为构建更可靠的证据驱动型推理系统提供了新途径。",
+      "llm_tldr": "针对交互式检索智能体中因隐性推理步骤导致的信用分配难题，本文提出RICE-PO，一种无需批判器的策略优化框架，通过将检索交互转化为局部学习信号来引导训练，从而提升基于证据的推理能力。实验表明该方法能更有效地利用检索反馈，为构建更可靠的证据驱动型推理系统提供了新途径。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "state tracking in agent reasoning and execution",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

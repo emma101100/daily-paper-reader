@@ -6,195 +6,106 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-29 ~ 2026-05-28
-- 运行时间：2026-05-28 10:42:18 UTC
+- 最新运行日期：2026-05-28
+- 运行时间：2026-05-28 22:34:30 UTC
 - 运行状态：成功
-- 本次总论文数：58
-- 精读区：0
-- 速读区：58
+- 本次总论文数：28
+- 精读区：16
+- 速读区：12
 
 ### 今日简报（AI）
-本月共解读58篇论文，其中《AutoResearch AI》和《Intern-Atlas》获高分推荐，聚焦AI驱动科研自动化与方法论演化。最值得关注的是《AutoResearch AI》（10分）的AI科学发现自动化框架，以及《Intern-Atlas》（9分）为AI科学家构建的方法演化图谱。建议普通读者优先阅读《Learning How and What to Memorize》，了解认知启发的两阶段记忆优化方法。
-- 详情：[/20260429-20260528/README](/20260429-20260528/README)
+今日聚焦 AI 加速科研自动化与智能体技能学习，精读了两篇满分前沿论文，速览了长时运行压缩、安全投毒与空闲计算等关键挑战。  
+最值得一看的是：AI 正从辅助工具成长为能自主提出假说、设计实验的“AI 科学家”，同时智能体消费模型生成技能的机制正在被系统破解。  
+对普通读者而言，下一步不妨关注“自主科研智能体”如何避免被恶意内容操纵，以及如何把等待时间变成学习时间。
+- 详情：[/202605/28/README](/202605/28/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [AutoResearch AI: Towards AI-Powered Research Automation for Scientific Discovery](/202605/28/2605.23204v1-autoresearch-ai-towards-ai-powered-research-automation-for-scientific-discovery)  
+   标签：评分：10.0/10、query:autoresearch
+   evidence：关于AI驱动科研自动化的综述，涵盖文献支撑、假设生成、实验、来源追踪等。
+2. [From Raw Experience to Skill Consumption: A Systematic Study of Model-Generated Agent Skills](/202605/28/2605.23899v1-from-raw-experience-to-skill-consumption-a-systematic-study-of-model-generated-agent-skills)  
+   标签：评分：10.0/10、query:agent-memory
+   evidence：系统研究从智能体经验中提取和重用模型生成技能的完整生命周期
+3. [SkillEvolBench: Benchmarking the Evolution from Episodic Experience to Procedural Skills](/202605/28/2605.24117v1-skillevolbench-benchmarking-the-evolution-from-episodic-experience-to-procedural-skills)  
+   标签：评分：10.0/10、query:agent-memory
+   evidence：评估从情节经验到程序性技能的演化，用压缩轨迹和验证反馈更新外部技能库。
+4. [PANDO: Efficient Multimodal AI Agents via Online Skill Distillation](/202605/28/2605.24785v1-pando-efficient-multimodal-ai-agents-via-online-skill-distillation)  
+   标签：评分：10.0/10、query:agent-memory
+   evidence：维护结构化技能库，结合进度反思和置信度技能降级，提升网页智能体效率
+5. [CODESKILL: Learning Self-Evolving Skills for Coding Agents](/202605/28/2605.25430v1-codeskill-learning-self-evolving-skills-for-coding-agents)  
+   标签：评分：10.0/10、query:agent-memory
+   evidence：通过将技能提取和维护重新定义为可学习策略，从编码智能体轨迹中学习自演化技能。
+6. [ResearchLoop: An Evidence-Gated Control Plane for AI-Assisted Research](/202605/28/2605.28282v1-researchloop-an-evidence-gated-control-plane-for-ai-assisted-research)  
+   标签：评分：10.0/10、query:autoresearch
+   evidence：提供证据门控控制平面，将研究问题、任务合约、证据对象、声明账本等作为带溯源的可持久化项目状态。
+7. [Rethinking Memory as Continuously Evolving Connectivity](/202605/28/2605.28773v1-rethinking-memory-as-continuously-evolving-connectivity)  
+   标签：评分：10.0/10、query:agent-memory
+   evidence：连接演化记忆作为异构图，通过反馈驱动 refinement 和整合
+8. [DORA: a dose-response autoencoder for interpretable transcriptome-to-viability prediction](/202605/28/biorxiv-10-64898-2026-05-27-728125-v1-dora-a-dose-response-autoencoder-for-interpretable-transcriptome-to-viability-prediction)  
+   标签：评分：10.0/10、query:autoresearch
+   evidence：整合转录组学与活力的剂量反应药物预测深度学习模型
+9. [MemGym: a Long-Horizon Memory Environment for LLM Agents](/202605/28/2605.20833v1-memgym-a-long-horizon-memory-environment-for-llm-agents)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：评估长程智能体执行中动态记忆形成的基准
+10. [EvoSci: A Bio-Inspired Multi-Agent Framework for the Evolution of Scientific Discovery](/202605/28/2605.24018v1-evosci-a-bio-inspired-multi-agent-framework-for-the-evolution-of-scientific-discovery)  
+   标签：评分：9.0/10、query:autoresearch
+   evidence：带共享记忆和进化反馈的多智能体科学协作框架，用于迭代生成想法
+11. [PANDO: Efficient Multimodal AI Agents via Online Skill Distillation](/202605/28/2605.24785v2-pando-efficient-multimodal-ai-agents-via-online-skill-distillation)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：通过在线技能蒸馏从智能体轨迹维护结构化技能库，提升效率
+12. [Retrieval as Reasoning: Self-Evolving Agent-Native Retrieval via LLM-Wiki](/202605/28/2605.25480v1-retrieval-as-reasoning-self-evolving-agent-native-retrieval-via-llm-wiki)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：智能体原生检索，以自演化结构化Wiki页面作为图状记忆支持推理。
+13. [Retrieval as Reasoning: Self-Evolving Agent-Native Retrieval via LLM-Wiki](/202605/28/2605.25480v2-retrieval-as-reasoning-self-evolving-agent-native-retrieval-via-llm-wiki)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：提出一种智能体原生检索系统，具有自演化的结构化知识（带链接的Wiki页面），实现检索即推理。
+14. [Personalize-then-Store: Benchmarking and Learning Personalized Memory for Long-horizon Agents](/202605/28/2605.25535v1-personalize-then-store-benchmarking-and-learning-personalized-memory-for-long-horizon-agents)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：研究长程任务中基于LLM的智能体的个性化记忆策略，提出基准和会话级学习方法。
+15. [Anticipate and Learn: Unleashing Idle-Time Compute in Proactive Agents](/202605/28/2605.25971v1-anticipate-and-learn-unleashing-idle-time-compute-in-proactive-agents)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：利用空闲计算和持久记忆的前瞻性智能体架构，解决知识缺口并准备证据。
+16. [You Live More Than Once: Towards Hierarchical Skill Meta-Evolving](/202605/28/2605.28390v1-you-live-more-than-once-towards-hierarchical-skill-meta-evolving)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：从智能体执行轨迹学习元技能以演化技能库；分层技能元演化
 
 ### 速读区论文标签
-1. [AutoResearch AI: Towards AI-Powered Research Automation for Scientific Discovery](/20260429-20260528/2605.23204v1-autoresearch-ai-towards-ai-powered-research-automation-for-scientific-discovery)  
-   标签：评分：10.0/10、query:autoresearch
-   evidence：关于AI驱动科研自动化的全面综述，涵盖端到端工作流
-2. [Intern-Atlas: A Methodological Evolution Graph as Research Infrastructure for AI Scientists](/20260429-20260528/2604.28158v1-intern-atlas-a-methodological-evolution-graph-as-research-infrastructure-for-ai-scientists)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：为自动化科学的方法论演化图，提供结构化工件和来源追踪
-3. [Learning How and What to Memorize: Cognition-Inspired Two-Stage Optimization for Evolving Memory](/20260429-20260528/2605.00702v1-learning-how-and-what-to-memorize-cognition-inspired-two-stage-optimization-for-evolving-memory)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：认知启发的两阶段优化框架学习LLM代理的记忆组织和更新
-4. [MemORAI: Memory Organization and Retrieval via Adaptive Graph Intelligence for LLM Conversational Agents](/20260429-20260528/2605.01386v1-memorai-memory-organization-and-retrieval-via-adaptive-graph-intelligence-for-llm-conversational-agents)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：基于图的记忆，含来源跟踪和自适应检索
-5. [SciResearcher: Scaling Deep Research Agents for Frontier Scientific Reasoning](/20260429-20260528/2605.01489v1-sciresearcher-scaling-deep-research-agents-for-frontier-scientific-reasoning)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：全自动前沿科学研究推理框架
-6. [NORA: A Harness-Engineered Autonomous Research Agent for End-to-End Spatial Data Science](/20260429-20260528/2605.02092v1-nora-a-harness-engineered-autonomous-research-agent-for-end-to-end-spatial-data-science)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：面向端到端空间数据科学的自主研究代理，采用技能优先架构
-7. [SkillOS: Learning Skill Curation for Self-Evolving Agents](/20260429-20260528/2605.06614v1-skillos-learning-skill-curation-for-self-evolving-agents)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：从经验中学习自进化智能体的技能策展策略
-8. [Do Self-Evolving Agents Forget? Capability Degradation and Preservation in Lifelong LLM Agent Adaptation](/20260429-20260528/2605.09315v1-do-self-evolving-agents-forget-capability-degradation-and-preservation-in-lifelong-llm-agent-adaptation)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：研究自进化智能体在工作流、技能、模型和记忆通道上的能力侵蚀
-9. [NanoResearch: Co-Evolving Skills, Memory, and Policy for Personalized Research Automation](/20260429-20260528/2605.10813v1-nanoresearch-co-evolving-skills-memory-and-policy-for-personalized-research-automation)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：技能、记忆与策略共演化以实现全研究流程自动化
-10. [NanoResearch: Co-Evolving Skills, Memory, and Policy for Personalized Research Automation](/20260429-20260528/2605.10813v2-nanoresearch-co-evolving-skills-memory-and-policy-for-personalized-research-automation)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：技能、记忆与策略共演化以实现全研究流程自动化
-11. [SkillGraph: Skill-Augmented Reinforcement Learning for Agents via Evolving Skill Graphs](/20260429-20260528/2605.12039v1-skillgraph-skill-augmented-reinforcement-learning-for-agents-via-evolving-skill-graphs)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：技能图从轨迹中提取可复用技能
-12. [SAGE: A Self-Evolving Agentic Graph-Memory Engine for Structure-Aware Associative Memory](/20260429-20260528/2605.12061v1-sage-a-self-evolving-agentic-graph-memory-engine-for-structure-aware-associative-memory)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：提出SAGE，一种自进化的图记忆引擎，用于语言智能体的动态图构建和检索
-13. [MLReplicate: Benchmarking Autonomous Research Systems for Machine Learning Reproducibility](/20260429-20260528/2605.16616v1-mlreplicate-benchmarking-autonomous-research-systems-for-machine-learning-reproducibility)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：评估自主研究系统在机器学习可重现性上的基准
-14. [AI for Auto-Research: Roadmap & User Guide](/20260429-20260528/2605.18661v1-ai-for-auto-research-roadmap--user-guide)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：端到端分析AI在整个研究生命周期中的应用
-15. [AutoResearchClaw: Self-Reinforcing Autonomous Research with Human-AI Collaboration](/20260429-20260528/2605.20025v1-autoresearchclaw-self-reinforcing-autonomous-research-with-human-ai-collaboration)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：提出了一个多智能体自主研究管线，包含自愈、辩论和结果复现
-16. [AutoResearchClaw: Self-Reinforcing Autonomous Research with Human-AI Collaboration](/20260429-20260528/2605.20025v2-autoresearchclaw-self-reinforcing-autonomous-research-with-human-ai-collaboration)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：多智能体辩论和自愈执行器，利用失败改进假设
-17. [Mem-$π$: Adaptive Memory through Learning When and What to Generate](/20260429-20260528/2605.21463v1-mem--adaptive-memory-through-learning-when-and-what-to-generate)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：自适应记忆生成代替静态检索
-18. [Dynamic Mixture of Latent Memories for Self-Evolving Agents](/20260429-20260528/2605.21951v1-dynamic-mixture-of-latent-memories-for-self-evolving-agents)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：用于自演化代理的潜在记忆混合，具备检索与整合
-19. [The Log is the Agent: Event-Sourced Reactive Graphs for Auditable, Forkable Agentic Systems](/20260429-20260528/2605.21997v1-the-log-is-the-agent-event-sourced-reactive-graphs-for-auditable-forkable-agentic-systems)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：事件源反应图用于可审计状态和溯源
-20. [Short-Term-to-Long-Term Memory Transfer for Knowledge Graphs under Partial Observability](/20260429-20260528/2605.22142v1-short-term-to-long-term-memory-transfer-for-knowledge-graphs-under-partial-observability)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：通过学习决策实现短期到长期记忆迁移
-21. [Claw AI Lab: An Autonomous Multi-Agent Research Team](/20260429-20260528/2605.22662v1-claw-ai-lab-an-autonomous-multi-agent-research-team)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：自主多智能体研究平台，支持可定制角色、工作流和工件检查
-22. [SciAtlas: A Large-Scale Knowledge Graph for Automated Scientific Research](/20260429-20260528/2605.22878v1-sciatlas-a-large-scale-knowledge-graph-for-automated-scientific-research)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：大规模知识图谱支持自动化科学研究的工件溯源
-23. [PRAXIS: Case-distilled and code-verified AI agents for biological research](/20260429-20260528/2605.23169v1-praxis-case-distilled-and-code-verified-ai-agents-for-biological-research)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：案例蒸馏与代码验证的AI代理，带有结构化长期记忆
-24. [SAM: State-Adaptive Memory for Long-Horizon Reasoning Agent](/20260429-20260528/2605.24468v1-sam-state-adaptive-memory-for-long-horizon-reasoning-agent)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：针对长视界推理代理的状态自适应记忆模块
-25. [AgentFugue: Agent Scaling for Long-Horizon Tasks through Collective Reasoning](/20260429-20260528/2605.24486v1-agentfugue-agent-scaling-for-long-horizon-tasks-through-collective-reasoning)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：多智能体通过共享推理中心协同完成长程任务
-26. [Mitigating Provenance-Role Collapse in Long-Term Agents via Typed Memory Representation](/20260429-20260528/2605.25869v1-mitigating-provenance-role-collapse-in-long-term-agents-via-typed-memory-representation)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：类型化记忆表示，包含来源跟踪，用于长期代理
-27. [Is Agent Memory a Database? Rethinking Data Foundations for Long-Term AI Agent Memory](/20260429-20260528/2605.26252v1-is-agent-memory-a-database-rethinking-data-foundations-for-long-term-ai-agent-memory)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：直接重新思考长期AI智能体记忆作为数据管理工作负载，强调状态轨迹正确性
-28. [MUSE-Autoskill: Self-Evolving Agents via Skill Creation, Memory, Management, and Evaluation](/20260429-20260528/2605.27366v1-muse-autoskill-self-evolving-agents-via-skill-creation-memory-management-and-evaluation)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：技能创建、复用和优化，结合记忆与评估
-29. [AI Research Agents Narrow Scientific Exploration](/20260429-20260528/2605.27905v1-ai-research-agents-narrow-scientific-exploration)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：将AI研究代理作为科学搜索系统进行研究，评估其探索广度
-30. [MemCog: From Memory-as-Tool to Memory-as-Cognition in Conversational Agents](/20260429-20260528/2605.28046v1-memcog-from-memory-as-tool-to-memory-as-cognition-in-conversational-agents)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：基于关联图代理记忆的记忆即认知系统
-31. [OmniCellAgent: An AI Scientist for Omic-Driven Scientific Discovery](/20260429-20260528/biorxiv-10-1101-2025-07-31-667797-v2-omnicellagent-an-ai-scientist-for-omic-driven-scientific-discovery)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：多智能体AI科学家自主检索和分析组学数据
-32. [Towards autonomous biology: Compiler-Verified Protocols as a Foundation for Real World AI Execution](/20260429-20260528/biorxiv-10-64898-2026-05-05-720956-v1-towards-autonomous-biology-compiler-verified-protocols-as-a-foundation-for-real-world-ai-execution)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：提出用于自主生物学的编译器验证协议，实现闭环发现
-33. [Open-Rosalind: Tool-First Biomedical LLM Agents with Process-Aware Benchmarking](/20260429-20260528/biorxiv-10-64898-2026-05-06-722404-v1-open-rosalind-tool-first-biomedical-llm-agents-with-process-aware-benchmarking)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：以证据接地和追踪完整性为操作原则的智能体系统
-34. [ClaroAI-Bench: Evaluating Agentic Scientific Reproducibility on Real Biomedical Papers](/20260429-20260528/biorxiv-10-64898-2026-05-08-723611-v1-claroai-bench-evaluating-agentic-scientific-reproducibility-on-real-biomedical-papers)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：评估代理科研可重现性的基准
-35. [BiomniBench: Process-level Evaluation of LLM Agents for Real-world Biomedical Research](/20260429-20260528/biorxiv-10-64898-2026-05-12-724604-v1-biomnibench-process-level-evaluation-of-llm-agents-for-real-world-biomedical-research)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：针对生物医学研究智能体的过程级基准，解决评估局限性
-36. [When Continual Learning Moves to Memory: A Study of Experience Reuse in LLM Agents](/20260429-20260528/2604.27003v1-when-continual-learning-moves-to-memory-a-study-of-experience-reuse-in-llm-agents)  
+1. [Parallel Context Compaction for Long-Horizon LLM Agent Serving](/202605/28/2605.23296v1-parallel-context-compaction-for-long-horizon-llm-agent-serving)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：研究有限上下文窗口下记忆中的经验重用冲突对持续学习的影响
-37. [Machine Collective Intelligence for Explainable Scientific Discovery](/20260429-20260528/2604.27297v1-machine-collective-intelligence-for-explainable-scientific-discovery)  
+   evidence：提出并行总结用于长程智能体的上下文压缩，管理增长的历史
+2. [Deep-Research Agents Can Be Poisoned via User-Generated Content](/202605/28/2605.24245v1-deep-research-agents-can-be-poisoned-via-user-generated-content)  
    标签：评分：8.0/10、query:autoresearch
-   evidence：多智能体演化假设生成与批判的科学发现
-38. [Contextual Agentic Memory is a Memo, Not True Memory](/20260429-20260528/2604.27707v1-contextual-agentic-memory-is-a-memo-not-true-memory)  
+   evidence：深度研究智能体迭代检索、综合并引用网络内容生成结构化报告，易受用户生成内容投毒攻击
+3. [Anticipate and Learn: Unleashing Idle-Time Compute in Proactive Agents](/202605/28/2605.25971v2-anticipate-and-learn-unleashing-idle-time-compute-in-proactive-agents)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：批评当前代理记忆仅为检索，提倡真正的基于权重的记忆
-39. [Intern-Atlas: A Methodological Evolution Graph as Research Infrastructure for AI Scientists](/20260429-20260528/2604.28158v2-intern-atlas-a-methodological-evolution-graph-as-research-infrastructure-for-ai-scientists)  
+   evidence：使用持久记忆和空闲计算预测用户需求的主动智能体，展示记忆检索与整合以满足预先准备。
+4. [Experiments in Agentic AI for Science](/202605/28/2605.26305v1-experiments-in-agentic-ai-for-science)  
    标签：评分：8.0/10、query:autoresearch
-   evidence：作为AI科学家研究基础设施的方法演化图
-40. [An Agent-Oriented Pluggable Experience-RAG Skill for Experience-Driven Retrieval Strategy Orchestration](/20260429-20260528/2605.03989v2-an-agent-oriented-pluggable-experience-rag-skill-for-experience-driven-retrieval-strategy-orchestration)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：用于检索策略编排的经验记忆
-41. [Governed Collaborative Memory as Artificial Selection in LLM-Based Multi-Agent Systems](/20260429-20260528/2605.04264v1-governed-collaborative-memory-as-artificial-selection-in-llm-based-multi-agent-systems)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：将治理协作记忆框架化为多代理系统中共享制度状态的选择机制
-42. [SkillRet: A Large-Scale Benchmark for Skill Retrieval in LLM Agents](/20260429-20260528/2605.05726v1-skillret-a-large-scale-benchmark-for-skill-retrieval-in-llm-agents)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：用于从大规模技能库中检索技能的基准
-43. [More Than Can Be Said: A Benchmark and Framework for Pre-Question Scientific Ideation](/20260429-20260528/2605.06345v1-more-than-can-be-said-a-benchmark-and-framework-for-pre-question-scientific-ideation)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：多代理框架用于问题前科学构思和假设生成
-44. [AgentDisCo: Towards Disentanglement and Collaboration in Open-ended Deep Research Agents](/20260429-20260528/2605.11732v1-agentdisco-towards-disentanglement-and-collaboration-in-open-ended-deep-research-agents)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：用于自主深度研究的解耦协作代理架构
-45. [LongMemEval-V2: Evaluating Long-Term Agent Memory Toward Experienced Colleagues](/20260429-20260528/2605.12493v1-longmemeval-v2-evaluating-long-term-agent-memory-toward-experienced-colleagues)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：评估长期代理记忆的基准，涉及检索与整合
-46. [SkillsVote: Lifecycle Governance of Agent Skills from Collection, Recommendation to Evolution](/20260429-20260528/2605.18401v1-skillsvote-lifecycle-governance-of-agent-skills-from-collection-recommendation-to-evolution)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：提出代理技能从收集、推荐到演化的生命周期治理框架
-47. [SkillGenBench: Benchmarking Skill Generation Pipelines for LLM Agents](/20260429-20260528/2605.18693v1-skillgenbench-benchmarking-skill-generation-pipelines-for-llm-agents)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：技能生成管道基准，直接关联技能库构建
-48. [ContextFlow: Hierarchical Task-State Alignment for Long-Horizon Embodied Agents](/20260429-20260528/2605.19314v1-contextflow-hierarchical-task-state-alignment-for-long-horizon-embodied-agents)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：面向长程代理的分层任务状态对齐与维护
-49. [MemConflict: Evaluating Long-Term Memory Systems Under Memory Conflicts](/20260429-20260528/2605.20926v1-memconflict-evaluating-long-term-memory-systems-under-memory-conflicts)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：在动态、静态和条件冲突下评估长期记忆系统
-50. [Self-Evolving Multi-Agent Systems via Decentralized Memory](/20260429-20260528/2605.22721v1-self-evolving-multi-agent-systems-via-decentralized-memory)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：去中心化记忆，包含利用池和探索池用于代理改进
-51. [Meta-Agent: From Task Descriptions to Verified Multi-Agent Systems](/20260429-20260528/2605.25233v1-meta-agent-from-task-descriptions-to-verified-multi-agent-systems)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：从任务描述自动构建并执行经过验证的多代理系统
-52. [Agentic AI Workload Characteristics](/20260429-20260528/2605.26297v1-agentic-ai-workload-characteristics)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：刻画了多轮任务中状态ful代理的执行特征
-53. [PEAM: Parametric Embodied Agent Memory through Contrastive Internalization of Experience in Minecraft](/20260429-20260528/2605.27762v1-peam-parametric-embodied-agent-memory-through-contrastive-internalization-of-experience-in-minecraft)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：将失败-修正轨迹内化为参数化记忆以便技能复用
-54. [Agentic systems are adept at solving well-scoped, verifiable problems in computational biology](/20260429-20260528/biorxiv-10-64898-2026-04-06-716850-v2-agentic-systems-are-adept-at-solving-well-scoped-verifiable-problems-in-computational-biology)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：用于评估计算生物学中智能体系统的基准
-55. [NEURA: An agentic system for autonomous neuroimaging workflows](/20260429-20260528/biorxiv-10-64898-2026-04-27-721217-v1-neura-an-agentic-system-for-autonomous-neuroimaging-workflows)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：用于自主科学工作流的代理系统，具备声明验证
-56. [NEURA: A proof-carrying framework for hallucination-resistant neuroimaging automation](/20260429-20260528/biorxiv-10-64898-2026-04-27-721217-v2-neura-a-proof-carrying-framework-for-hallucination-resistant-neuroimaging-automation)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：证明承载框架确保声明经过工具证据验证
-57. [Talk2QSP: Deriving Executable Scenarios from Unstructured Literature via Human-in-the-Loop Agents](/20260429-20260528/biorxiv-10-64898-2026-05-06-723244-v2-talk2qsp-deriving-executable-scenarios-from-unstructured-literature-via-human-in-the-loop-agents)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：从文献提取可执行场景的代理框架
-58. [NanoCortex: A Unified Agentic System for Nanopore Sequencing Analysis](/20260429-20260528/biorxiv-10-64898-2026-05-19-726254-v1-nanocortex-a-unified-agentic-system-for-nanopore-sequencing-analysis)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：用于纳米孔测序分析的全自动多智能体系统
+   evidence：面向科学工作流的两个智能体AI框架：自动化数据集策展与自主讲座转报告。
+5. [ACC: Compiling Agent Trajectories for Long-Context Training](/202605/28/2605.21850v1-acc-compiling-agent-trajectories-for-long-context-training)  
+   标签：评分：7.0/10、query:agent-memory
+   evidence：编译智能体轨迹为长上下文训练数据，使语言模型能处理需维护状态的长程任务
+6. [Forecasting Scientific Progress with Artificial Intelligence](/202605/28/2605.22681v1-forecasting-scientific-progress-with-artificial-intelligence)  
+   标签：评分：7.0/10、query:autoresearch
+   evidence：评估AI系统在预测科学进展方面的可行性、推理、方案设计和时序预测能力
+7. [Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components](/202605/28/2605.24558v1-position-ai-for-science-should-treat-measurement-to-dataset-pipelines-as-inference-components)  
+   标签：评分：7.0/10、query:autoresearch
+   evidence：主张捕获测量管道来源，避免隐藏假设空间
+8. [AuthTrace: Diagnosing Evidence Construction in Thematically Dense Single-Author Corpora](/202605/28/2605.25382v2-authtrace-diagnosing-evidence-construction-in-thematically-dense-single-author-corpora)  
+   标签：评分：7.0/10、query:autoresearch
+   evidence：用于诊断语言模型证据构建的基准，测量证据召回率和精确率，与声明-证据基础相关。
+9. [FlyRoute: Self-Evolving Agent Profiling via Data Flywheel for Adaptive Task Routing](/202605/28/2605.22057v1-flyroute-self-evolving-agent-profiling-via-data-flywheel-for-adaptive-task-routing)  
+   标签：评分：6.0/10、query:agent-memory
+   evidence：从成功的智能体交互中提取能力证据，形成技能库用于自适应路由，实现基于轨迹的智能体改进。
+10. [An Interactive Paradigm for Deep Research](/202605/28/2605.24266v1-an-interactive-paradigm-for-deep-research)  
+   标签：评分：6.0/10、query:autoresearch
+   evidence：可操控的深度研究框架，支持流程中用户控制和多样性感知规划
+11. [Memory-Induced Tool-Drift in LLM Agents](/202605/28/2605.24941v1-memory-induced-tool-drift-in-llm-agents)  
+   标签：评分：6.0/10、query:agent-memory
+   evidence：研究长时记忆偏差导致LLM智能体工具调用失败，提出记忆引发工具漂移的基准。
+12. [RICE-PO: Turning Retrieval Interactions into Credit Signals for Reasoning Agents](/202605/28/2605.26352v1-rice-po-turning-retrieval-interactions-into-credit-signals-for-reasoning-agents)  
+   标签：评分：6.0/10、query:agent-memory
+   evidence：将检索交互转化为信用信号，提升推理智能体在证据推理中的状态跟踪能力
 
 
 <div class="dpr-home-promo-card">

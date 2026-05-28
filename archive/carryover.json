@@ -1,17 +1,200 @@
 {
-  "generated_at": "2026-05-28T10:11:55.304160+00:00",
-  "updated_date": "20260429-20260528",
+  "generated_at": "2026-05-28T22:06:32.319293+00:00",
+  "updated_date": "20260528",
   "carryover_days": 9,
   "tag_states": {
     "autoresearch": {
-      "updated_date": "20260429-20260528",
+      "updated_date": "20260528",
       "carryover_days": 9,
-      "items": []
+      "items": [
+        {
+          "id": "biorxiv-10-64898-2026-05-18-725921-v1",
+          "source": "biorxiv",
+          "title": "AI-Discovered Cognitive Models Reveal Novel Insights into Human and Animal Learning",
+          "abstract": "Scientific models are widely used across the natural sciences as an interface between scientific theories and empirical data [1]. Such models play a key role, for example, in the study of human and animal learning, where they express algorithmic hypotheses and relate them to psychology and neuroscience data [2, 3]. These models are traditionally handcrafted by expert researchers based on existing theory or new insights. Such handcrafted models, however, are now known to fall short of capturing the full richness of behavior, even in their narrow domains [4-7]. An alternative data-driven approach has emerged, seeking to discover new insights by fitting and interpreting flexible models [8-11]. However, these tools require substantial human effort to derive insight from data, and it has been unclear how to discover new ideas from data efficiently. Here, we present DataDIVER, a general approach for automatically discovering computational models from data, and demonstrate that these models surface novel mechanistic insights into human and animal learning. Our approach delivers models that take the form of short computer programs, which are optimized both to fit data well and to be simple. These programs explicitly connect with existing theoretical frameworks and are readily understandable by human scientists. They can also be used to make novel predictions, some of which we show are borne out in re-analysis of existing data. General-purpose tools for surfacing new ideas from data, especially in combination with the large datasets that are increasingly available in many fields, stand to dramatically accelerate scientific discovery.",
+          "authors": [
+            "Kasenberg, D.",
+            "Castro, P. S.",
+            "Eckstein, M. K.",
+            "Elteto, N.",
+            "Dabney, W.",
+            "Wang, C. L.",
+            "Engelcke, M.",
+            "Mohanta, R.",
+            "Dev, A.",
+            "Botvinick, M. M.",
+            "Tomasev, N.",
+            "Turner, G. C.",
+            "Costa, V. D.",
+            "Daw, N. D.",
+            "Stachenfeld, K. L.",
+            "Miller, K. J."
+          ],
+          "primary_category": "animal behavior and cognition",
+          "categories": [
+            "animal behavior and cognition"
+          ],
+          "published": "2026-05-21T00:00:00+00:00",
+          "link": "https://www.biorxiv.org/content/10.64898/2026.05.18.725921v1.full.pdf",
+          "tags": [
+            "keyword:agent-memory",
+            "keyword:autoresearch",
+            "query:agent-memory",
+            "query:autoresearch"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Uses AI to automatically discover cognitive models, automating scientific model building",
+          "llm_evidence_cn": "使用AI自动发现认知模型，实现科学模型构建自动化",
+          "llm_evidence": "使用AI自动发现认知模型，实现科学模型构建自动化",
+          "canonical_evidence": "使用AI自动发现认知模型，实现科学模型构建自动化",
+          "llm_tldr_en": "Demonstrates automated discovery of cognitive models from behavioral data using flexible AI tools, revealing novel insights into learning and challenging handcrafted models.",
+          "llm_tldr_cn": "传统认知模型由专家手工构建，难以捕捉行为的丰富性。本文采用数据驱动方法，利用灵活AI工具自动发现认知模型，通过拟合和解释模型揭示人类与动物学习的新见解。研究表明AI发现的模型不仅在拟合优度上超越手工模型，还提供了新的科学概念与解释。这项工作将AI for Science推及认知科学，展示了机器学习作为模型发现引擎的潜力，加速理论迭代与知识发现。",
+          "llm_tldr": "传统认知模型由专家手工构建，难以捕捉行为的丰富性。本文采用数据驱动方法，利用灵活AI工具自动发现认知模型，通过拟合和解释模型揭示人类与动物学习的新见解。研究表明AI发现的模型不仅在拟合优度上超越手工模型，还提供了新的科学概念与解释。这项工作将AI for Science推及认知科学，展示了机器学习作为模型发现引擎的潜力，加速理论迭代与知识发现。",
+          "llm_tags": [
+            "query:autoresearch"
+          ],
+          "matched_query_tag": "query:autoresearch",
+          "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+          "matched_requirement_id": "req-3",
+          "selection_source": "carryover_cache",
+          "paper_id": "biorxiv-10-64898-2026-05-18-725921-v1",
+          "carry_days": 1
+        },
+        {
+          "id": "biorxiv-10-64898-2026-04-30-721768-v2",
+          "source": "biorxiv",
+          "title": "Interpreting Omics Data Analysis with Large Language Models for Disease Target and Drug Discovery",
+          "abstract": "In biomedical scientific discovery, synthesizing prior knowledge from the literature is an essential component of interpreting numerical omics data analyses for disease target identification and drug discovery. Large language models (LLMs) alone can rapidly retrieve disease mechanisms from biomedical text, but text-only outputs are general and unreliable for target and drug prioritization without cohort-specific quantitative evidence. Herein, we propose a provenance-aware Text-to-Target framework that couples schema-constrained multi-model LLM retrieval with numeric omics data analysis. The key design is a modality-aware fusion step: candidates are partitioned into overlap-supported anchors, retrieval-only hidden hubs, and network-emergent novelty nodes, then propagated into staged hypothesis and strategy generation under topology constraints. We evaluate the model in Alzheimers disease (AD) and pancreatic ductal adenocarcinoma (PDAC). In PDAC, the workflow produced a balanced 75-gene candidate universe and a 23-strategy portfolio, with significant DepMap support at both target level and strategy level. In AD, stricter candidate controls yielded a compact 34-gene universe and 14 strategies; under an expanded CRISPRbrain registry, both target-level axes were significant, with strong strategy-level enrichment. Across both diseases, final strategies preserved full provenance closure to the candidate pool, enabling end-to-end auditability from retrieval artifacts to validation outputs. These results support a transferable discovery architecture in which omics evidence constrains biological activity, LLM retrieval expands mechanistic search space, and network-aware fusion preserves interpretability. The framework provides a reproducible basis for dual-disease target prioritization and motivates continuous literature-mechanism concordance with agentic evidence-refresh loops.",
+          "authors": [
+            "XU, Z.",
+            "Chen, W.",
+            "Ren, W.",
+            "Xu, T.",
+            "Amaechin, S.",
+            "Khan, R.",
+            "Chen, Y.",
+            "Province, M.",
+            "Payne, P.",
+            "Li, F."
+          ],
+          "primary_category": "bioinformatics",
+          "categories": [
+            "bioinformatics"
+          ],
+          "published": "2026-05-23T00:00:00+00:00",
+          "link": "https://www.biorxiv.org/content/10.64898/2026.04.30.721768v2.full.pdf",
+          "tags": [
+            "keyword:agent-memory",
+            "keyword:autoresearch",
+            "query:agent-memory",
+            "query:autoresearch"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "provenance-aware framework partitioning candidates into overlap-supported anchors, retrieval-only hidden hubs, and new discoveries",
+          "llm_evidence_cn": "来源感知框架，将候选物划分为重叠支持锚点、仅检索隐藏枢纽和新发现",
+          "llm_evidence": "来源感知框架，将候选物划分为重叠支持锚点、仅检索隐藏枢纽和新发现",
+          "canonical_evidence": "来源感知框架，将候选物划分为重叠支持锚点、仅检索隐藏枢纽和新发现",
+          "llm_tldr_en": "This paper proposes a provenance-aware Text-to-Target framework that couples schema-constrained multi-model LLM retrieval with quantitative omics data to prioritize disease targets and drugs with clear evidence partitioning.",
+          "llm_tldr_cn": "生物医学发现中，纯文本LLM检索缺乏队列特异性定量证据，导致结果不可靠。本文提出来源感知Text-to-Target框架，将模式约束的多模型LLM检索与数值组学数据分析耦合，通过模态感知融合将候选物分为重叠支持锚点、仅检索隐藏枢纽和新发现，实现证据可追溯的目标与药物优先级排序。",
+          "llm_tldr": "生物医学发现中，纯文本LLM检索缺乏队列特异性定量证据，导致结果不可靠。本文提出来源感知Text-to-Target框架，将模式约束的多模型LLM检索与数值组学数据分析耦合，通过模态感知融合将候选物分为重叠支持锚点、仅检索隐藏枢纽和新发现，实现证据可追溯的目标与药物优先级排序。",
+          "llm_tags": [
+            "query:autoresearch"
+          ],
+          "matched_query_tag": "query:autoresearch",
+          "matched_query_text": "structured research artifacts and provenance in automated science",
+          "matched_requirement_id": "req-4",
+          "selection_source": "carryover_cache",
+          "paper_id": "biorxiv-10-64898-2026-04-30-721768-v2",
+          "carry_days": 1
+        },
+        {
+          "id": "2605.27571v1",
+          "source": "arxiv",
+          "title": "Discovery Agents for Real-Time Analytics: Toward Proactive Insight Systems",
+          "abstract": "Modern analytics systems are fundamentally reactive, requiring users to define queries over increasingly complex and continuously evolving data. In real-time streaming environments, this paradigm breaks down, as the space of potential insights becomes too large to enumerate manually. We present a multi-agent architecture for autonomous insight discovery over real-time data streams. The system implements a continuous discovery loop in which agents generate hypotheses, compile them into executable analytics, validate generated artifacts, and produce visualizations and deployable applications. The architecture leverages Apache Kafka for event-driven coordination, Apache Flink for stream processing, and large language models to implement specialized agents. A key contribution is a contract-driven design based on typed intermediate artifacts, enabling modularity, observability, lineage, and safer execution of dynamically generated analytics. Through use cases in retail, finance, and public data, we show how this architecture supports a shift from query-driven analytics to proactive, discovery-driven systems.",
+          "authors": [
+            "Gaetano Rossiello",
+            "Dharmashankar Subramanian"
+          ],
+          "primary_category": "cs.AI",
+          "categories": [
+            "cs.AI",
+            "cs.CL",
+            "cs.DB"
+          ],
+          "published": "2026-05-26T18:43:25+00:00",
+          "link": "https://arxiv.org/pdf/2605.27571v1",
+          "tags": [
+            "keyword:agent-memory",
+            "keyword:autoresearch",
+            "query:agent-memory",
+            "query:autoresearch"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "multi-agent architecture for autonomous hypothesis generation and validation over real-time data",
+          "llm_evidence_cn": "多智能体架构实现实时数据上的自主假设生成与验证",
+          "llm_evidence": "多智能体架构实现实时数据上的自主假设生成与验证",
+          "canonical_evidence": "多智能体架构实现实时数据上的自主假设生成与验证",
+          "llm_tldr_en": "Discovery Agents implements a continuous loop for real-time analytics where agents generate hypotheses, compile analytics, validate artifacts, and produce visualizations, demonstrating proactive insight systems.",
+          "llm_tldr_cn": "分析系统通常是被动查询，无法应对实时流数据的洞察空间爆炸。本文提出多智能体架构，在实时数据流上实现自主发现循环：生成假设、编译分析、验证工件、生成可视化。系统基于Kafka和Flink，利用LLM驱动专用智能体。该方法展示了主动洞察系统的可行性，可迁移至科学自动发现流程。",
+          "llm_tldr": "分析系统通常是被动查询，无法应对实时流数据的洞察空间爆炸。本文提出多智能体架构，在实时数据流上实现自主发现循环：生成假设、编译分析、验证工件、生成可视化。系统基于Kafka和Flink，利用LLM驱动专用智能体。该方法展示了主动洞察系统的可行性，可迁移至科学自动发现流程。",
+          "llm_tags": [
+            "query:autoresearch"
+          ],
+          "matched_query_tag": "query:autoresearch",
+          "matched_query_text": "autonomous research agent systems for scientific discovery",
+          "matched_requirement_id": "req-1",
+          "selection_source": "carryover_cache",
+          "paper_id": "2605.27571v1",
+          "carry_days": 1
+        }
+      ]
     },
     "agent-memory": {
-      "updated_date": "20260429-20260528",
+      "updated_date": "20260528",
       "carryover_days": 9,
-      "items": []
+      "items": [
+        {
+          "id": "2605.27328v1",
+          "source": "arxiv",
+          "title": "Governed Evolution of Agent Runtimes through Executable Operational Cognition",
+          "abstract": "Recent advances in agentic systems increasingly treat code as an executable operational substrate rather than as a disposable output artifact. Prior work such as \\emph{Code as Agent Harness} frames validated agent-generated artifacts as runtime entities that can be created, executed, revised, persisted, and reused within long-running cognitive loops. However, the governance, lifecycle management, and operational evolution of such artifacts remain under-specified.   This paper proposes a framework for governed runtime evolution in multi-agent systems through executable operational cognition. We formalize agent-generated artifacts as persistent runtime capabilities that progressively become part of the operational substrate rather than transient intermediate outputs. Building on this perspective, we introduce \\emph{HarnessMutation} as a governed mechanism for lifecycle-aware runtime adaptation operating under explicit validation, traceability, evaluation, and rollback constraints.   Rather than treating runtime adaptation as unrestricted self-modification, the proposed framework models evolution as a bounded and observable process over persistent operational memory. It further shows how these ideas can be operationalized over modern agent runtimes and governance-oriented orchestration systems, providing a conceptual foundation for adaptive infrastructures whose evolution remains explicit, auditable, and constrained.",
+          "authors": [
+            "Mariano Garralda-Barrio"
+          ],
+          "primary_category": "cs.SE",
+          "categories": [
+            "cs.SE",
+            "cs.AI",
+            "cs.MA"
+          ],
+          "published": "2026-05-26T17:36:48+00:00",
+          "link": "https://arxiv.org/pdf/2605.27328v1",
+          "tags": [
+            "keyword:agent-memory",
+            "keyword:autoresearch",
+            "query:agent-memory",
+            "query:autoresearch"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Proposes governed runtime evolution in multi-agent systems by formalizing agent-generated artifacts as persistent runtime capabilities.",
+          "llm_evidence_cn": "提出在多智能体系统中通过将智能体生成工件形式化为持久运行时能力来治理运行时演化。",
+          "llm_evidence": "提出在多智能体系统中通过将智能体生成工件形式化为持久运行时能力来治理运行时演化。",
+          "canonical_evidence": "提出在多智能体系统中通过将智能体生成工件形式化为持久运行时能力来治理运行时演化。",
+          "llm_tldr_en": "Addresses under-specified governance of agent-generated code artifacts by proposing a framework for governed runtime evolution in multi-agent systems, turning validated artifacts into persistent operational substrate.",
+          "llm_tldr_cn": "该论文针对智能体系统中代码工件治理、生命周期管理和运行演化的欠规范化问题，提出一个通过可执行操作认知（Executable Operational Cognition）治理多智能体运行时演化的框架。它将经验证的智能体生成工件形式化为渐进成为操作底层的持久运行时能力，而非瞬态输出。该框架为多智能体系统的记忆共享和协调提供了治理机制，有助于构建长期运行的可靠智能体系统。",
+          "llm_tldr": "该论文针对智能体系统中代码工件治理、生命周期管理和运行演化的欠规范化问题，提出一个通过可执行操作认知（Executable Operational Cognition）治理多智能体运行时演化的框架。它将经验证的智能体生成工件形式化为渐进成为操作底层的持久运行时能力，而非瞬态输出。该框架为多智能体系统的记忆共享和协调提供了治理机制，有助于构建长期运行的可靠智能体系统。",
+          "llm_tags": [
+            "query:agent-memory"
+          ],
+          "matched_query_tag": "query:agent-memory",
+          "matched_query_text": "multi-agent systems coordination and memory sharing",
+          "matched_requirement_id": "req-13",
+          "selection_source": "carryover_cache",
+          "paper_id": "2605.27328v1",
+          "carry_days": 1
+        }
+      ]
     }
   }
 }

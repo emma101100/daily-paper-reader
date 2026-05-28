@@ -1,0 +1,613 @@
+Title: Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components
+
+URL Source: https://arxiv.org/pdf/2605.24558v1
+
+Published Time: Tue, 26 May 2026 00:43:05 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Ling Zhan * 1 2 Xiaoyao Yu * 1 Tao Jia 1 2 3 
+
+Abstract 
+
+AI for Science (AI4Science) workflows often treat the released dataset as a fixed interface to the un-derlying system. However, in domains relying on indirect observation , the learner observes a derivative representation produced by multi-stage measurement, reconstruction, and preprocessing pipelines. We argue that these measurement-to-dataset pipelines are inference components: treating their outputs as “given data” freezes an observation model and obscures uncertainty over feasible pipeline choices. We identify three failure modes arising from this “frozen lens”: 
+
+(C1) hidden hypothesis space , where the re-leased dataset does not specify the pipeline config-uration or its validity conditions; (C2) uncertified transportability , where a pipeline may be docu-mented but its regime of validity is untested, so failures under distribution shift cannot be adju-dicated; (C3) ungoverned multiplicity , where many defensible pipelines exist and dispersion is real but not propagated into uncertainty-aware evidence. We stress-test these claims with a large-scale neuroscience empirical audit, finding a sur-vival rate of ≈ 0.0004% under a cross-dataset stability criterion. We call on the AI4Science community to make pipelines computable infer-ence objects via domain-specific Computable Ob-servation Frameworks. This shift enables quanti-fying pipeline adequacy and stability, converting implicit implementation choices into auditable, reproducible, and cumulative scientific evidence. 
+
+> *
+
+Equal contribution 1 College of Computer and Information Sci-ence, Southwest University, Chongqing, China 2 Chongqing Key Laboratory of Brain-Inspired Cognitive Computing and Educa-tional Rehabilitation for Children with Special Needs, Chongqing Normal University, Chongqing, China 3 College of Computer and Information Science, Chongqing Normal University, Chongqing, China. Correspondence to: Tao Jia <tjia@swu.edu.cn >.
+
+Proceedings of the 43 rd International Conference on Machine Learning , Seoul, South Korea. PMLR 306, 2026. Copyright 2026 by the author(s). 
+
+1. Introduction 
+
+AI for Science (AI4Science) is often framed around benchmark-driven predictive objectives, yet the epistemic aims of science are broader: hypothesis generation, theory building, and mechanistic explanation tied to the underlying system (Wang et al., 2023; Messeri & Crockett, 2024). A growing literature integrates modern machine learning (ML) into discovery workflows across disciplines, from multi-messenger astrophysics to computational psychology (Xu et al., 2021; Van Noorden & Perkel, 2023; Cuoco et al., 2022; Ke et al., 2025). However, in many fields, research findings are mined from indirect observation : the infer-ence of a scientific target from proxy measurements via a nontrivial observation model, effectively treating data ac-quisition as an inverse problem (Stuart, 2010; Murata et al., 2023). For example, in radio interferometry, images are reconstructed from visibilities via calibration and decon-volution choices (Thi ´ebaut, 2013). The same issue also appears in structural biology and drug discovery, where downstream models often consume curated structural or bioactivity records whose apparent “data” status depends on deposition, assay, normalization, and filtering conven-tions (Gaulton et al., 2017). Appendix A gives representa-tive pipelines spanning five indirect-observation domains. Consequently, AI4Science under indirect observation must consider not only what to learn, but also which pipeline configuration defines the representation to be learned from. This is a difference of degree rather than kind. Standard ML also depends on preprocessing, but its inferential ob-ject usually centers on the mapping from representation to prediction on an agreed task interface. Preprocessing typically serves this objective as performance-oriented en-gineering (Zha et al., 2025; Wang et al., 2026). In indirect-observation AI4Science, configuration ϕ specifies a multi-stage mapping from sensor measurements to a released representation, with consequential degrees of freedom that are rarely specified, constrained, or audited (Hand, 2004; Ahmed, 2025). Because AI4Science often aims to support 
+
+mechanistic claims about an underlying system that is not directly observable, the configured pipeline functions as an 
+
+observation model linking measurements to hypothesized latent structure. Downstream learning can optimize per-1
+
+> arXiv:2605.24558v1 [cs.LG] 23 May 2026
+
+Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components Our Position: Treat Pipelines as Inference Components in AI4Science 
+
+What AI4Science Should Model        
+
+> scientific inference process
+> Risk: proxy accuracy on , unstable claims about
+> Latent Mechanism ( ) Raw Measurements ( ) Filter Denoise Reconstruct ... Frozen Preprocessing Pipeline ( )Ultimate Goal: Mechanism Discovery (Understand )-dependent Conclusions encodes an implicit observation perspective about .
+> (C1) Hidden Hypothesis Space (C3) Ungoverned Multiplicity Measurement and Reconstruction Process EEG audit:
+> raw EEG FC/asymmetry preprocessing + SPI MDD-HC contrast latent neural mechanism ML Model ()Representation
+> What ML Usually Optimizes
+> Treat released representation as given data
+> (C2) Uncertified Transportability
+> Proxy Task: Prediction (=)( )
+> predictive inference process
+> Standard ML also depends on preprocessing. In AI4Science, this dependence becomes claim-forming.
+
+Figure 1. Predictive inference versus scientific inference. The contrast is a difference of degree rather than kind: standard ML also depends on preprocessing. In indirect-observation AI4Science, however, a pipeline Pϕ transforms raw measurements x into a released representation z = Pϕ(x), from which a downstream model produces ˆy = fθ (z). Mechanistic claims about the latent target ψ are therefore conditional on ϕ. The inset gives the EEG audit instantiation. 
+
+formance on the released interface, but it yields evidence for the claimed mechanism only conditional on ϕ (Arridge et al., 2019; Antun et al., 2020). 
+
+Figure 1 summarizes this shift from predictive inference to scientific inference. Both settings may instantiate the same computational template, but when the target moves from prediction to mechanism discovery, Pϕ directly shapes how mechanisms are inferred and interpreted. In indirect-observation AI4Science, released representations depend on weakly identified defaults, inherited recipes, and tuning decisions that encode assumptions about signal and arti-fact (Botvinik-Nezer et al., 2020; Breznau et al., 2022; Kiar et al., 2024). Freezing these choices yields a frozen lens : an implicit inference component whose output is treated as an objective data fact (Paullada et al., 2021; Leonelli, 2019). This can reward predictive proxies while hiding pipeline uncertainty from the learner, weakening mechanistic inter-pretation (Markowetz, 2024). 
+
+Our position: Pipelines are components of inference in AI4Science. They should be audited and evaluated under scientific validity criteria, not frozen as dataset defini-tions. Uncertainty over admissible observation models should be quantified and carried forward as cumulative evidence, rather than collapsed to a point choice. 
+
+We articulate this position through three failure modes. (C1) 
+
+Hidden hypothesis space: the released representation hides the pipeline-indexed space of mechanisms that could have been tested. (C2) Uncertified transportability: a documented pipeline rarely comes with a tested regime of validity across measurement settings. (C3) Ungoverned multiplicity: multi-ple defensible pipelines remain, but their dispersion is rarely propagated into uncertainty-qualified evidence. The paper proceeds by characterizing how pipelines become dataset interfaces (Section 2), deriving three failure modes (Section 3; Appendix B), auditing EEG connectomics un-der admissible pipeline variation (Section 4; Appendix C), addressing common objections (Section 5), and proposing computable observation frameworks (Section 6). 
+
+2. The Frozen Lens in AI4Science 
+
+This section characterizes how current AI4Science work-flows turn observation pipelines into dataset interfaces. Across pipeline-first, differentiable, and foundation-model paradigms, what travels across labs is often a derivative rep-resentation rather than raw measurement. Table 1 summa-rizes how each paradigm fixes, learns, or inherits a pipeline configuration ϕ before downstream learning begins. 
+
+2.1. The Evolution of the Frozen Lens 
+
+In the common AI4Science regime, the data–model in-terface is shaped by modularity. Domain practitioners in computational chemistry, astrophysics, and neuroimag-ing apply established toolchains (e.g., RDKit , Astropy ,
+
+MNE-Python ) to raw measurements or primary ob-servational products to produce model-ready representa-tions (Hirsch & Gilad-Bachrach, 2021; Klarner et al., 2023; Caucheteux et al., 2021). This separation is practical and reinforced by processed-derivative benchmarks, where the community distributes the released representation as the evaluation object, thereby fixing ϕ upstream (Glasser et al., 2013; Baptista et al., 2022). As a result, the dependence of derivative datasets on pipeline choices is often weakly identified from the available data and correspondingly under-reported (Kessler et al., 2025; Merz et al., 2023). The frozen-lens problem is not created by AI. Pre-AI scientific workflows already used toolchains, reporting norms, quality-control checklists, and shared derivative for-mats to stabilize analysis across laboratories (Gorgolewski et al., 2016; Esteban et al., 2019; Nichols et al., 2017). These mechanisms improve reproducibility, but they usu-ally document the pipeline that was run rather than the admissible family of pipelines that could have been run. AI4Science amplifies the consequence of this arrangement: processed derivatives become benchmark targets, learned front-ends are optimized and then frozen, and foundation models inherit preprocessing and reconstruction conven-tions through their training corpora (Strypsteen & Bertrand, 2021; Bushuiev et al., 2025; Sun et al., 2025). As reuse 2Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components              
+
+> Table 1. Bundling pipeline into “data” in current AI4Science workflows. Community-facing interfaces typically fix an observation model via a pipeline Pϕ(explicit, inherited, or learned-then-frozen). ϕindexes pipeline choices.
+> Paradigm Typical Instantiations Practical Interface Role / Status of ϕ
+> Pipeline-first
+> (classical) Processed-derivative benchmarks (Glasser et al., 2013; Baptista et al., 2022). Standardized toolchains (Landrum, 2013; Robitaille et al., 2013; Gramfort et al., 2014). A released representation (often with a reference pipeline/QC recipe) becomes the object of reuse and benchmarking.
+> Explicit and fixed:
+> ϕis selected upstream and executed once to produce the representation.
+> Hybrid / Differentiable
+> (end-to-end) Learnable front-ends (Strypsteen & Bertrand, 2021); Differentiable operators (Engel et al., 2020); Unrolled physics-based modules (Aggarwal et al., 2019). A deployed end-to-end system (front-end + learner/reconstructor) with a standard inference API.
+> Learned then fixed:
+> ϕis optimized during training, then deployed as a fixed front-end.
+> Model-first
+> (foundation models) Curated pretraining data with fixed reconstruction/harmonization conventions (Bushuiev et al., 2025; Sun et al., 2025; Soares et al., 2025). A pretrained model and its representation space (embeddings, generative priors, or task adapters).
+> Implicit and inherited:
+> ϕis encoded in pretraining curation and reconstruction conventions.
+
+and automation scale, a fixed ϕ can propagate farther from the original measurement context and be optimized against more aggressively by downstream learners (Paullada et al., 2021; Sambasivan et al., 2021a; Thiyagalingam et al., 2022). Hybrid approaches make parts of the pipeline differentiable and learnable, turning preprocessing into trainable mod-ules (Engel et al., 2020; Aggarwal et al., 2019). This can learn ϕ end-to-end, but the learned front-end is usually op-timized for predictive or reconstruction loss and then de-ployed as a fixed interface. Sensitivity of scientific con-clusions to the learned pipeline is therefore often left to post hoc checks rather than treated as a governed commit-ment (Antun et al., 2020). Scientific foundation models shift, rather than remove, the frozen lens dynamic (Nguyen et al., 2023; Pyzer-Knapp et al., 2025). When trained on raw measurements, the obser-vation model is absorbed into the training distribution and model parameters, making Pϕ harder to audit (Bushuiev et al., 2025; Szwarcman et al., 2025). When trained on released representations, ϕ is inherited from corpus-level re-construction, filtering, and curation conventions (Sun et al., 2025; Soares et al., 2025). In both regimes, prediction may improve while the pipeline shaping the representation be-comes harder to inspect, vary, or validate (Bommasani et al., 2025; Sambasivan et al., 2021b). 
+
+2.2. Systematic Constraints and Epistemic Cost 
+
+Freezing ϕ is often a pragmatic response to systematic con-straints in scientific measurement, so it should not be dis-missed as technical debt. Yet under indirect observation this pragmatism is not epistemically neutral: committing to a single ϕ freezes the evidential pipeline, which should be governed rather than treated as a default. 
+
+Measurement heterogeneity creates pressure to stan-dardize. Instruments and acquisition protocols (e.g., scan-ners, sensors, sites) induce systematic environment shifts that must be mapped into a comparable representation for learning (Thanjavur et al., 2021; Claverie et al., 2018; Ya-mashita et al., 2019). Standardization thus becomes the de facto interface enabling pooling, benchmarking, and reuse across environments (Gorgolewski et al., 2016; Markiewicz et al., 2021). As reuse scales, this interface turns ϕ into a shared community commitment rather than an individual analysis choice. 
+
+Access and operational constraints enforce derivative-only interfaces. Raw measurements are frequently inac-cessible to downstream researchers due to consent/privacy restrictions, proprietary formats, or sheer scale, so commu-nities distribute processed datasets as the practical interface for reuse (Mohr et al., 2025). Even when raw measure-ments are available, recomputing and benchmarking Pϕ
+
+across plausible pipelines can be computationally and oper-ationally prohibitive, effectively rendering pipeline choices irreversible for most users and making a frozen ϕ a struc-tural consequence rather than a mere convention (Dugr ´eet al., 2025; Allen et al., 2024). 
+
+2.3. Evidence Accumulation Without Lens Governance 
+
+These constraints motivate several practices for accumulat-ing evidence and partially governing analysis paths. First, scientific communities rely on cumulative evidence synthe-sis , including systematic reviews (Mulrow, 1994), meta-analyses (Field & Gillett, 2010), and cross-study harmoniza-tion protocols (Arroyo-Araujo et al., 2022; Miller, 2017), to assess whether reported effects survive setting shifts and heterogeneous measurement conditions. Second, a growing methodology explicitly quantifies analysis-path sensitivity via multiverse analyses (Bell et al., 2022; Steegen et al., 2016), specification-curve style robustness checks (Simon-sohn et al., 2020), and many-analysts exercises (Silberzahn et al., 2018), treating defensible analytic variation as an ob-3Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+ject of inference rather than a nuisance to be hidden. Third, scientific communities increasingly rely on pipeline bench-marking to standardize practice and expose failure cases under controlled conditions (Brooks et al., 2024). This includes reference toolchains (Hirsch & Gilad-Bachrach, 2021; Klarner et al., 2023; Caucheteux et al., 2021), shared challenges (Zahedi et al., 2016), and comparative evalua-tions of preprocessing variants (Thiyagalingam et al., 2022). However, these mechanisms impose different and incom-plete forms of governance. Evidence synthesis is typi-cally constrained to what prior studies have released or reported (Smith et al., 2016; Ioannidis, 2005), so it rarely op-erationalizes an admissible observation-model collection or propagates uncertainty over ϕ into new mechanistic claims. Multiverse and many-analysts designs do directly surface specification sensitivity, including sensitivity to pipeline choices, but they are typically deployed as study-level ro-bustness audits and rarely yield standardized, community-wide constraints on admissible ϕ or reusable uncertainty summaries that downstream users can carry forward (Harder, 2020; Breznau et al., 2022). Pipeline benchmarking can compare alternative ϕ under controlled evaluations, yet it is commonly organized around proxy predictive or reconstruc-tion objectives and does not, by default, require scientific validity criteria (e.g., invariance targets, transport conditions, or uncertainty accounting) to be made explicit (Maier-Hein et al., 2018; Roß et al., 2023). In this sense, current practice improves transparency around the interface without fully upgrading it into a governed observation model. For many downstream users, ϕ remains effectively fixed, and mecha-nistic conclusions can still inherit unscored dependence on upstream choices. A related formal line of work asks how uncertain ev-idence should enter probabilistic inference. Jeffrey’s probability-kinematics framework updates beliefs when ev-idence shifts probabilities over observable events rather than fixing a single observed event (Jeffrey, 1990). Pearl’s virtual-evidence formulation instead represents soft evi-dence through likelihood-weighted auxiliary observations in a probabilistic graphical model (Pearl, 2014). More recent work on stochastic conditioning formalizes distributional evidence, where inference conditions on the event that an observable variable follows a distribution rather than on a realized value (Tolpin et al., 2021). Munk et al. com-pare these interpretations and show that treating the same uncertain evidence as a density over observations, a distribu-tional event, or a likelihood-style soft observation can yield different posterior inferences (Munk et al., 2023). This uncertain-evidence line of work provides the closest formal precedent for our argument. It shows that evidence is not only a value to be conditioned on, but an object whose uncertainty semantics must be specified before posterior inference is well defined. In indirect-observation workflows, this issue begins even earlier: the pipeline ϕ constructs the representation that later enters inference as evidence. Un-certainty over admissible ϕ is therefore observation-model uncertainty. If admissible ϕ is not represented explicitly, this uncertainty is collapsed before inference begins, leaving downstream users with a single released artifact rather than a recoverable evidential record. 
+
+3. From Frozen Lenses to Brittle Evidence 
+
+A frozen pipeline turns admissible observation-model varia-tion into an artifact. Downstream optimization can improve performance on that artifact while leaving the mechanis-tic claim conditional on an untested pipeline commitment. This section explains how that commitment produces fail-ure modes: (C1) hidden hypothesis space, (C2) uncertified transportability, and (C3) ungoverned multiplicity. 
+
+3.1. (C1): Hidden Hypothesis Space (C1) concerns missing specification of the observation model. Downstream work often begins from a released representation without a recoverable account of the pipeline choices and validity conditions that produced it (Nichols et al., 2017). This omission is consequential: defensible pipeline choices can yield qualitatively different mechanis-tic conclusions (Kale et al., 2019). In AI4Science, such choices are not merely downstream “analysis variants”; they are alternative observation models that change how raw measurements are mapped into the released artifact (Murata et al., 2023; Steegen et al., 2016). A common narrative attributes such dispersion primarily to human factors (p-hacking, inconsistent practice, or “re-searcher degrees of freedom”) (Simmons et al., 2011). The dominant constraint is structural: the shared artifact is a single derivative, so admissible pipeline variation is not part of what can be jointly examined, reproduced, or compared across analysts. In ML terms, freezing the pipeline fixes the effective hypothesis space: the learner can only search over explanations compatible with the released representa-tion (D’Amour et al., 2022), while the dependence of those explanations on admissible upstream choices is no longer recoverable from the released data alone ( Appendix B.2 ). The consequence is not that a pipeline-induced proxy is avoidable, but that mechanistic conclusions are often re-ported without qualifying the pipeline commitment that made them (Kiar et al., 2024). A model may fit a frozen derivative extremely well by exploiting pipeline-specific artifacts or inductive biases. Yet the released interface often does not make the pipeline or its validity conditions recov-erable to downstream users, so predictive success on the artifact cannot be straightforwardly interpreted as regime-4Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+stable mechanistic evidence (Carp, 2012). 
+
+3.2. (C2): Uncertified Transportability (C2) arises when a documented pipeline lacks a tested regime of validity. Even when a community adopts a canoni-cal pipeline, it rarely specifies when that pipeline is expected to fail as acquisition protocols, sensors, sites, or noise con-ditions change. Consequently, failures under distribution shift become hard to interpret: it is unclear whether they reflect a downstream learner’s lack of robustness, a regime violation in the pipeline, or their interaction (D’Amour et al., 2022; Subbaswamy et al., 2021; Taori et al., 2020). This is therefore not only a generalization issue of the learner. It is a failure to certify the pipeline that defines what the downstream learners ever get to see. A key reason that uncertified transportability is hard to “patch downstream” is irreversible projection . Many prepro-cessing operations are lossy and many-to-one (e.g., masking, coarse quantization, aggressive denoising), so distinct phys-ical states can map to the same released artifact (Liu et al., 2020). Under regime shifts, even an identically specified pipeline can induce a different effective projection, col-lapsing distinctions that were discriminative in-regime and confounding mechanistic adjudication out-of-regime (Ar-ridge et al., 2019; Stuart, 2010). If those distinctions are removed upstream, downstream learners cannot recover them from the released data ( Appendix B.3 ). This enables proxy progress: learners can improve fit to a fixed surrogate while mechanistic conclusions stay brittle under admissible shifts (Subbaswamy et al., 2021; Maier-Hein et al., 2018). Crucially, AI4Science tends to amplify this failure mode through repeated selection. As benchmarking and auto-mated tuning scale, the workflow iterates adaptively against a fixed released derivative. Selection then rewards cues that predict the derivative well (including shortcuts), not cues that remain stable across regimes (Dwork et al., 2015; Blum & Hardt, 2015; Geirhos et al., 2020; Thiyagalingam et al., 2022). The result is a systematic transport gap: gains that are real on the released artifact may not accumulate as mechanistic knowledge across regimes. 
+
+3.3. (C3): Ungoverned Multiplicity (C3) concerns the remaining multiplicity after specification and transport are addressed. Even if a pipeline is docu-mented and restricted to a plausible validity regime, it is rarely unique: multiple defensible, regime-valid pipelines may remain. The failure is to report mechanistic conclu-sions as if this remaining variation had been resolved, rather than propagating it into uncertainty-qualified evidence and cross-study comparison. This creates accumulation and optimization failures. Across studies, different admissible pipelines may imply different target claims, making synthesis ill-posed without a shared aggregation rule (Field & Gillett, 2010; Smith et al., 2016; Mulrow, 1994). Within a study, proxy metrics weakly con-strain ϕ: multiple admissible pipelines can tie on accu-racy, AUC, or MSE yet yield different mechanisms, turn-ing performance-based choice into ungoverned selection rather than uncertainty propagation (D’Amour et al., 2022; Bell et al., 2022). Appendix B.4 formalizes why defaulting or proxy-tuning a single pipeline behaves like criterion-misaligned selection over ϕ.Importantly, this is not a corner case. Many analyst and mul-tiverse studies show that independent teams analyzing the same underlying data can reach meaningfully different quan-titative conclusions under reasonable practice (Silberzahn et al., 2018; Botvinik-Nezer et al., 2020). This variabil-ity reflects genuine specification multiplicity, meaning that multiple defensible analysis choices can yield distinct re-sults (Steegen et al., 2016; Breznau et al., 2022). The constructive implication is that pipeline uncertainty should become an input to learning and reporting, not a hid-den nuisance. Enumeration, while exposing sensitivity, fails to define a shared target or aggregation rule (Steegen et al., 2016; Simonsohn et al., 2020). End-to-end tuning, while op-timizing proxy fit, implicitly collapses admissible variation into untracked selection (D’Amour et al., 2022; Bell et al., 2022; Dwork et al., 2015). Consequently, workflows should instead harness multiplicity as a selection signal , scoring pipelines by the stability of mechanistic conclusions across the admissible set (and across settings). If this uncertainty is not propagated, confidence is inflated and point claims replace sensitivity-qualified claims (Simmons et al., 2011; Ioannidis, 2005). The risk grows as AI4Science scales via shared derivatives, benchmarks, and automated selection on fixed interfaces (Thiyagalingam et al., 2022; Nichols et al., 2017). To quantify the severity of these blind spots, we turn from theoretical analysis to empirical auditing. 
+
+4. An Empirical Audit 
+
+We empirically operationalize the frozen-lens critique in EEG functional connectomics, a domain where neural activ-ity is observed only through multi-stage measurement and preprocessing. The goal of the audit is not to establish a new depression biomarker or to rank pipelines by predictive performance. Instead, the audit asks whether conclusions drawn from a released representation remain stable when admissible observation-model choices are varied. For each dataset, we evaluate 864 preprocessing pipelines and 284 
+
+connectivity operators, yielding MDD–HC effect estimates under a uniform testing protocol. We then ask which con-figurations are both significant within a dataset and stable across datasets in effect direction and relative ordering. 5Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components                    
+
+> Table 2. Audit specification and outcome. We audit a literature-grounded space of preprocessing pipelines and connectivity opera-tors across two datasets. Only one pipeline–operator configuration remains both significant within datasets and stable across datasets.
+> Element Instantiation in Audit
+> Datasets Two independent datasets: MODMA and
+> CISIR .Scientific target MDD–HC difference in hemispheric FC asymmetry, a subject-level scalar comparing left–right symmetric connectivity structure. Preprocessing pipelines
+> 864 literature-derived preprocessing configurations, each mapping raw EEG time series to a model-ready signal through choices such as filtering, referencing, denoising, downsampling, and windowing. Operators 284 SPI operators, each defining a rule for converting a pair of EEG channel time series into one FC edge weight. Audited configurations
+> 864 ×284 = 245 ,376 pipeline–operator attempts. Validation criteria
+> Significance: within-dataset MDD–HC separation under a fixed testing protocol.
+> Stability: cross-dataset agreement in effect direction and relative ordering under bootstrap-supported assessment. Outcome Many configurations are significant in at least one dataset, but only one satisfies the joint criteria in both datasets (1/245 ,376 ≈0.0004% ).
+
+Why this audit matters for (C1)–(C3). This audit is not a performance benchmark. It is a stress test of whether a frozen data interface can support stable mechanistic evi-dence. By varying admissible preprocessing and connec-tivity choices, the sweep makes three quantities observable. First, if many defensible ϕ yield different significant effects, then the effective hypothesis space is pipeline-indexed and hidden behind the released representation ( C1 ). Second, if effects that are significant in one dataset flip direction or reorder across an independent dataset, then the pipeline lacks certified transportability across measurement regimes (C2 ). Third, if many ϕ appear acceptable within a dataset but only a vanishing fraction remain stable across datasets, then multiplicity is real and should be propagated rather than collapsed to a default ( C3 ). 
+
+4.1. Audit Protocol 
+
+Table 2 summarizes the audit components. Here we state the minimal definitions needed to interpret the landscape, with full protocol details deferred to Appendix C .
+
+Terminology. In this audit, functional connectivity (FC) denotes a matrix whose entries summarize statistical cou-pling between pairs of EEG channels (Zhan et al., 2026a; Chen et al., 2024b). Because both datasets are resting-state EEG recordings, we use resting-state functional connectivity (rsFC) when emphasizing the acquisition condition and FC when referring to the matrix representation. Hemispheric asymmetry denotes a subject-level scalar summary obtained by comparing FC edge weights at left–right symmetric po-sitions. The MDD–HC contrast is the group difference in this scalar summary between participants with major depres-sive disorder (MDD) and healthy controls (HCs), computed under a fixed estimator and testing protocol. 
+
+Pipeline-induced representations. For each dataset, we preprocess EEG time series with each pipeline to obtain a model-ready signal. Given this signal, we apply a down-stream connectivity operator to construct a FC matrix (Luo et al., 2022). We use Statistical Pairwise Interactions (SPIs) as alternative rules for assigning an edge weight between two EEG channels. Concretely, an SPI takes two channel time series and returns one number for the FC edge. Pear-son correlation is the familiar example (Cliff et al., 2023). Different SPIs therefore turn the same preprocessed EEG signal into different connectivity matrices, so each pipeline– SPI pair defines one admissible way of constructing the released representation. We score pipelines by (i) within-dataset significance using a Mann–Whitney U test with multiple-comparison control (McKnight & Najab, 2010; Benjamini & Hochberg, 1995), and (ii) cross-dataset sta-bility requiring bootstrap-supported directional agreement across datasets (DiCiccio & Efron, 1996). 
+
+Significance and stability. Significance refers to within-dataset evidence that a pipeline–SPI configuration separates MDD and HC participants under the fixed MDD–HC con-trast. Stability refers to cross-dataset reproducibility of the same conclusion, requiring agreement in effect direction and relative ordering across MODMA and CISIR under bootstrap resampling. 
+
+4.2. Audit Result 
+
+Figure 2 summarizes a slice of the audit: within-dataset significance versus bootstrap cross-dataset directional con-sistency of the MDD–HC hemispheric-asymmetry effect. A large fraction of configurations attain significance in at least one dataset, yet most fail to maintain consistent conclusions across datasets under the joint criteria. Across the full au-dited space of 245 ,376 pipeline–operator configurations, 
+
+only one survives both significance and cross-dataset sta-bility, yielding a survival rate of 1/245 ,376 ≈ 0.0004 %
+
+(conditional on the audited space and protocol). 
+
+4.3. Operationalizing (C1)–(C3) on the Landscape 
+
+Each pipeline–operator pair yields an MDD–HC effect estimate, turning (C1) –(C3) into an empirical landscape. Effects are pipeline-conditional because small admissible changes can reshuffle significance (C1) . Many significant effects fail cross-dataset directional/rank stability, indicating 6Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components MODMA CISIR   
+
+> Relative-Order
+> Significance Squared Cross-Corr
+> -log 10 (p)
+> Figure 2. Significance vs. cross-dataset stability. Each point corresponds to an SPI evaluated in a dataset. Many SPIs appear significant in one dataset but fail joint criteria across datasets. Only one survives in both (Squared Cross-Corr, linked red circles).
+
+regime-sensitive projection (C2) . Within-dataset winners are non-unique, so a single default hides multiplicity via untracked selection (C3) .
+
+Scope and Generalizability . While our audit is imple-mented on EEG, (C1) –(C3) are structural under indirect observation. Recent benchmarking of brain connectivity-mapping methods further shows that downstream functional-connectivity organization depends substantially on the cho-sen mapping method (Liu et al., 2025; Luppi et al., 2024). While the ≈ 0.0004% survival rate is specific to our audit, it exposes a fragility in AI4Science and should be read as a warning signal rather than an EEG-specific curiosity. 
+
+5. Alternative Views 
+
+Our position raises predictable concerns: If acknowledged best-practice toolchains already standardize pipelines, what is missing? If auditing requires large design-space searches, how can it be practical? If pipeline is mainly scientific craft, what is ML adding? We use these objections to sharpen the infrastructure question: what AI4Science lacks is not another checklist, but a way to make observation-model variation a computable object. 
+
+5.1. Objection A: “Best-practice toolchains already standardize the observation model” 
+
+A reasonable view is that indirect-observation fields already achieve comparability through widely adopted toolchains, quality control (QC) conventions, and benchmark-style reuse of shared derivatives (Esteban et al., 2019; Gor-golewski et al., 2016). On this view, pipelines are not truly “ungoverned”: community norms and software defaults im-plicitly constrain choices, and remaining variation reflects analyst judgment rather than an epistemic gap. 
+
+Why this view is incomplete. Our concern is that standard-ization freezes the pipeline upstream, outside the inference contract: downstream models condition on a released deriva-tive as “given data” rather than treating the observation map-ping as an inferential object. Defaults and QC provide proce-dural regularity, but they rarely define claim-aligned validity criteria (e.g., stability under admissible reprocessing and across settings) with an auditable sensitivity/stability sum-mary. Consequently, multiple “best-practice” choices can yield different mechanistic conclusions, even when teams operate within the same shared interface (Botvinik-Nezer et al., 2020; Luppi et al., 2024). 
+
+Our upgrade. Keep the toolchains, but make the pipeline an ML object: define an explicit admissible pipeline space and score candidates by cross-setting claim stability (and sensitivity) under a declared compute budget. The output is not merely a default derivative, but a selected (or Pareto-efficient) pipeline/policy plus a stability profile that makes uncertainty over ϕ comparable across labs and time. 
+
+5.2. Objection B: “This is impractical at scale” 
+
+A pragmatic objection is that the combinatorial nature of search-based governance makes it computationally in-tractable and resource-intensive. Enumerating pipelines and operators, auditing stability across settings, and maintaining executable specifications can be prohibitive for typical lab budgets. On this view, the only workable compromise is to standardize the pipeline and focus optimization downstream. 
+
+Why this view is incomplete. The choice is not between exhaustive multiverse enumeration and a single frozen proxy (Steegen et al., 2016). What is impractical today is bespoke pipeline governance: uncertainty is absorbed by ad hoc analyst iteration and post hoc narrative selection rather than exposed as a computable object. Meanwhile, large compute is still spent on downstream winner-takes-all optimization against proxy metrics induced by a fixed pipeline. As a result, failures under reprocessing or set-ting shifts remain non-diagnosable (D’Amour et al., 2022). The scaling bottleneck is therefore not “too much computa-tion,” but the lack of a reusable representation that makes observation-model variation computable. 
+
+Our upgrade. We build on existing workflow and prove-nance infrastructure, which already makes realized pipelines executable, portable, and reproducible (Crusoe et al., 2022). For observation-model governance, the specifica-tion must also encode the admissible family of pipeline choices that could have produced the released representa-tion. AI4Science should therefore standardize machine-readable pipeline specifications containing an executable workflow graph, typed operator parameters, admissible pa-rameter domains, and provenance records for generated derivatives. With such specifications, automated systems can (i) search within Φ under explicit budgets, (ii) run 7Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+stability queries, and (iii) release portable audit records that others can reuse without re-implementing tool-specific pipelines (Feurer et al., 2015). This shifts “impractical at scale” into a platform objective: make pipelines executable, traceable, and queryable, so governance becomes amortized infrastructure rather than manual reporting. 
+
+5.3. Objection C: “This is not an ML problem” 
+
+A plausible critique is that pipeline governance is method-ology or standards work, not an ML problem. The right solution is to publish better pipelines and reporting guide-lines, rather than introducing new learning machinery. 
+
+Why this view is incomplete. Under indirect observation, the pipeline is a high-dimensional, interacting design space. In practice, the space is too large and too coupled for manual curation to yield a uniquely defensible interface. “Best prac-tice” rarely specifies how to trade off admissibility, cross-setting transport, and sensitivity. This is precisely the regime where ML contributes: representing design spaces, defining stability-aligned objectives, and performing budgeted search and uncertainty-aware selection in a way that is reproducible and comparable across studies (D’Amour et al., 2022). 
+
+Our upgrade. ML contributes the missing inference ma-chinery and aligned decision rules that can select or aggre-gate across admissible pipelines while propagating residual pipeline uncertainty into the reported claim. As AI4Science shifts toward reusable derivatives and automated experi-mentation, implicit pipeline choices become a dominant, scalable source of irreproducible mechanistic claims (Tom et al., 2024; Musslick et al., 2025). This makes governed, stability-first selection a first-class learning problem. 
+
+6. Call to Action 
+
+To make our position operational, we call on the AI4Science community to treat the pipeline as a queryable layer of the inference workflow. Concretely, we advocate shifting from procedural “best practice” checklists toward domain-specific Computable Observation Frameworks. This is not a proposal to replace existing toolchains or workflow stan-dards. It is a proposal to expose their degrees of freedom as computable objects, so domains can evaluate, select, and re-port observation models with the same rigor that ML applies to predictive models. A minimal implementation does not require fully automated end-to-end science. It requires three artifacts. First, a ver-sioned specification of the admissible pipeline family Φ, in-cluding operator choices, parameter domains, assumptions, and failure modes. Second, a bounded audit protocol that evaluates selected ϕ ∈ Φ under declared datasets, settings, validity criteria, and compute budgets. Third, a reporting artifact that records which variation was explored, which          
+
+> Layer 1
+> Representation
+> executable Φ
+> specification
+> Layer 2
+> Optimization
+> stability-oriented search
+> Layer 3
+> Governance
+> reusable audit records
+> Closing loop
+> update specifications, objec-tives, and accumulated evidence
+> parallel
+> feedback
+> Figure 3. Flow of a Computable Observation Framework. Layer 1
+> makes admissible variation executable as a specification of Φ.
+> Layer 2 and Layer 3 proceed in parallel, searching over Φand accumulating audit records. The closing loop feeds audit outcomes back into the specification, objectives, and evidence base.
+
+conclusions were stable, and which residual uncertainty over ϕ remains. Figure 3 summarizes this workflow and the dependency among layers. Table 3 specifies who should do what across domain science, ML methodology, and research infrastructure. 
+
+6.1. Layer 1: Representation Layer 1 is a versioned, executable pipeline specifica-tion : a machine-readable operator graph with typed nodes, constrained parameter domains, software implementations, provenance records, and explicit semantics about assump-tions and failure modes. This specification turns hidden configuration choices into explicit objects that can be exe-cuted, inspected, replayed, and varied under declared admis-sible choices. Crucially, it remains compatible with existing toolchains, serving as an export target for workflow DAGs rather than a replacement for them. 
+
+Atomic observation operators. The specification should expose a typed operator interface with declared assumptions and failure modes, starting from a small, high-impact subset of operators. Existing toolchains can be integrated via thin wrappers that export these operators and their parameters into the specification, enabling comparison and controlled counterfactual re-execution without full re-implementation. 
+
+Computable pipeline specifications. The relevant require-ment is that pipeline variation can be executed and queried systematically. A practical specification can be a typed workflow DAG: each node names an operator, points to its software implementation, declares input–output types, and lists admissible parameter domains. For example, an EEG node can expose referencing as a categorical choice (av-erage versus REST), ICA removal as a binary choice, and band-pass cutoffs as discrete or continuous parameters. This representation supports differentiable tuning where avail-able, but also gradient-free search, rule-based enumeration, and policy-based selection over discrete, conditional, or 8Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components            
+
+> Table 3. Division of expertise for implementing Computable Observation Frameworks.
+> Expertise Main role COF artifact
+> Domain scientists Specify admissible Φ: defensible operators, parameter ranges, valid-ity conditions, and failure modes. Domain-constrained Φspecifica-tion. ML researchers Make Φcomputable: DAG/spec exports, mixed search, stability objectives, and uncertainty-aware selection. Search and selection procedures over Φ.Methodologists / infras-tructure Make audits reusable: provenance, audit interfaces, reporting tem-plates, and cumulative evidence bases. Reusable audit records and re-ports.
+
+tool-specific choices. 
+
+6.2. Layer 2: Optimization 
+
+Once pipelines are representable, the relevant computation goal is to evaluate and choose pipelines by claim validity: optimizing for conclusions that remain stable under admis-sible reprocessing and transportable across settings. 
+
+Stability objectives. Transport and insensitivity to nuisance variation must be formulated as explicit computational tar-gets, with low failure rates under declared perturbations. The optimization loop then searches for configurations ϕ
+
+that maximize these criteria across admissible variation and settings, rather than merely maximizing predictive fit within a single frozen artifact. 
+
+Acceleration and amortization. Practical stability search requires amortization primitives: reusing compiled graphs, exploiting structure-aware subsampling of bench-marks (Zhan et al., 2026b), and caching intermediate arti-facts so audits become progressively cheaper across studies. The deliverable is a Pareto set (or a policy over Φ) equipped with a stability/sensitivity profile under a declared compute budget, rather than a single unqualified point commitment. 
+
+6.3. Layer 3: Governance Layer 3 is a governance platform that provides shared com-putation and shared memory for the domain. The platform runs audits reproducibly and accumulates their outputs into a reusable evidence base. 
+
+Audited execution at scale. Given a pipeline specification (Layer 1 ) and a stability objective ( Layer 2 ), the platform runs declared audit protocols across datasets and settings, logging intermediate artifacts and preserving provenance traces. This converts what is currently bespoke analyst iter-ation into a standardized, verifiable scientific computation. 
+
+Evidence accumulation over observation-model space. 
+
+The platform accumulates audit outputs in a queryable form that supports claim evaluation: given a target claim and declared admissibility, it estimates the claim’s confidence under admissible pipeline variation and records which re-gions of Φ support or refute the claim. In this way, later studies can reuse and update accumulated evidence rather than re-discovering fragile degrees of freedom via bespoke iteration. 
+
+Cross-study comparability. Because pipelines are ex-pensive to rerun and hard to compare across heteroge-neous toolchains, operating on a shared pipeline speci-fication enables counterfactual queries (e.g., varying ϕ
+
+within a declared admissible neighborhood) without be-spoke re-implementation. This makes disagreements diag-nosable: the community can test whether conflicting con-clusions arise from measurement variation, dataset shift, or observation-model incompatibility induced by lossy up-stream choices (Crusoe et al., 2022). 
+
+6.4. Closing the Loop 
+
+Adopting the Computable Observation Framework makes scientific evidence accumulative, addressing (C1) –(C3) in one workflow: Layer 1 turns pipelines into typed, ver-sioned, executable objects, Layer 2 makes cross-setting transport a first-class optimization target via stability-first objectives, and Layer 3 reproduces and aggregates audits across datasets to localize failure modes and accumulate stability profiles, so unavoidable multiplicity is propagated as uncertainty (Pareto sets or policies over Φ) rather than collapsed to an untracked point choice. 
+
+7. Conclusion 
+
+We take a simple position: AI4Science should treat measurement-to-dataset pipelines as inference compo-nents. This is a continuation of recent position works on Data-centric ML (Villalobos et al., 2024; Kandpal & Raffel, 2025) and AI4Science (Hogg & Villar, 2024). Importantly, we do not advocate any single inferential doctrine (e.g., fully Bayesian (Stuart, 2010) or multiverse analysis (Stee-gen et al., 2016)), nor a simple “pipeline AutoML” (He et al., 2021). Instead, we call for building a Computable Observation Framework that turns observation-model un-certainty into cumulative evidence . This is more pressing as foundation models, agents, and automated laboratories accelerate scientific iteration (Romera-Paredes et al., 2024; Tom et al., 2024; Chenthamarakshan et al., 2023). 9Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Acknowledgements 
+
+This work is supported by Natural Science Foundation of China (No. 72374173), the Fundamental Research Funds for the Central Universities (No. SWU-XDJH202303), University Innovation Research Group of Chongqing (No. CXQT21005), China Scholarship Council (CSC) program (No. 202306990091, No. 202406990056) and Chongqing Graduate Research Innovation Project (No. CYB22129, No. CYB240088). The experiments are supported by the High Performance Computing clusters and the Large-Scale In-strument Sharing Platform (H20 GPU Server) at Southwest University. We acknowledge the opensource data providers and the pyspi developer team for their important contribu-tions to the open scientific community. We are also grateful to the reviewers for their constructive and insightful com-ments, which helped improve the quality and presentation of this work. 
+
+References 
+
+Aggarwal, H. K., Mani, M. P., and Jacob, M. Modl: Model-based deep learning architecture for inverse problems. 
+
+IEEE Trans. Medical Imaging , 38(2):394–405, 2019. doi: 10.1109/TMI.2018.2865356. Ahmed, S. The epistemological status of the direct and indirect observation distinction. Eur. J. Philos. Sci. , 15 (4):1–28, 2025. Allen, M., Dorr, F., Gallego Mejia, J. A., Mart ´ınez-Ferrer, L., Jungbluth, A., Kalaitzis, F., and Ramos-Poll ´an, R. M3leo: A multi-modal, multi-label earth observation dataset in-tegrating interferometric sar and multispectral data. Adv. Neur. In. , 37:104694–104723, 2024. Antun, V., Renna, F., Poon, C., Adcock, B., and Hansen, A. C. On instabilities of deep learning in image recon-struction and the potential costs of ai. Proc. Natl. Acad. Sci. , 117(48):30088–30095, 2020. Arridge, S., Maass, P., ¨Oktem, O., and Sch ¨onlieb, C.-B. Solving inverse problems using data-driven models. Acta Numer. , 28:1–174, 2019. Arroyo-Araujo, M., Voelkl, B., Laloux, C., Novak, J., Koopmans, B., Waldron, A.-M., Seiffert, I., Stirling, H., Aulehner, K., Janhunen, S. K., et al. Systematic assess-ment of the replicability and generalizability of preclin-ical findings: Impact of protocol harmonization across laboratory sites. PLoS biology , 20(11):e3001886, 2022. Baptista, D., Correia, J., Pereira, B., and Rocha, M. Evaluat-ing molecular representations in machine learning models for drug response prediction and interpretability. Journal of Integrative Bioinformatics , 19(3):20220006, 2022. Bean, B., Bhatnagar, S., Castro, S., Meyer, J. D., Emonts, B., Garcia, E., Garwood, R., Golap, K., Villalba, J. G., Harris, P., et al. Casa, the common astronomy software applications for radio astronomy. Publ. Astron. Soc. Pac. ,134(1041):114501, 2022. Bell, S. J., Kampman, O., Dodge, J., and Lawrence, N. Modeling the machine learning multiverse. Adv. Neur. In. ,35:18416–18429, 2022. Benjamini, Y. and Hochberg, Y. Controlling the false dis-covery rate: a practical and powerful approach to multiple testing. Journal of the Royal statistical society: series B (Methodological) , 57(1):289–300, 1995. Berman, H. M., Westbrook, J., Feng, Z., Gilliland, G., Bhat, T. N., Weissig, H., Shindyalov, I. N., and Bourne, P. E. The protein data bank. Nucleic acids research , 28(1): 235–242, 2000. Betschart, R. O., Thi ´ery, A., Aguilera-Garcia, D., Zoche, M., Moch, H., Twerenbold, R., Zeller, T., Blankenberg, S., and Ziegler, A. Comparison of calling pipelines for whole genome sequencing: an empirical study demonstrating the importance of mapping and alignment. Sci. Rep. , 12 (1):21502, 2022. Bigdely-Shamlo, N., Mullen, T., Kothe, C., Su, K.-M., and Robbins, K. A. The prep pipeline: standardized prepro-cessing for large-scale eeg analysis. Frontiers in neuroin-formatics , 9:16, 2015. Blum, A. and Hardt, M. The ladder: A reliable leaderboard for machine learning competitions. In ICML , pp. 1006– 1014. PMLR, 2015. Bommasani, R., Klyman, K., Kapoor, S., Longpre, S., Xiong, B., Maslej, N., and Liang, P. The 2024 foun-dation model transparency index. Trans. Mach. Learn. Res. , 2025, 2025. Botvinik-Nezer, R., Holzmeister, F., Camerer, C. F., Dreber, A., Huber, J., Johannesson, M., Kirchler, M., Iwanir, R., Mumford, J. A., Adcock, R. A., et al. Variability in the analysis of a single neuroimaging dataset by many teams. 
+
+Nature , 582(7810):84–88, 2020. Breznau, N., Rinke, E. M., Wuttke, A., Nguyen, H. H., Adem, M., Adriaans, J., Alvarez-Benjumea, A., Ander-sen, H. K., Auer, D., Azevedo, F., et al. Observing many researchers using the same data and hypothesis reveals a hidden universe of uncertainty. Proc. Natl. Acad. Sci. ,119(44):e2203150119, 2022. Brooks, T. G., Lahens, N. F., Mr ˇcela, A., and Grant, G. R. Challenges and best practices in omics benchmarking. 
+
+Nat. Rev. Genet. , 25(5):326–339, 2024. Bushuiev, R., Bushuiev, A., Samusevich, R., Brungs, C., Sivic, J., and Pluskal, T. Self-supervised learning of molecular representations from millions of tandem mass spectra using dreams. Nat. Biotechnol. , pp. 1–11, 2025. Cai, H., Yuan, Z., Gao, Y., Sun, S., Li, N., Tian, F., Xiao, H., Li, J., Yang, Z., Li, X., et al. A multi-modal open dataset for mental-disorder analysis. Sci. Data , 9(1):178, 2022. 10 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Carp, J. The secret lives of experiments: methods reporting in the fmri literature. Neuroimage , 63(1):289–300, 2012. Caucheteux, C., Gramfort, A., and King, J.-R. Disentan-gling syntax and semantics in the brain with deep net-works. In International conference on machine learning ,pp. 1336–1348. PMLR, 2021. Chen, H., Lei, Y., Li, R., Xia, X., Cui, N., Chen, X., Liu, J., Tang, H., Zhou, J., Huang, Y., et al. Resting-state eeg dynamic functional connectivity distinguishes non-psychotic major depression, psychotic major depression and schizophrenia. Mol. Psychiatr. , 29(4):1088–1098, 2024a. Chen, W., Zhan, L., and Jia, T. Sex differences in hierar-chical and modular organization of functional brain net-works: Insights from hierarchical entropy and modularity analysis. Entropy , 26(10):864, 2024b. Chenthamarakshan, V., Hoffman, S. C., Owen, C. D., Lukacik, P., Strain-Damerell, C., Fearon, D., Malla, T. R., Tumber, A., Schofield, C. J., Duyvesteyn, H. M., et al. Accelerating drug target inhibitor discovery with a deep generative foundation model. Science advances , 9(25): eadg7865, 2023. Claverie, M., Ju, J., Masek, J. G., Dungan, J. L., Vermote, E. F., Roger, J.-C., Skakun, S. V., and Justice, C. The harmonized landsat and sentinel-2 surface reflectance data set. Remote sensing of environment , 219:145–161, 2018. Cliff, O. M., Bryant, A. G., Lizier, J. T., Tsuchiya, N., and Fulcher, B. D. Unifying pairwise interactions in complex dynamics. Nature Computational Science , 3(10):883– 893, 2023. Cohen, M. Analyzing neural time series data: theory and practice . The MIT Press, 2014. Crusoe, M. R., Abeln, S., Iosup, A., Amstutz, P., Chilton, J., Tijani ´c, N., M ´enager, H., Soiland-Reyes, S., Gavrilovi ´c, B., Goble, C., et al. Methods included: standardizing computational reuse and portability with the common workflow language. Commun. ACM , 65(6):54–63, 2022. Cuoco, E., Patricelli, B., Iess, A., and Morawski, F. Compu-tational challenges for multimodal astrophysics. Nature Computational Science , 2(8):479–485, 2022. D’Amour, A., Heller, K. A., Moldovan, D., Adlam, B., Alipanahi, B., Beutel, A., Chen, C., Deaton, J., Eisen-stein, J., Hoffman, M. D., Hormozdiari, F., Houlsby, N., Hou, S., Jerfel, G., Karthikesalingam, A., Lucic, M., Ma, Y., McLean, C. Y., Mincu, D., Mitani, A., Monta-nari, A., Nado, Z., Natarajan, V., Nielson, C., Osborne, T. F., Raman, R., Ramasamy, K., Sayres, R., Schrouff, J., Seneviratne, M., Sequeira, S., Suresh, H., Veitch, V., Vladymyrov, M., Wang, X., Webster, K., Yadlowsky, S., Yun, T., Zhai, X., and Sculley, D. Underspecification presents challenges for credibility in modern machine learning. J. Mach. Learn. Res. , 23:226:1–226:61, 2022. Delorme, A. and Makeig, S. Eeglab: an open source toolbox for analysis of single-trial eeg dynamics including inde-pendent component analysis. Journal of neuroscience methods , 134(1):9–21, 2004. DePristo, M. A., Banks, E., Poplin, R., Garimella, K. V., Maguire, J. R., Hartl, C., Philippakis, A. A., Del Angel, G., Rivas, M. A., Hanna, M., et al. A framework for variation discovery and genotyping using next-generation dna sequencing data. Nature genetics , 43(5):491–498, 2011. DiCiccio, T. J. and Efron, B. Bootstrap confidence intervals. 
+
+Statistical science , 11(3):189–228, 1996. Do, L. American psychiatric association diagnostic and statistical manual of mental disorders (dsm-iv). Ency-clopedia of child behavior and development , pp. 84–85, 2011. Dong, L., Li, F., Liu, Q., Wen, X., Lai, Y., Xu, P., and Yao, D. Matlab toolboxes for reference electrode standardization technique (rest) of scalp eeg. Frontiers in neuroscience ,11:601, 2017. Dugr ´e, M., Chatelain, Y., and Glatard, T. An analysis of per-formance bottlenecks in mri preprocessing. GigaScience ,14:giae098, 2025. Dwork, C., Feldman, V., Hardt, M., Pitassi, T., Reingold, O., and Roth, A. L. Preserving statistical validity in adaptive data analysis. In Proceedings of the forty-seventh annual ACM symposium on Theory of computing , pp. 117–126, 2015. Engel, J. H., Hantrakul, L., Gu, C., and Roberts, A. DDSP: differentiable digital signal processing. In 8th Interna-tional Conference on Learning Representations, ICLR 2020, Addis Ababa, Ethiopia, April 26-30, 2020 . Open-Review.net, 2020. Esteban, O., Markiewicz, C. J., Blair, R. W., Moodie, C. A., Isik, A. I., Erramuzpe, A., Kent, J. D., Goncalves, M., DuPre, E., Snyder, M., et al. fmriprep: a robust prepro-cessing pipeline for functional mri. Nature methods , 16 (1):111–116, 2019. Fernandez-Leiro, R. and Scheres, S. H. A pipeline approach to single-particle processing in relion. Biological Crys-tallography , 73(6):496–502, 2017. Feurer, M., Klein, A., Eggensperger, K., Springenberg, J., Blum, M., and Hutter, F. Efficient and robust automated machine learning. Advances in neural information pro-cessing systems , 28, 2015. Field, A. P. and Gillett, R. How to do a meta-analysis. Br. J. Math. Stat. Psychol. , 63(3):665–694, 2010. Gaulton, A., Hersey, A., Nowotka, M., Bento, A. P., Cham-bers, J., Mendez, D., Mutowo, P., Atkinson, F., Bellis, 11 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+L. J., Cibri ´an-Uhalte, E., et al. The chembl database in 2017. Nucleic acids research , 45(D1):D945–D954, 2017. Geirhos, R., Jacobsen, J.-H., Michaelis, C., Zemel, R., Bren-del, W., Bethge, M., and Wichmann, F. A. Shortcut learn-ing in deep neural networks. Nature Machine Intelligence ,2(11):665–673, 2020. Glasser, M. F., Sotiropoulos, S. N., Wilson, J. A., Coalson, T. S., Fischl, B., Andersson, J. L., Xu, J., Jbabdi, S., Web-ster, M., Polimeni, J. R., et al. The minimal preprocessing pipelines for the human connectome project. Neuroimage ,80:105–124, 2013. Gorgolewski, K. J., Auer, T., Calhoun, V. D., Craddock, R. C., Das, S., Duff, E. P., Flandin, G., Ghosh, S. S., Glatard, T., Halchenko, Y. O., et al. The brain imaging data structure, a format for organizing and describing outputs of neuroimaging experiments. Scientific data , 3 (1):1–9, 2016. Gramfort, A., Luessi, M., Larson, E., Engemann, D. A., Strohmeier, D., Brodbeck, C., Parkkonen, L., and H ¨am ¨al ¨ainen, M. S. Mne software for processing meg and eeg data. neuroimage , 86:446–460, 2014. Hand, D. J. Measurement theory and practice: The world through quantification . Arnold, London, 2004. Harder, J. A. The multiverse of methods: Extending the multiverse analysis to address data-collection decisions. 
+
+Perspectives on Psychological Science , 15(5):1158–1177, 2020. Haresign, I. M., Phillips, E., Whitehorn, M., Noreika, V., Jones, E., Leong, V., and Wass, S. Automatic classi-fication of ica components from infant eeg using mara. 
+
+Developmental cognitive neuroscience , 52:101024, 2021. He, X., Zhao, K., and Chu, X. Automl: A survey of the state-of-the-art. Knowledge-based systems , 212:106622, 2021. Hirsch, R. and Gilad-Bachrach, R. Trees with attention for set prediction tasks. In International Conference on Machine Learning , pp. 4250–4261. PMLR, 2021. Hogg, D. W. and Villar, S. Position: Is machine learn-ing good or bad for the natural sciences? In Forty-first International Conference on Machine Learning , 2024. Hunter, T. R., Indebetouw, R., Brogan, C. L., Berry, K., Chang, C.-S., Francke, H., Geers, V. C., G ´omez, L., Hib-bard, J. E., Humphreys, E. M., et al. The alma interfero-metric pipeline heuristics. Publ. Astron. Soc. Pac. , 135 (1049):074501, 2023. Ioannidis, J. P. Why most published research findings are false. PLoS medicine , 2(8):e124, 2005. Jeffrey, R. C. The logic of decision . University of Chicago press, 1990. Kale, A., Kay, M., and Hullman, J. Decision-making under uncertainty in research synthesis: Designing for the gar-den of forking paths. In Brewster, S. A., Fitzpatrick, G., Cox, A. L., and Kostakos, V. (eds.), Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems, CHI 2019, Glasgow, Scotland, UK, May 04-09, 2019 , pp. 202. ACM, 2019. Kandpal, N. and Raffel, C. Position: The most expensive part of an llm should be its training data. In Forty-second International Conference on Machine Learning Position Paper Track , 2025. Ke, L., Tong, S., Cheng, P., and Peng, K. Exploring the frontiers of llms in psychological applications: A com-prehensive review. Artif. Intell. Rev. , 58(10):305, 2025. Kessler, R., Enge, A., and Skeide, M. A. How eeg prepro-cessing shapes decoding performance. Communications Biology , 8(1):1039, 2025. Kiar, G., Mumford, J. A., Xu, T., Vogelstein, J. T., Glatard, T., and Milham, M. P. Why experimental variation in neu-roimaging should be embraced. Nature communications ,15(1):9411, 2024. Klarner, L., Rudner, T. G., Reutlinger, M., Schindler, T., Morris, G. M., Deane, C., and Teh, Y. W. Drug discovery under covariate shift with domain-informed prior distri-butions over functions. In International Conference on Machine Learning , pp. 17176–17197. PMLR, 2023. Kołodziej, A., Magnuski, M., Ruban, A., and Brzezicka, A. No relationship between frontal alpha asymmetry and depressive disorders in a multiverse analysis of five studies. Elife , 10:e60595, 2021. Landrum, G. Rdkit documentation. Release , 1(1-79):4, 2013. Leonelli, S. Data-centric biology: A philosophical study .University of Chicago Press, 2019. Liu, Z., Gomes, S., Tiwari, A., and Scarlett, J. Sample com-plexity bounds for 1-bit compressive sensing and binary stable embeddings with generative priors. In Interna-tional Conference on Machine Learning , pp. 6216–6225. PMLR, 2020. Liu, Z.-Q., Luppi, A. I., Hansen, J. Y., Tian, Y. E., Zalesky, A., Yeo, B., Fulcher, B. D., and Misic, B. Benchmarking methods for mapping functional connectivity in the brain. 
+
+Nat. Methods , pp. 1–10, 2025. Luo, Y., Chen, W., Qiu, J., and Jia, T. Accelerated func-tional brain aging in major depressive disorder: evidence from a large scale fmri analysis of chinese participants. 
+
+Translational psychiatry , 12(1):397, 2022. Luppi, A. I., Gellersen, H. M., Liu, Z.-Q., Peattie, A. R., Manktelow, A. E., Adapa, R., Owen, A. M., Naci, L., Menon, D. K., Dimitriadis, S. I., et al. Systematic eval-uation of fmri data-processing pipelines for consistent 12 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+functional connectomics. Nat. Commun. , 15(1):4745, 2024. Maier-Hein, L., Eisenmann, M., Reinke, A., Onogur, S., Stankovic, M., Scholz, P., Arbel, T., Bogunovic, H., Bradley, A. P., Carass, A., et al. Why rankings of biomed-ical image analysis competitions should be interpreted with care. Nature communications , 9(1):5217, 2018. Markiewicz, C. J., Gorgolewski, K. J., Feingold, F., Blair, R., Halchenko, Y. O., Miller, E., Hardcastle, N., Wexler, J., Esteban, O., Goncavles, M., et al. The openneuro re-source for sharing of neuroscience data. Elife , 10:e71774, 2021. Markowetz, F. All models are wrong and yours are useless: making clinical prediction models impactful for patients. 
+
+NPJ precision oncology , 8(1):54, 2024. McKenna, A., Hanna, M., Banks, E., Sivachenko, A., Cibul-skis, K., Kernytsky, A., Garimella, K., Altshuler, D., Gabriel, S., Daly, M., et al. The genome analysis toolkit: a mapreduce framework for analyzing next-generation dna sequencing data. Genome research , 20(9):1297–1303, 2010. McKnight, P. E. and Najab, J. Mann-whitney u test. The Corsini encyclopedia of psychology , pp. 1–1, 2010. Mendez, D., Gaulton, A., Bento, A. P., Chambers, J., De Veij, M., F ´elix, E., Magari ˜nos, M. P., Mosquera, J. F., Mutowo, P., Nowotka, M., et al. Chembl: towards direct deposition of bioassay data. Nucleic acids research , 47 (D1):D930–D940, 2019. Merz, G., Liu, Y., Burke, C. J., Aleo, P. D., Liu, X., Car-rasco Kind, M., Kindratenko, V., and Liu, Y. Detection, instance segmentation, and classification for astronomical surveys with deep learning (deepdisc): detectron2 imple-mentation and demonstration with hyper suprime-cam data. Mon. Not. R. Astron Soc. , 526(1):1122–1137, 09 2023. Messeri, L. and Crockett, M. J. Artificial intelligence and illusions of understanding in scientific research. Nature ,627(8002):49–58, 2024. Miller, W. G. Harmonization: its time has come, 2017. Mohr, M., Pebesma, E., Dries, J., Lippens, S., Janssen, B., Thiex, D., Milcinski, G., Schumacher, B., Briese, C., Claus, M., et al. Federated and reusable processing of earth observation data. Sci. Data , 12(1):194, 2025. Mulrow, C. D. Systematic reviews: rationale for systematic reviews. Bmj , 309(6954):597–599, 1994. Mumtaz, W. Mdd patients and healthy controls eeg data (new). Figshare, Dataset , 2016. Mumtaz, W., Malik, A. S., Yasin, M. A. M., and Xia, L. Review on eeg and erp predictive biomarkers for major depressive disorder. Biomed. Signal Proces. , 22:85–98, 2015. Munk, A., Mead, A., and Wood, F. Uncertain evidence in probabilistic models and stochastic simulators. In Inter-national Conference on Machine Learning , pp. 25486– 25500. PMLR, 2023. Murata, N., Saito, K., Lai, C.-H., Takida, Y., Uesaka, T., Mitsufuji, Y., and Ermon, S. Gibbsddrm: A partially col-lapsed gibbs sampler for solving blind inverse problems with denoising diffusion restoration. In International con-ference on machine learning , pp. 25501–25522. PMLR, 2023. Musslick, S., Bartlett, L. K., Chandramouli, S. H., Dubova, M., Gobet, F., Griffiths, T. L., Hullman, J., King, R. D., Kutz, J. N., Lucas, C. G., et al. Automating the practice of science: Opportunities, challenges, and implications. 
+
+Proc. Natl. Acad. Sci. , 122(5):e2401238121, 2025. Nguyen, T., Brandstetter, J., Kapoor, A., Gupta, J. K., and Grover, A. Climax: A foundation model for weather and climate. In Krause, A., Brunskill, E., Cho, K., Engelhardt, B., Sabato, S., and Scarlett, J. (eds.), International Con-ference on Machine Learning, ICML 2023, 23-29 July 2023, Honolulu, Hawaii, USA , volume 202 of Proceed-ings of Machine Learning Research , pp. 25904–25938. PMLR, 2023. Nichols, T. E., Das, S., Eickhoff, S. B., Evans, A. C., Glatard, T., Hanke, M., Kriegeskorte, N., Milham, M. P., Poldrack, R. A., Poline, J.-B., et al. Best practices in data analysis and sharing in neuroimaging using mri. Nature neuroscience , 20(3):299–303, 2017. Olson, N. D., Wagner, J., McDaniel, J., Stephens, S. H., Westreich, S. T., Prasanna, A. G., Johanson, E., Boja, E., Maier, E. J., Serang, O., et al. Precisionfda truth challenge v2: Calling variants from short and long reads in difficult-to-map regions. Cell genomics , 2(5), 2022. Paullada, A., Raji, I. D., Bender, E. M., Denton, E., and Hanna, A. Data and its (dis) contents: A survey of dataset development and use in machine learning research. Pat-terns , 2(11), 2021. Pearl, J. Probabilistic reasoning in intelligent systems: net-works of plausible inference . Elsevier, 2014. Punjani, A., Rubinstein, J. L., Fleet, D. J., and Brubaker, M. A. cryosparc: algorithms for rapid unsupervised cryo-em structure determination. Nature methods , 14(3):290– 296, 2017. Pyzer-Knapp, E. O., Manica, M., Staar, P., Morin, L., Ruch, P., Laino, T., Smith, J. R., and Curioni, A. Foundation models for materials discovery–current state and future directions. Npj Computational Materials , 11(1):61, 2025. Robitaille, T. P., Tollerud, E. J., Greenfield, P., Droettboom, M., Bray, E., Aldcroft, T., Davis, M., Ginsburg, A., Price-Whelan, A. M., Kerzendorf, W. E., et al. Astropy: A 13 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+community python package for astronomy. Astron. Astro-phys. , 558:A33, 2013. Romera-Paredes, B., Barekatain, M., Novikov, A., Balog, M., Kumar, M. P., Dupont, E., Ruiz, F. J., Ellenberg, J. S., Wang, P., Fawzi, O., et al. Mathematical discoveries from program search with large language models. Nature , 625 (7995):468–475, 2024. Roß, T., Bruno, P., Reinke, A., Wiesenfarth, M., Koeppel, L., Full, P. M., Pekdemir, B., Godau, P., Trofimova, D., Isensee, F., et al. Beyond rankings: learning (more) from algorithm validation. Medical image analysis , 86:102765, 2023. Sambasivan, N., Kapania, S., Highfill, H., Akrong, D., Par-itosh, P., and Aroyo, L. M. “everyone wants to do the model work, not the data work”: Data cascades in high-stakes ai. In proceedings of the 2021 CHI Conference on Human Factors in Computing Systems , pp. 1–15, 2021a. Sambasivan, N., Kapania, S., Highfill, H., Akrong, D., Par-itosh, P. K., and Aroyo, L. ”everyone wants to do the model work, not the data work”: Data cascades in high-stakes AI. In Kitamura, Y., Quigley, A., Isbister, K., Igarashi, T., Bjørn, P., and Drucker, S. M. (eds.), CHI ’21: CHI Conference on Human Factors in Computing Sys-tems, Virtual Event / Yokohama, Japan, May 8-13, 2021 ,pp. 39:1–39:15. ACM, 2021b. Scheres, S. H. Single-particle processing in relion-3.1. MRC Lab. Mol. Biol., Cambridge, UK, Tutorial RELION-3.1 ,2019. Sheehan, D. V., Lecrubier, Y., Sheehan, K. H., Amorim, P., Janavs, J., Weiller, E., Hergueta, T., Baker, R., Dunbar, G. C., et al. The mini-international neuropsychiatric interview (mini): the development and validation of a structured diagnostic psychiatric interview for dsm-iv and icd-10. Journal of clinical psychiatry , 59(20):22–33, 1998. Silberzahn, R., Uhlmann, E. L., Martin, D. P., Anselmi, P., Aust, F., Awtrey, E., Bahn ´ık, ˇS., Bai, F., Bannard, C., Bonnier, E., et al. Many analysts, one data set: Making transparent how variations in analytic choices affect re-sults. Advances in methods and practices in psychological science , 1(3):337–356, 2018. Simmons, J. P., Nelson, L. D., and Simonsohn, U. False-positive psychology: Undisclosed flexibility in data col-lection and analysis allows presenting anything as signifi-cant. Psychological science , 22(11):1359–1366, 2011. Simonsohn, U., Simmons, J. P., and Nelson, L. D. Specifi-cation curve analysis. Nature human behaviour , 4(11): 1208–1214, 2020. Smith, C. T., Marcucci, M., Nolan, S. J., Iorio, A., Sudell, M., Riley, R., Rovers, M. M., and Williamson, P. R. In-dividual participant data meta-analyses compared with meta-analyses based on aggregate data. Cochrane Db. Syst. Rev. , (9), 2016. Soares, E., Vital Brazil, E., Shirasuna, V., Zubarev, D., Cerqueira, R., and Schmidt, K. An open-source family of large encoder-decoder foundation models for chemistry. 
+
+Communications Chemistry , 8(1):193, 2025. Spitzer, R. L., Kroenke, K., Williams, J. B., Patient Health Questionnaire Primary Care Study Group, et al. Vali-dation and utility of a self-report version of prime-md: the phq primary care study. JAMA , 282(18):1737–1744, 1999. Steegen, S., Tuerlinckx, F., Gelman, A., and Vanpaemel, W. Increasing transparency through a multiverse analysis. 
+
+Perspectives on Psychological Science , 11(5):702–712, 2016. Strypsteen, T. and Bertrand, A. End-to-end learnable eeg channel selection for deep neural networks with gumbel-softmax. J. Neural Eng. , 18(4):0460a9, 2021. Stuart, A. M. Inverse problems: a bayesian perspective. 
+
+Acta numerica , 19:451–559, 2010. Subbaswamy, A., Adams, R., and Saria, S. Evaluating model robustness and stability to dataset shift. In Interna-tional conference on artificial intelligence and statistics ,pp. 2611–2619. PMLR, 2021. Sun, Y., Wang, L., Li, G., Lin, W., and Wang, L. A founda-tion model for enhancing magnetic resonance images and downstream segmentation, registration and diagnostic tasks. Nat. Biomed. Eng. , 9(4):521–538, 2025. Szwarcman, D., Roy, S., Fraccaro, P., G ´ıslason, O. E., Blumenstiel, B., Ghosal, R., De Oliveira, P. H., de Sousa Almeida, J. L., Sedona, R., Kang, Y., et al. Prithvi-eo-2.0: A versatile multi-temporal foundation model for earth observation applications. IEEE Trans. Geosci. Remote Sens. , 2025. Taori, R., Dave, A., Shankar, V., Carlini, N., Recht, B., and Schmidt, L. Measuring robustness to natural distribution shifts in image classification. Adv. Neur. In. , 33:18583– 18599, 2020. Thanjavur, K., Ivezi ´c, ˇZ., Allam, S. S., Tucker, D. L., Smith, J. A., and Gwyn, S. Photometric cross-calibration of the sdss stripe 82 standard stars catalogue with gaia edr3, and comparison with pan-starrs1, des, cfis, and galex catalogues. Mon. Not. R. Astron Soc. , 505(4):5941–5956, 2021. Thi ´ebaut, ´E. Principles of image reconstruction in inter-ferometry. European Astronomical Society Publications Series , 59:157–187, 2013. Thiyagalingam, J., Shankar, M., Fox, G., and Hey, T. Sci-entific machine learning benchmarks. Nature Reviews Physics , 4(6):413–420, 2022. 14 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Tolpin, D., Zhou, Y., Rainforth, T., and Yang, H. Proba-bilistic programs with stochastic conditioning. In Inter-national Conference on Machine Learning , pp. 10312– 10323. PMLR, 2021. Tom, G., Schmid, S. P., Baird, S. G., Cao, Y., Darvish, K., Hao, H., Lo, S., Pablo-Garc ´ıa, S., Rajaonson, E. M., Skreta, M., et al. Self-driving laboratories for chemistry and materials science. Chem. Rev. , 124(16):9633–9732, 2024. Van der Auwera, G. A., Carneiro, M. O., Hartl, C., Poplin, R., Del Angel, G., Levy-Moonshine, A., Jordan, T., Shakir, K., Roazen, D., Thibault, J., et al. From fastq data to high-confidence variant calls: the genome analy-sis toolkit best practices pipeline. Current protocols in bioinformatics , 43(1):11–10, 2013. Van Der Vinne, N., Vollebregt, M. A., Van Putten, M. J., and Arns, M. Frontal alpha asymmetry as a diagnostic marker in depression: Fact or fiction? a meta-analysis. 
+
+Neuroimage: clinical , 16:79–87, 2017. Van Noorden, R. and Perkel, J. M. Ai and science: what 1,600 researchers think. Nature , 621(7980):672–675, 2023. Villalobos, P., Ho, A., Sevilla, J., Besiroglu, T., Heim, L., and Hobbhahn, M. Position: Will we run out of data? limits of llm scaling based on human-generated data. In 
+
+Forty-first International Conference on Machine Learn-ing , 2024. Wang, H., Fu, T., Du, Y., Gao, W., Huang, K., Liu, Z., Chandak, P., Liu, S., Van Katwyk, P., Deac, A., et al. Scientific discovery in the age of artificial intelligence. 
+
+Nature , 620(7972):47–60, 2023. Wang, Y., Chai, Q., Lin, L., and Jia, T. Pdsl: Propagation dynamics aware framework for source localization. IEEE Transactions on Network Science and Engineering , 2026. wwPDB Consortium. Protein data bank: the single global archive for 3d macromolecular structure data. Nucleic Acids Research , 47(D1):D520–D528, 01 2019. ISSN 0305-1048. Xu, Y., Liu, X., Cao, X., Huang, C., Liu, E., Qian, S., Liu, X., Wu, Y., Dong, F., Qiu, C.-W., et al. Artificial intelligence: A powerful paradigm for scientific research. 
+
+The Innovation , 2(4), 2021. Yamashita, A., Yahata, N., Itahashi, T., Lisi, G., Yamada, T., Ichikawa, N., Takamura, M., Yoshihara, Y., Kuni-matsu, A., Okada, N., et al. Harmonization of resting-state functional mri data across multiple imaging sites via the separation of site differences into sampling bias and measurement bias. PLoS biology , 17(4):e3000042, 2019. Zahedi, M., Shahin, M., and Babar, M. A. A systematic review of knowledge sharing challenges and practices in global software development. Int. J. Inform. Manage. , 36 (6):995–1019, 2016. Zha, D., Bhat, Z. P., Lai, K.-H., Yang, F., Jiang, Z., Zhong, S., and Hu, X. Data-centric artificial intelligence: A survey. ACM Computing Surveys , 57(5):1–42, 2025. Zhan, L., Huang, J., Yu, X., Chen, W., and Jia, T. Beyond pairwise connections: Extracting high-order functional brain network structures under global constraints. Ad-vances in Neural Information Processing Systems , 38: 171568–171600, 2026a. Zhan, L., Li, Z., Huang, J., and Jia, T. Accelerat-ing benchmarking of functional connectivity modeling via structure-aware core-set selection. arXiv preprint arXiv:2602.05667 , 2026b. Zhao, S., Agafonov, O., Azab, A., Stokowy, T., and Hovig, E. Accuracy and efficiency of germline variant calling pipelines for human genome data. Scientific reports , 10 (1):20222, 2020. 15 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+A. Pipeline Exemplars Across Indirect-Observation Sciences 
+
+Figure 4 summarizes five high-impact domains where the community commonly releases a processed derivative as the practical interface for reuse, benchmarking, and downstream inference. In each case, the derivative is produced by a multi-stage preprocessing/reconstruction pipeline whose parameterization encodes consequential, convention-driven modeling choices. Freezing a single default pipeline therefore operationalizes a frozen lens : it fixes an observational operator upstream, while leaving the induced analysis-path uncertainty and setting dependence under-governed. 
+
+A. fMRI (BOLD) preprocessing (e.g., fMRIPrep derivatives) 
+
+BIDS import 
+
+T1w prep 
+
+BOLD ref 
+
+Motion corr. 
+
+SDC (if avail.) 
+
+Coreg + norm 
+
+Resample spaces 
+
+Confounds est. 
+
+> Slice timing
+> SDC strategy
+> Smoothing policy
+> Nuisance regression
+> Scrub/ censor
+> Template choice
+
+B. Germline short-variant calling (e.g., GATK-style cohort calling) 
+
+FASTQ QC 
+
+Align to ref 
+
+Mark dups BQSR gVCF per-sample 
+
+Joint genotype 
+
+VQSR / filters 
+
+> Ref build + decoys
+> Aligner params
+> BQSR on/off
+> Joint strategy
+> Truth sets (VQSR)
+> Filter thresholds
+
+C. Cryo-EM single-particle reconstruction (e.g., RELION/cryoSPARC) 
+
+Movies import 
+
+Motion corr. 
+
+CTF est. 
+
+Particle picking 
+
+Extract stack 
+
+2D class 
+
+3D class 
+
+Refine + post 
+
+> Dose weighting
+> CTF settings
+> Pick thresholds
+> Box size / binning
+> Class granularity
+> Mask + sharpen
+
+D. Radio interferometry (CASA-style calibration & imaging) 
+
+Visibilities import 
+
+Flag RFI/bad 
+
+Bandpass cal 
+
+Gain cal 
+
+Flux scale 
+
+Apply cal 
+
+tclean deconv 
+
+Self-cal (opt.) 
+
+> Flagging policy
+> Ref ant / solint
+> Weighting (robust)
+> Decon family
+> Mask strategy
+> Self-cal loops
+> E. Structural biology and bioactivity curation (e.g., PDB/ChEMBL-style datasets)
+> Raw exp. records
+> Structure solve
+> Model refine
+> Validate + QC
+> Deposit + annotate
+> Assay curation
+> Record aggregation
+> ML-ready dataset
+> Method choice
+> Resolution cutoff
+> Ligand / proton.
+> Quality filters
+> Assay endpoint
+> Condition filters
+> Duplicate policy
+> Label aggregation
+
+Figure 4. Canonical preprocessing/reconstruction pipelines in five indirect-observation domains. Top row in each panel: typical operational steps from raw measurements or primary experimental records to the released derivative artifact. Bottom row: representative fork points that are commonly fixed by defaults, conventions, or tool choices, thereby “freezing” an observation model and inducing analysis-path uncertainty. 
+
+fMRI (BOLD). Neuroimaging datasets are often distributed in standardized layouts (BIDS) and processed into derivatives using automated pipelines such as fMRIPrep (Gorgolewski et al., 2016; Esteban et al., 2019). Canonical steps include anatomical preprocessing and spatial normalization, motion and distortion correction, resampling to standard spaces, and confound estimation (Esteban et al., 2019). Crucially, downstream conclusions can vary substantially across defensible analysis choices (“many analysts”) even with the same raw dataset (Botvinik-Nezer et al., 2020). This exactly mirrors our EEG findings and motivates explicit accounting of pipeline degrees of freedom (e.g., SDC strategy, smoothing, nuisance regression, censoring). 16 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Germline short-variant calling (WGS/WES). A widely used cohort pipeline follows: read QC and alignment, duplicate marking and (optionally) base quality score recalibration, per-sample gVCF calling, joint genotyping, and callset filtering via VQSR (or hard filters) (McKenna et al., 2010; DePristo et al., 2011; Van der Auwera et al., 2013). Pipeline choices (reference build, aligner/caller stack, BQSR usage, and filtering regime) can shift error profiles and thus propagate into association and interpretation (Zhao et al., 2020; Betschart et al., 2022; Olson et al., 2022). Hard filtering thresholds here act as uncertified projections, creating the same (C2) Uncertified Transportability risk we measure in Section 3 .
+
+Cryo-EM single-particle reconstruction. Single-particle cryo-EM pipelines proceed from dose-fractionated movies through motion correction and CTF estimation to particle picking/extraction, 2D/3D classification, refinement, and post-processing (including masking/sharpening and validation) (Scheres, 2019; Fernandez-Leiro & Scheres, 2017; Punjani et al., 2017). These steps constitute an explicit inference pipeline, with well-known sensitivity to choices such as picking thresholds, class granularity, and post-processing settings. 
+
+Radio interferometric astronomy (visibility → image). Radio data reduction typically calibrates raw visibilities via flagging, bandpass and gain calibration, flux scaling, application of solutions, and imaging/deconvolution (e.g., CLEAN-family reconstruction in tclean ), often with optional self-calibration loops (Bean et al., 2022; Hunter et al., 2023). Key pipeline decisions include flagging policy, calibration solution intervals, imaging weighting (e.g., Briggs robust), and masking/deconvolver choices, which reshape the effective measurement operator and recovered morphology. 
+
+Structural biology and bioactivity databases. The frozen-lens dynamic also appears when downstream AI4Science models are trained on curated scientific databases rather than on a single laboratory pipeline. Protein Data Bank (PDB) entries are not raw molecular reality: they are deposited structural models produced through experimental acquisition, reconstruction, refinement, validation, and curation choices (Berman et al., 2000; wwPDB Consortium, 2019). Likewise, ChEMBL-style bioactivity records aggregate measurements across assays whose targets, protocols, endpoints, concentrations, cell lines, organisms, and normalization conventions may differ substantially (Gaulton et al., 2017; Mendez et al., 2019). For downstream drug-discovery models, these records often function as fixed training labels or structural inputs, but the released value is conditional on upstream experimental and curation choices. Thus, even when the database is community-standard, the interface may still collapse admissible observation-model variation: alternative assay filters, endpoint harmonization rules, structure-quality thresholds, or aggregation policies can change which molecular relationships are learnable from the released representation. 
+
+B. Formalizing the Structural Failure Modes 
+
+This section formalizes why bundling the observation model Pϕ into the dataset definition induces structural failure modes under indirect observation. We focus on the common AI4Science regime where Pϕ is fixed upstream, and use minimal notation to sharpen three claims: (C1) hidden hypothesis spaces induced by the pipeline, (C2) uncertified transportability via irreversible evidence projection, and (C3) ungoverned multiplicity induced by pipeline dispersion and estimand mismatch. 
+
+B.1. Setup: artifacts are pipeline-indexed, and accumulation requires a shared estimand 
+
+Let x ∈ X denote raw measurements, ψ ∈ Ψ the scientific quantity of interest, and s ∈ S index settings (e.g., measuring sites, cohorts, protocols, instruments). Under indirect observation, the released representation is produced by a pipeline (observation model) 
+
+zϕ = Pϕ(x), ϕ ∈ Φ, (1) where Φ is the scientifically admissible set of pipelines. A released dataset is a single realized artifact zrel = zϕ0 for some (often implicit) committed ϕ0. As a result, conditioning on a particular released artifact zrel implicitly conditions on the pipeline that produced it. Let y denote the proxy task target or observed task-level outcome. Given an artifact zϕ, a downstream model produces 
+
+ˆy = Fθ (zϕ),
+
+and is typically optimized within a setting s under a proxy loss, where Ds denotes the setting-s distribution over (x, y ):
+
+θ∗(ϕ, s ) = arg min  
+
+> θ
+
+E(x,y )∼Ds [L(Fθ (Pϕ(x)) , y )] . (2) 17 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Key distinction. Standard workflows treat ϕ as fixed upstream and optimize only θ. Our position is that ϕ is a scientific commitment that determines what evidence is present in the artifact, so comparability and accumulation require explicit treatment of pipeline dispersion rather than implicit point commitments. 
+
+B.2. C1: Hidden Hypothesis Spaces 
+
+Pipeline specifies a representation map Pϕ : X → Z . Let F = { z 7 → Fθ (z) : θ ∈ Θ } denote the downstream model family. For any fixed ϕ, the induced (measurement-to-science) hypothesis class is 
+
+Hϕ =
+
+n
+
+h : X → Ψ h(x) = f (Pϕ(x)) for some f ∈ F 
+
+o
+
+. (3) Thus choosing ϕ is choosing Hϕ. Unlike soft regularization, many preprocessing operators are non-invertible (e.g., filtering, projection), so they impose hard constraints: if the true mechanism h∗ /∈ H ϕ, the misspecification is structural. Over admissible pipelines, the effective hypothesis space is the union 
+
+HΦ = [
+
+> ϕ∈Φ
+
+Hϕ, (4) which bundling collapses to a single implicit Hϕ0 .
+
+Takeaway (C1). Pipelines define hidden hypothesis spaces: bundling fixes an implicit Hϕ0 and imports strong compositional inductive biases while obscuring the effective search space HΦ in (4). 
+
+B.3. C2: Uncertified transportability (via irreversible evidence projection) 
+
+A pipeline can irreversibly collapse measurements onto a representation manifold implied by its assumptions before 
+
+modeling. Formally, for a given ϕ, distinct measurement states x1̸ = x2 can be mapped to indistinguishable representations 
+
+Pϕ(x1) ≈ Pϕ(x2). (5) Equivalently, Pϕ induces an equivalence relation on measurements, 
+
+x1 ∼ϕ x2 ⇐⇒ Pϕ(x1) = Pϕ(x2). (6) Fixing Pϕ enforces that all variation within an equivalence class is treated as nuisance at the representation level. If the scientific target is not invariant under ∼ϕ (i.e., ∃ x1 ∼ϕ x2 with ψ(x1)̸ = ψ(x2)), then the mechanistically relevant distinction is irrecoverable from zϕ by any downstream model that only observes Pϕ(x).
+
+Takeaway (C2). Freezing a pipeline commits measurements to a quotient space (6) before learning, so predictive gains can certify the pipeline rather than the mechanism, potentially discarding evidence for competing explanations upstream. 
+
+B.4. C3: Ungoverned multiplicity (pipeline dispersion and estimand mismatch) 
+
+Under indirect observation, Φ often contains multiple scientifically defensible pipelines. Within a setting s, many ϕ can yield similar proxy performance after downstream optimization: 
+
+Rs(ϕ) = min  
+
+> θ
+
+E(x,y )∼Ds [L(Fθ (Pϕ(x)) , y )] , Rs(ϕ1) ≈ Rs(ϕ2). (7) Yet mechanistic conclusions can differ across pipelines even when Rs(ϕ) is comparable. Let C(ϕ, s ) denote a mechanistic output induced by the full pipeline (e.g., feature attribution, connectivity pattern, inferred causal edge set). Then pipeline dispersion is consequential when there exist ϕ1, ϕ 2 ∈ Φ such that 
+
+Rs(ϕ1) ≈ R s(ϕ2) but C(ϕ1, s )̸ = C(ϕ2, s ). (8) In this regime, ϕ is weakly identified by the within-setting proxy objective: proxy fit does not determine the mechanistic conclusion. 
+
+Estimand mismatch and the crisis of accumulation. A released artifact zϕ0 induces a pipeline-indexed object of inference (implicitly C(ϕ0, s )). Across studies that use different admissible pipeline configurations ϕ (including different defaults, 18 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+toolchains, or “equivalent” pipelines), the community is not estimating a single shared quantity but a family {C(ϕ, s )}ϕ∈Φ.Thus cross-study agreement and meta-analytic aggregation are well-defined only if the community supplies an explicit rule that either: (i) standardizes ϕ (fixing the estimand), or (ii) propagates pipeline uncertainty by combining evidence over 
+
+Φ (fixing the estimand by marginalization or an agreed summary functional). This missing rule is a governance gap that leaves accumulation ill-posed rather than merely noisy. Formally, if one aims to interpret conclusions as evidence about the scientific target ψ from raw measurements x, a generic uncertainty-propagating form is 
+
+P (ψ | x) ∝
+
+Z
+
+> ϕ∈Φ
+
+P (ψ | zϕ) P (ϕ) dϕ, zϕ = Pϕ(x). (9) Without such a standardization or aggregation rule, different studies need not share a common estimand, so “replication” becomes ill-posed rather than merely noisy. 
+
+Selection is not propagation. Current practice resolves pipeline dispersion by selection (implicit defaults, ad-hoc tuning, or significance-based choice), yielding a point commitment ˆϕ that may vary across settings and analysts. Selection can therefore convert admissible pipeline variation into hidden degrees of freedom while leaving mechanistic claims unqualified by pipeline sensitivity. 
+
+Takeaway (C3). Indirect observation induces a nontrivial admissible set Φ; when (8) holds, proxy fit weakly identifies 
+
+ϕ and does not determine mechanism. Absent a community rule that standardizes or propagates over Φ (e.g., (9) ), this governance gap ensures studies do not share a common estimand, and accumulation is not well-defined. 
+
+C. Motivating Empirical Audit 
+
+In this section, we present an empirical study that examines EEG-based hemispheric asymmetry in resting-state functional connectivity (rsFC) for Major Depressive Disorder (MDD). This question has been debated for decades (Van Der Vinne et al., 2017). Frontal alpha-band asymmetry has long been proposed as a candidate biomarker for MDD (Mumtaz et al., 2015). However, recent meta-analyses and multiverse analyses suggest that the effect is weak or not reliably observed (Kołodziej et al., 2021). We designed our study to revisit the question from a network perspective. In doing so, we find that plausible pipeline choices materially shape the inferred rsFC asymmetry, consistent with our broader claim that pipeline injects consequential inductive biases into the evidence used for downstream inference. We next describe the experimental setup and summarize the main findings. 
+
+C.1. Dataset CISIR (Mumtaz, 2016) This dataset was released by Centre for Intelligent Signal and Imaging Research, Universiti Teknologi PETRONAS, Malaysia in 2016 . It includes 34 MDD outpatients ( 18 females) (age, mean= 40 .33 , std ±12 .861 )and an age-matched group of 30 healthy controls (HCs, 9 females) (age, mean=38.227, std ±15 .64 ). The MDD participants met the diagnostic criteria for MDD according to Diagnostic and Statistical Manual-IV (DSM-IV) (Do, 2011). They are recruited from the outpatient clinic of hospital Universiti Sains Malaysia (HUMS), Malaysia. The experiment design is approved by the ethics committee, HUSM. The MDD participants with psychotic symptoms, pregnant patients, alcoholics, smokers and patients having epileptic problems are excluded. The normal controls were screened for possible mental or physical illness and found to be free of neurological and psychiatric disease. All participants were instructed to abstain from caffeine, nicotine, alcohol before EEG recordings, and completed EEG acquisition at the same time of day. 
+
+MODMA (Cai et al., 2022) This dataset is released by Gansu Provincial Key Laboratory of Wearable Computing, School of Information Science and Engineering, Lanzhou University, China. This dataset includes 53 participants with 
+
+24 outpatients (females= 11 ) (age, mean= 30 .09 , std ±10 .368 ) and 29 HCs (females= 9) (age, mean= 31 .4, std ±8.99 ). All participants had a normal or corrected-to-normal vision. Patients with MDD were recruited from inpatient and outpatient services from Lanzhou University Second Hospital, Gansu, China, diagnosed by at least one attending psychiatrist. All MDD patients received a structured Mini-International Neuropsychiatric Interview (MINI) (Sheehan et al., 1998) that met the diagnostic criteria for major depression of DSM-IV. The inclusion criteria for all participants were the age between 18 
+
+and 55 years old and primary or higher education level. The HCs are recruited by posters. The study was approved by the Ethics Committee of the Second Affiliated Hospital of Lanzhou University, and written informed consent was obtained from all subjects before the experiment began. For MDD patients, inclusion criteria required meeting the diagnostic criteria for depression according to the MINI, participants’ Patient Health Questionnaire-9 item (PHQ-9) (Spitzer et al., 1999) score 19 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+was greater than or equal to 5, and no psychotropic drug treatment within the prior two weeks. For MDD patients, the exclusion criteria were having mental disorders or brain organ damage, having a serious physical illness, and severe suicidal tendencies. For HC, the exclusion criteria included a personal or family history of mental disorders. Exclusion criteria for all subjects included abuse of or dependence on alcohol or psychotropic drugs in the past year, women who were pregnant or lactating, or taking birth control pills. 
+
+C.2. Preprocessing Steps Common Settings We use MATLAB 1 with EEGLAB toolbox (Delorme & Makeig, 2004) for offline EEG preprocessing. We selected 19 common channels and applied the same preprocessing to the CISIR and MODMA datasets for consistency. We use a series of band-pass filters on the preprocessed EEG records. These frequency bands included delta ( 1-4 Hz), theta ( 4-8 Hz), alpha ( 8-13 Hz), beta ( 13 -30 Hz), gamma ( 30 -40 Hz), and the full band ( 1-40 Hz) according to previous studies (Cohen, 2014; Chen et al., 2024a). 
+
+Preprocessing Choices The original papers recommend different preprocessing pipelines, so we audited the inductive bias introduced by admissible preprocessing variation. We evaluated 864 valid preprocessing configurations under a top-level factorial design: 2 × 4 × 3 × 2 × 3 × 6 = 864 . The factors were: • PREP (Bigdely-Shamlo et al., 2015): None, Automatic. • Downsampling: Original, 250Hz, 200Hz, 100Hz. • Filtering: None, [0.1Hz, 40Hz], [1Hz, 40Hz]. • Re-referencing: Average, REST (Dong et al., 2017). • Artifact handling: None, automatic bad-channel rejection, or ICA+MARA (Haresign et al., 2021)+TrimOutlier. • Window size: 100ms, 200ms, 400ms, 1s, 2s, 4s. Bad-channel interpolation was applied only within the automatic bad-channel rejection branch and was not an independent design factor. For each valid preprocessing configuration, we ran the full set of 284 SPIs (Cliff et al., 2023), yielding 
+
+245 , 376 candidate networks. 
+
+Table 4 lists the estimator-level SPIs used in the audit. The identifiers follow the version-locked pyspi configuration used in our experiments. 
+
+C.3. Method Hemispheric Functional Connectomic Asymmetry Formally, the adjacency matrix A could be rewritten as: 
+
+A =
+
+ALL ALR 
+
+ARL ARR 
+
+
+
+, (10) where ALL and ARR denote rsFC within left hemisphere and right hemisphere, respectively. ALR denotes rsFC from left hemisphere to right hemisphere and ARL denotes rsFC from right hemisphere to left hemisphere. For undirected SPIs, ALR 
+
+and ARL are transposes under matched channel ordering. For directed SPIs, the two blocks can differ. We estimate the rsFC hemispheric asymmetry by calculating the differences in edge weights at symmetric positions between the left and right hemispheres and taking the median across edges. We use the median for robustness to outliers. Empirically, it also yields more consistent cross-dataset behavior than mean-based summaries. 
+
+Significance and Consistency A reasonable validity criterion is that an inferred effect should be (i) significant within each dataset and (ii) consistent across independent datasets. Accordingly, we use two complementary indices to evaluate each pipeline–SPI configuration. 
+
+> 1https://www.mathworks.com
+
+20 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Table 4. Estimator-level Statistical Pairwise Interactions (SPIs) used in the EEG audit. Each identifier denotes one pyspi statistic that maps a pair of EEG channel time series to one scalar FC edge weight. The list follows the version-locked pyspi configuration used in the audit and contains the 284 SPIs evaluated in our experiments. 
+
+cov EmpiricalCovariance cov EllipticEnvelope cov MinCovDet cov GraphicalLasso cov GraphicalLassoCV cov ShrunkCovariance cov LedoitWolf cov OAS prec EmpiricalCovariance prec EllipticEnvelope prec MinCovDet prec GraphicalLasso prec GraphicalLassoCV prec LedoitWolf prec OAS prec ShrunkCovariance spearmanr spearmanr-sq kendalltau kendalltau-sq xcorr max sig-True xcorr mean sig-True xcorr mean sig-False xcorr-sq max sig-True xcorr-sq mean sig-True xcorr-sq mean sig-False cov-sq EmpiricalCovariance cov-sq EllipticEnvelope cov-sq GraphicalLasso cov-sq GraphicalLassoCV cov-sq LedoitWolf cov-sq MinCovDet cov-sq OAS cov-sq ShrunkCovariance prec-sq EmpiricalCovariance prec-sq EllipticEnvelope prec-sq GraphicalLasso prec-sq GraphicalLassoCV prec-sq LedoitWolf prec-sq MinCovDet prec-sq OAS prec-sq ShrunkCovariance pdist euclidean pdist cityblock pdist cosine pdist chebyshev pdist canberra pdist braycurtis dcorr dcorr biased dcorrx maxlag-1 dcorrx maxlag-10 mgc mgcx maxlag-1 mgcx maxlag-10 hsic hsic biased hhg dtw dtw constraint-itakura dtw constraint-sakoe chiba lcss lcss constraint-itakura lcss constraint-sakoe chiba softdtw softdtw constraint-itakura softdtw constraint-sakoe chiba bary euclidean mean bary euclidean max bary dtw mean bary dtw max bary softdtw mean bary softdtw max bary sgddtw mean bary sgddtw max bary-sq euclidean mean bary-sq euclidean max bary-sq dtw mean bary-sq dtw max bary-sq sgddtw mean bary-sq sgddtw max bary-sq softdtw mean bary-sq softdtw max gwtau anm igci cds reci ccm E-1 mean ccm E-1 max ccm E-1 diff ccm E-10 mean ccm E-10 max ccm E-10-diff ccm E-None mean ccm E-None max ccm E-None diff je gaussian je kozachenko je kernel W-0.5 ce gaussian ce kozachenko ce kernel W-0.5 mi gaussian mi kraskov NN-4 mi kraskov NN-4 DCE mi kernel W-0.25 tlmi gaussian tlmi kraskov NN-4 tlmi kraskov NN-4 DCE tlmi kernel W-0.25 te kraskov NN-4 k-max-10 tau-max-4 te kraskov NN-4 DCE k-max-10 tau-max-4 te kraskov NN-4 DCE k-1 kt-1 l-1 lt-1 te kraskov NN-4 DCE k-2 kt-1 l-1 lt-1 te kraskov NN-4 k-1 kt-1 l-1 lt-1 te kernel W-0.25 k-1 te symbolic k-1 kt-1 l-1 lt-1 te symbolic k-10 kt-1 l-1 lt-1 gc gaussian k-max-10 tau-max-2 gc gaussian k-1 kt-1 l-1 lt-1 cce gaussian cce kozachenko cce kernel W-0.5 di gaussian di kozachenko di kernel W-0.5 si gaussian k-1 si kozachenko k-1 si kernel W-0.5 k-1 phi star t-1 norm-0 phi star t-1 norm-1 phi Geo t-1 norm-0 phi Geo t-1 norm-1 xme kozachenko k1 xme kozachenko k10 xme gaussian k1 xme gaussian k10 xme kernel k1 xme kernel k10 cohmag multitaper mean fs-1 fmin-0 fmax-0-5 cohmag multitaper mean fs-1 fmin-0 fmax-0-25 cohmag multitaper mean fs-1 fmin-0-25 fmax-0-5 cohmag multitaper max fs-1 fmin-0 fmax-0-5 cohmag multitaper max fs-1 fmin-0 fmax-0-25 cohmag multitaper max fs-1 fmin-0-25 fmax-0-5 phase multitaper mean fs-1 fmin-0 fmax-0-5 phase multitaper mean fs-1 fmin-0 fmax-0-25 phase multitaper mean fs-1 fmin-0-25 fmax-0-5 phase multitaper max fs-1 fmin-0 fmax-0-5 phase multitaper max fs-1 fmin-0 fmax-0-25 phase multitaper max fs-1 fmin-0-25 fmax-0-5 gd multitaper delay fs-1 fmin-0 fmax-0-5 gd multitaper delay fs-1 fmin-0 fmax-0-25 gd multitaper delay fs-1 fmin-0-25 fmax-0-5 psi multitaper mean fs-1 fmin-0 fmax-0-5 psi multitaper mean fs-1 fmin-0 fmax-0-25 psi multitaper mean fs-1 fmin-0-25 fmax-0-5 psi wavelet mean fs-1 fmin-0 fmax-0-5 mean psi wavelet mean fs-1 fmin-0 fmax-0-25 mean psi wavelet mean fs-1 fmin-0-25 fmax-0-5 mean psi wavelet max fs-1 fmin-0 fmax-0-5 max psi wavelet max fs-1 fmin-0 fmax-0-25 max psi wavelet max fs-1 fmin-0-25 fmax-0-5 max icoh multitaper mean fs-1 fmin-0 fmax-0-5 icoh multitaper mean fs-1 fmin-0 fmax-0-25 icoh multitaper mean fs-1 fmin-0-25 fmax-0-5 icoh multitaper max fs-1 fmin-0 fmax-0-5 icoh multitaper max fs-1 fmin-0 fmax-0-25 icoh multitaper max fs-1 fmin-0-25 fmax-0-5 plv multitaper mean fs-1 fmin-0 fmax-0-5 plv multitaper mean fs-1 fmin-0 fmax-0-25 plv multitaper mean fs-1 fmin-0-25 fmax-0-5 plv multitaper max fs-1 fmin-0 fmax-0-5 plv multitaper max fs-1 fmin-0 fmax-0-25 plv multitaper max fs-1 fmin-0-25 fmax-0-5 ppc multitaper mean fs-1 fmin-0 fmax-0-5 ppc multitaper mean fs-1 fmin-0 fmax-0-25 ppc multitaper mean fs-1 fmin-0-25 fmax-0-5 ppc multitaper max fs-1 fmin-0 fmax-0-5 ppc multitaper max fs-1 fmin-0 fmax-0-25 ppc multitaper max fs-1 fmin-0-25 fmax-0-5 pli multitaper mean fs-1 fmin-0 fmax-0-5 pli multitaper mean fs-1 fmin-0 fmax-0-25 pli multitaper mean fs-1 fmin-0-25 fmax-0-5 pli multitaper max fs-1 fmin-0 fmax-0-5 pli multitaper max fs-1 fmin-0 fmax-0-25 pli multitaper max fs-1 fmin-0-25 fmax-0-5 wpli multitaper mean fs-1 fmin-0 fmax-0-5 wpli multitaper mean fs-1 fmin-0 fmax-0-25 wpli multitaper mean fs-1 fmin-0-25 fmax-0-5 wpli multitaper max fs-1 fmin-0 fmax-0-5 wpli multitaper max fs-1 fmin-0 fmax-0-25 wpli multitaper max fs-1 fmin-0-25 fmax-0-5 dspli multitaper mean fs-1 fmin-0 fmax-0-5 dspli multitaper mean fs-1 fmin-0 fmax-0-25 dspli multitaper mean fs-1 fmin-0-25 fmax-0-5 dspli multitaper max fs-1 fmin-0 fmax-0-5 dspli multitaper max fs-1 fmin-0 fmax-0-25 dspli multitaper max fs-1 fmin-0-25 fmax-0-5 dswpli multitaper mean fs-1 fmin-0 fmax-0-5 dswpli multitaper mean fs-1 fmin-0 fmax-0-25 dswpli multitaper mean fs-1 fmin-0-25 fmax-0-5 dswpli multitaper max fs-1 fmin-0 fmax-0-5 dswpli multitaper max fs-1 fmin-0 fmax-0-25 dswpli multitaper max fs-1 fmin-0-25 fmax-0-5 dtf multitaper mean fs-1 fmin-0 fmax-0-5 dtf multitaper mean fs-1 fmin-0 fmax-0-25 dtf multitaper mean fs-1 fmin-0-25 fmax-0-5 dtf multitaper max fs-1 fmin-0 fmax-0-5 dtf multitaper max fs-1 fmin-0 fmax-0-25 dtf multitaper max fs-1 fmin-0-25 fmax-0-5 ddtf multitaper mean fs-1 fmin-0 fmax-0-5 ddtf multitaper mean fs-1 fmin-0 fmax-0-25 ddtf multitaper mean fs-1 fmin-0-25 fmax-0-5 ddtf multitaper max fs-1 fmin-0 fmax-0-5 ddtf multitaper max fs-1 fmin-0 fmax-0-25 ddtf multitaper max fs-1 fmin-0-25 fmax-0-5 dcoh multitaper mean fs-1 fmin-0 fmax-0-5 dcoh multitaper mean fs-1 fmin-0 fmax-0-25 dcoh multitaper mean fs-1 fmin-0-25 fmax-0-5 dcoh multitaper max fs-1 fmin-0 fmax-0-5 dcoh multitaper max fs-1 fmin-0 fmax-0-25 dcoh multitaper max fs-1 fmin-0-25 fmax-0-5 pdcoh multitaper mean fs-1 fmin-0 fmax-0-5 pdcoh multitaper mean fs-1 fmin-0 fmax-0-25 pdcoh multitaper mean fs-1 fmin-0-25 fmax-0-5 pdcoh multitaper max fs-1 fmin-0 fmax-0-5 pdcoh multitaper max fs-1 fmin-0 fmax-0-25 pdcoh multitaper max fs-1 fmin-0-25 fmax-0-5 gpdcoh multitaper mean fs-1 fmin-0 fmax-0-5 gpdcoh multitaper mean fs-1 fmin-0 fmax-0-25 gpdcoh multitaper mean fs-1 fmin-0-25 fmax-0-5 gpdcoh multitaper max fs-1 fmin-0 fmax-0-5 gpdcoh multitaper max fs-1 fmin-0 fmax-0-25 gpdcoh multitaper max fs-1 fmin-0-25 fmax-0-5 sgc nonparametric mean fs-1 fmin-0 fmax-0-5 sgc nonparametric mean fs-1 fmin-0 fmax-0-25 sgc nonparametric mean fs-1 fmin-0-25 fmax-0-5 sgc nonparametric max fs-1 fmin-0 fmax-0-5 sgc nonparametric max fs-1 fmin-0 fmax-0-25 sgc nonparametric max fs-1 fmin-0-25 fmax-0-5 sgc parametric mean fs-1 fmin-0 fmax-0-5 order-None sgc parametric mean fs-1 fmin-0 fmax-0-25 order-None sgc parametric mean fs-1 fmin-0-25 fmax-0-5 order-None sgc parametric mean fs-1 fmin-0 fmax-0-5 order-1 sgc parametric mean fs-1 fmin-0 fmax-0-25 order-1 sgc parametric mean fs-1 fmin-0-25 fmax-0-5 order-1 sgc parametric mean fs-1 fmin-0 fmax-0-5 order-20 sgc parametric mean fs-1 fmin-0 fmax-0-25 order-20 sgc parametric mean fs-1 fmin-0-25 fmax-0-5 order-20 sgc parametric max fs-1 fmin-0 fmax-0-5 order-None sgc parametric max fs-1 fmin-0 fmax-0-25 order-None sgc parametric max fs-1 fmin-0-25 fmax-0-5 order-None sgc parametric max fs-1 fmin-0 fmax-0-5 order-1 sgc parametric max fs-1 fmin-0 fmax-0-25 order-1 sgc parametric max fs-1 fmin-0-25 fmax-0-5 order-1 sgc parametric max fs-1 fmin-0 fmax-0-5 order-20 sgc parametric max fs-1 fmin-0 fmax-0-25 order-20 sgc parametric max fs-1 fmin-0-25 fmax-0-5 order-20 lmfit SGDRegressor lmfit Ridge lmfit Lasso lmfit ElasticNet lmfit BayesianRidge gpfit DotProduct gpfit RBF coint johansen max eig stat order-0 ardiff-10 coint johansen trace stat order-0 ardiff-10 coint johansen max eig stat order-0 ardiff-1 coint johansen trace stat order-0 ardiff-1 coint johansen max eig stat order-1 ardiff-10 coint johansen trace stat order-1 ardiff-10 coint johansen max eig stat order-1 ardiff-1 coint johansen trace stat order-1 ardiff-1 coint aeg tstat trend-c autolag-aic maxlag-10 coint aeg tstat trend-ct autolag-aic maxlag-10 coint aeg tstat trend-ct autolag-bic maxlag-10 pec pec orth pec log pec orth log pec orth abs pec orth log abs 
+
+21 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components 
+
+Significance. Within each dataset, we quantify the MDD–HC separation using the Mann–Whitney U statistic, a rank-based nonparametric test that does not assume Gaussianity (McKnight & Najab, 2010). We apply the same testing protocol and decision threshold uniformly across all pipeline–SPI configurations. 
+
+Consistency. Because both datasets are modest in size, we use the nonparametric bootstrap to approximate the sampling distribution of our pipeline-level statistics and to assess directional stability under resampling (DiCiccio & Efron, 1996). Concretely, we treat the effect direction as supported when resampled estimates concentrate on the same sign (equivalently, when a bootstrap confidence interval for the contrast excludes zero), and we use this stability signal for robustness analysis and feature selection. 
+
+C.4. Experiment Design 
+
+We partitioned the subjects into four groups based on dataset (MODMA vs. CISIR) and diagnosis (MDD vs. HC). For each SPI and each group, we computed individual-level rsFC asymmetry matrices and then averaged them within the group to obtain a single group-mean asymmetry matrix per SPI. We then computed the Spearman correlation between each pair of SPI representations to check the pairwise relationships. To enhance visualization, we performed hierarchical clustering on the MODMA-MDD subset and applied the resulting order across all four groups. Following previous work (Cliff et al., 2023), we assessed the relationship between SPIs by computing the pairwise Spearman correlation of their group-level rsFC asymmetry matrices. 
+
+C.5. Environment 
+
+Experiments are performed on an 8-GPU (H20) high-performance computing cluster provided by the Large-scale Instrument Sharing Platform of Southwest University. 
+
+C.6. Results Hidden hypothesis space (C1). Figure 5 a shows that the observation model is not a minor analysis choice but a defining part of the data interface. The block-structured correlation matrix indicates that equally defensible SPIs induce distinct, only weakly interchangeable representations of connectivity from the same measurements, consistent with a fragmented effective hypothesis space under different pipelines. Notably, xcorr (abbreviated from xcorr sq mean sig=False ) does not align with the dominant clusters, suggesting that selection heuristics based on consensus or similarity can systematically exclude pipelines that encode different mechanistic hypotheses. This supports the (C1) claim that the released representation does not uniquely specify the observation model that produced it, nor the conditions under which it should be trusted. 
+
+Uncertified transportability (C2). Figure 5 c illustrates how a pipeline can fail to transport when the measurement regime changes. Compared with xcorr , bary-sq shows coherent structure in MODMA but degrades into unstructured patterns in CISIR, while ppc produces patterns consistent with an ill-suited pipeline for this target. These contrasts operationalize 
+
+(C2) : even when a pipeline is plausible and can yield strong within-dataset signals, its regime of validity is not guaranteed, and failures under shift cannot be adjudicated without reporting transport conditions. Together, panels a to c show that observation model choice is a primary source of hypothesis space variation, transport failure, and unpropagated uncertainty in this audit. 
+
+Ungoverned multiplicity (C3). Figure 5 b plots each SPI by within-dataset significance and cross-dataset directional consistency. The dense region of pipelines with high significance but low consistency illustrates that many defensible pipelines can produce apparently significant findings in a single dataset while failing to preserve the conclusion across datasets. Thus, without an explicit governance rule, researchers can defensibly select a significant pipeline and report a finding that does not survive admissible variation and setting shifts. Only one configuration ( xcorr , red) satisfies the joint criteria in both datasets, matching the near zero survival rate reported in the main paper. 22 Position: AI for Science Should Treat Measurement-to-Dataset Pipelines as Inference Components MODMA CISIR            
+
+> Relative-Order Significance xcorr-sq_mean_sig-False bary-sq_dtw_mean ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+> MODMA MODMA CISIR CISIR MDD  MDD HC  HC MDD MDD HC HC
+> MODMA CISIR MDD  MDD HC  HC
+> MODMA CISIR MDD MDD HC HC
+> MODMA CISIR MDD MDD HC HC
+> MODMA CISIR MDD MDD HC HC
+
+a bcxcorr-sq_mean_sig-False 
+
+> -log 10 (p)
+
+Figure 5. Empirical demonstration of frozen lens failure modes (C1 to C3) in functional connectomics. (a) Hidden hypothesis space (C1). Pairwise correlations among 284 candidate observation models (SPIs) show strong block structure, indicating that different defensible pipelines induce qualitatively different representations from the same measurements. (b) Ungoverned multiplicity (C3). The SPI landscape plotted by within-dataset significance and cross-dataset directional consistency shows that many pipelines look significant in isolation but fail to preserve conclusions across datasets. Only one configuration ( xcorr , red) satisfies the joint criteria. (c) Uncertified transportability (C2). Qualitative comparison of the robust xcorr pipeline and unstable alternatives across datasets. bary-sq 
+
+produces coherent structure in MODMA that collapses in CISIR, illustrating that a pipeline can appear valid in one measurement regime yet fail under a shifted regime. 
+
+23

@@ -1,0 +1,875 @@
+Title: AuthTrace: Diagnosing Evidence Construction in Thematically Dense Single-Author Corpora
+
+URL Source: https://arxiv.org/pdf/2605.25382v2
+
+Published Time: Wed, 27 May 2026 00:57:46 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+# AuthTrace: Diagnosing Evidence Construction in Thematically Dense Single-Author Corpora 
+
+Xiaoqing Wu and Feifei Li and Haoliang Ming and Wenhui Que 
+
+WeChat, Tencent Inc., Beijing, China 
+
+{xiaoqingwwu, niyali, hliangming, victorque}@tencent.com 
+
+Abstract 
+
+Evidence construction—the stage that deter-mines which passages reach the language model before generation begins—is evaluated paradigm by paradigm, leaving practitioners with no principled way to diagnose which orga-nization strategy fails, where, or why. We intro-duce AuthTrace , a diagnostic benchmark built on thematically dense single-author corpora where near-miss distractors share style, topic, and vocabulary with the required evidence. Au-thTrace provides explicit quoted evidence, ex-act fan-in annotation, and a unified pack-level protocol measuring evidence recall, evidence precision, and answer correctness. A fan-in gradient—the number of source documents re-quired to support the answer—serves as the primary diagnostic axis, enabling controlled comparison across retrieval, memory, graph, and structured-evidence paradigms. Evaluat-ing eight systems across two QA models, we find that evidence recall is the strongest ob-served predictor of answer correctness under the primary reader–judge pair (r = 0.96); most failures stem from missing evidence rather than answer synthesis. Fan-in further exposes paradigm-specific collapse patterns: flat re-trieval degrades 2–3× faster than thematically organized evidence construction. These results show fan-in decomposition to be a reusable diagnostic lens for identifying where evidence-construction systems fail and which paradigm best serves a given workload. 
+
+1 Introduction 
+
+Evidence construction is increasingly handled by heterogeneous organization strategies—flat re-trieval, memory compression, graph traversal, and structured thematic indexing—yet these paradigms are benchmarked in isolation: each brings its own corpus, output unit, and evaluation metric. As a result, when an evidence system fails, practitioners cannot determine whether the failure stems from missing evidence, noisy evidence, or flawed answer synthesis, nor can they identify which organiza-tion paradigm would better serve the workload. A shared diagnostic protocol is needed. We observe that a single-author corpus can be instantiated un-der each of these evidence-organization views: it is a bounded document collection amenable to chunk-ing and embedding (Karpukhin et al., 2020; Lewis et al., 2020), an accumulated knowledge source suitable for memory compression (Packer et al., 2024), a relational structure for graph construction (Gutiérrez et al., 2024), and a thematic archive for wiki organization (Ming et al., 2026). The setting is especially challenging when the corpus is thematically dense. In open-domain re-trieval and heterogeneous IR evaluation, irrelevant passages often differ from the query in topic, en-tities, or genre (Thakur et al., 2021; Yang et al., 2018). In an author-centered corpus, many distrac-tors are near misses: they share the same style, vo-cabulary, historical setting, and recurring concerns, yet they do not directly support the target claim. Evidence selection in this setting requires distin-guishing direct support from plausible thematic adjacency, and many questions require support to be assembled across several documents. We introduce AuthTrace , a diagnostic bench-mark for evidence construction in thematically dense single-author corpora. AuthTrace is built from 860 public-domain writings by five modern Chinese prose writers. Each instance provides a query, quoted gold evidence units linked to source documents, atomic gold claim units, a reference answer, and an exact evidence fan-in label—the number of distinct source documents required to support the answer. Fan-in is the benchmark’s main diagnostic axis, grouping instances into Single-doc (= 1 ), Low multi-doc ( = 2 ), and High multi-doc (≥ 3). All systems are evaluated through a uni-fied pack-level protocol measuring Evidence Re-call (ER), Evidence Precision (EP), and Answer Correctness (AC). Figures 1 and 2 summarize the 1
+
+> arXiv:2605.25382v2 [cs.CL] 26 May 2026
+
+benchmark composition and evaluation framework. Through this design, AuthTrace enables the first controlled cross-paradigm comparison of evidence construction. We make three contributions: 1. A unified cross-paradigm diagnostic frame-work that places retrieval, memory, graph, and structured-evidence systems on the same corpus, queries, and pack-level protocol for controlled comparison across previously siloed evaluation settings. 2. AuthTrace, a publicly released benchmark across five single-author corpora with quoted required evidence, exact fan-in annotation, and human-validated accuracy—coupled with a fan-in complexity gradient that localizes each sys-tem’s breaking point. 1
+
+3. Empirical findings showing that (i) no paradigm dominates—graph retrieval excels at local grounding while thematic indexing leads on multi-document synthesis, with a crossover at fan-in 2; (ii) evidence recall is the main ob-served failure mode; and (iii) fan-in exposes paradigm-specific collapse rates, yielding a se-lection heuristic: graph retrieval for f = 1 , the-matic indexing for f ≥ 2.
+
+2 AuthTrace Task 
+
+Given an author corpus Ca = {d1, . . . , d n} and a query q, a system outputs an evidence pack ˆEq and an answer ˆa. Each benchmark instance provides a reference answer a⋆, gold claim units C⋆, and gold evidence units E⋆. Each evidence unit is a quoted span paired with a source document, making the required support explicit at document and passage level. We define evidence fan-in as the number of dis-tinct source documents appearing in the gold evi-dence: 
+
+fan -in( q) = |{ d : ( d, e ) ∈ E⋆}| . (1) We group examples into Single-doc (= 1 ), Low multi-doc (= 2), and High multi-doc (≥ 3). Single-doc questions test local grounding, low-fan-in questions test small-scale aggregation, and high-fan-in questions test broad synthesis. Fan-in is not intended to exhaustively parameterize question dif-ficulty; it isolates an interpretable dimension of evidence-construction complexity.  
+
+> 1Data, corpus, and evaluation code: https://anonymous. 4open.science/r/AuthTrace-anonymous-7BD8
+
+The evidence pack is evaluated as a unit. Astrong pack must cover the evidence required by the answer while avoiding passages that are merely thematically related. This criterion is stricter than ordinary passage relevance or citation evaluation: a passage may discuss the same theme and still be invalid evidence for the specific claim being asked (Gao et al., 2023; Es et al., 2024). This separa-tion lets AuthTrace distinguish failures in evidence selection, organization, and answer synthesis. Ad-ditional motivation for the single-author setting and the cross-paradigm interpretation appears in Appendix A. 
+
+3 Metrics 
+
+Answer Correctness. Answer Correctness (AC) uses a holistic 0–3 rubric (0 = incorrect or irrel-evant, 3 = complete and precise; full rubric in Appendix K.3) that jointly penalizes missing gold claims and irrelevant content. The LLM judge re-ceives the query, reference answer, and gold claim units as a scoring guide, then rates the predicted answer on claim coverage and factual precision. The reported AC metric is normalized to [0 , 100] :AC = score /3 × 100 .
+
+Evidence Recall. Evidence Recall (ER) mea-sures how much of the gold evidence E⋆ is covered by the predicted evidence pack ˆEq:
+
+ER = |matched( E⋆, ˆEq)||E⋆| . (2) A gold unit is counted as matched when an LLM judge confirms that the predicted pack contains a passage covering its key factual content (binary decision; prompt in Appendix K.4). ER diagnoses missing-evidence failures: low ER indicates that the answer model did not receive enough support, regardless of how focused the retrieved pack is. 
+
+Evidence Precision. Evidence Precision (EP) measures the fraction of predicted evidence units in 
+
+ˆEq that directly support at least one gold evidence unit or its associated atomic claim: 
+
+EP = |supporting( ˆEq, E ⋆)|| ˆEq| . (3) A predicted unit is counted as supporting when the judge confirms it can be aligned with at least one gold entry (prompt in Appendix K.5). EP diagnoses topical over-selection and context in-efficiency. High ER with low EP indicates over-retrieval with sufficient support; high EP with low 2Lu Xun Zhou Zuoren Zhu Ziqing Xiao Hong Yu Dafu 
+
+overlapping themes 
+
+recurring motifs 
+
+stylistic consistency 
+
+Example QA instance (Zhou Zuoren)  
+
+> When discussing firecrackers, Daoist rites, and folk drama … how does the author’s attitude toward ritual practices differ?
+> Gold evidence
+> E1. “Chinese people like firecrackers not for beauty, but for worshiping gods / driving ghosts …” E2. “Setting off firecrackers reflects numbness … only children truly appreciate beauty.” …
+> Reference answer
+> The author criticizes firecrackers as numb, superstitious ritual ...
+> fan-in = 3 docs
+> Query
+> Gold claims
+> C1. Firecrackers = numb superstition. C2. Daoist rites = playful aesthetic memory …
+> 5 evidence units Multi-doc
+
+2,099 filtered QA instances 
+
+Fan-in distribution (supporting documents) 
+
+> Single-doc 1 doc
+
+1,285 Low multi-doc 2 docs 552 High multi-doc 3+ docs 262 
+
+> fan-in = # supporting documents
+
+5 authors / 860 works Figure 1: AuthTrace benchmark overview. The dataset spans five authors and 860 works, yielding 2,099 filtered QA instances with exact fan-in labels. Each instance contains a query, quoted gold evidence, atomic gold claims, a reference answer, and a fan-in annotation that records the number of supporting documents. 
+
+ER indicates a clean but incomplete pack. Ap-pendix E discusses the context-budget interpreta-tion of EP. 
+
+4 Dataset 
+
+AuthTrace emphasizes annotation depth. Each ac-cepted instance contains quoted required evidence, document-level provenance, atomic claims, a con-cise reference answer, and exact fan-in. This design supports direct computation of pack-level ER and EP, which cannot be recovered from answer-only labels or loose relevance annotations (Gao et al., 2023; Saad-Falcon et al., 2024). AuthTrace is built from public-domain writings by Lu Xun, Zhou Zuoren, Zhu Ziqing, Xiao Hong, and Yu Dafu—860 articles totaling approximately 2M Chinese characters. These writers provide co-herent but thematically dense corpora: each returns across essays to overlapping social, cultural, liter-ary, and personal concerns (per-author statistics in Appendix B, Table 4). AuthTrace is constructed through a staged LLM-assisted annotation pipeline. We first curate the author corpora at the document level, retaining non-fiction prose in which the author’s own viewpoint occupies the dominant share of the text and remov-ing documents shorter than 800 Chinese characters. Each retained article is assigned a primary theme from a fixed taxonomy of 11 canonical themes. Single-document instances are generated from indi-vidual high-quality articles, while multi-document instances are generated from same-theme docu-ment groups sampled to create low- and high-fan-in evidence requirements. Appendix B gives the full generation and normalization protocol. Each instance stores a query with title leakage removed, quoted gold evidence units, atomic gold claim units, a concise reference answer, and ex-act fan-in computed from the distinct documents appearing in the gold evidence (full annotation schema in Appendix C; representative examples in Appendix D). The final benchmark is obtained by filtering generated instances for query valid-ity, evidence-answer support, and quote–document consistency (generation constraints and prompts in Appendix I and J). After filtering, the benchmark contains 2,099 instances: 1,285 single-doc ( f =1 ), 552 low multi-doc ( f =2 ), and 262 high multi-doc (f ≥3). A human spot-check on 200 randomly sampled instances finds 97.0% overall validity (100% query validity, 97.0% evidence-answer support, 100% quote–document consistency). The remaining in-valid cases are primarily evidence-support errors, where the quoted evidence is related to the refer-ence answer but does not fully support all required claims. 3Predicted evidence pack 
+
+> support
+> support
+> near miss
+
+…
+
+> predicted answer
+
+✎
+
+> Query
+> Organization views
+> Flat RAG
+
+⌕
+
+…
+
+> Graph RAG
+> Memory
+> Event Memory
+> LLM-Wiki
+> Long-context
+> QA reader
+
+LLM Judge    
+
+> Judge checks
+> •coverage of quoted evidence •support vs. near misses •answer support by atomic claims
+> Gold annotation bundle
+> quoted evidence
+> atomic claims
+> reference answer
+> ER
+> EP
+> AC
+
+Figure 2: AuthTrace evaluation framework. System-specific organization views produce a predicted evidence pack and answer, which are judged against the gold annotation bundle using Evidence Recall (ER), Evidence Precision (EP), and Answer Correctness (AC). 
+
+5 Experimental Setup 
+
+We compare evidence construction across eight systems and baselines: closed-book answering, long-context prompting, oracle evidence, flat RAG (Lewis et al., 2020), HippoRAG2 (Gutiérrez et al., 2025), Mem0 (Chhikara et al., 2025), EverMemOS (Hu et al., 2026), and LLM-Wiki evidence construc-tion (Ming et al., 2026). Each paradigm imposes a different corpus view and evidence-construction mechanism (summarized in Appendix A, Table 3). All systems operate over the same cleaned au-thor corpora and answer the same question set. Retrieval-based and organization-based systems re-turn an evidence pack that is evaluated for ER and EP before answer generation. Closed-book systems do not output evidence packs and are evaluated only by AC. Long-context prompting is treated as a separate baseline because it tests large-budget sequential corpus exposure rather than compact ev-idence construction (Bai et al., 2024; Hsieh et al., 2024; Zhang et al., 2024). The main experiment uses GLM-5.1-FP8 (GLM-5-Team et al., 2026) as the QA reader and Qwen3.5-397B-A17B (Team, 2026) as the evaluator, separat-ing answer generation from judgment. We further run a model-family ablation on a 20% stratified sample (419 instances) that crosses two QA read-ers (GLM-5.1-FP8, GPT-4.1-mini) with two judges (Qwen3.5-397B-A17B, GPT-4o-mini), holding evi-dence packs fixed to isolate reader and judge effects. For systems that produce ranked evidence units, the evidence budget is held fixed where possible, and evidence units are normalized into the same matching protocol, following the broader practice of comparing retrieval systems under shared evalu-ation interfaces (Thakur et al., 2021; Petroni et al., 2021). Full system descriptions and implementa-tion details appear in Appendix F. 
+
+Evidence matching. Predicted evidence packs are normalized into canonical segments before eval-uation (normalization details in Appendix K). The matching protocol treats near-miss thematic pas-sages as non-supporting even when they are topi-cally close, ensuring that ER and EP reflect genuine evidence coverage rather than mere topical adja-cency. Human–LLM agreement validation (Ap-pendix L) confirms the reliability of the LLM judge: Spearman ρ = 0 .78 for AC, 91.2% binary agree-ment for ER, and 88.4% for EP. 
+
+6 Results 
+
+6.1 Evidence Construction Is Recall-Dominant in the Main Setting 
+
+Table 1 shows that the main GLM+Qwen setting is recall-dominant, and Figure 4 visualizes the corre-sponding ER–AC and EP–AC relationships. Sys-tems with higher ER generally achieve higher AC even when their EP is low. HippoRAG2 is the clear-est example: it retrieves noisy packs with EP of only 2.1%, yet its high ER (88.3%) yields the high-est non-oracle downstream AC (69.1). Conversely, 4Single-doc  
+
+> (fan-in = 1)
+> Low multi-doc
+> (fan-in 2 3)
+> High multi-doc
+> (fan-in 4)
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> Answer Correctness (%)
+> Oracle
+> HippoRAG2
+> LLM-Wiki
+> EverMemOS
+> Flat RAG
+> Mem0
+> Long-context
+
+Figure 3: Fan-in degradation curves for evidence-construction paradigms. Each curve traces AC from Single-doc through Low multi-doc to High multi-doc, revealing characteristic degradation profiles: cliff-like (Flat RAG, Mem0), stepwise (HippoRAG2), gradual (LLM-Wiki), and rebound (EverMemOS, which in-creases at Low multi-doc before declining). 20 40 60 80 100                
+
+> Evidence Recall (%)
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> Answer Correctness (%)
+> (a) ER vs. AC (r= 0.96)
+> 0510 15 20
+> Evidence Precision (%)
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> Answer Correctness (%)
+> (b) EP vs. AC (r= -0.39)
+> Flat RAG HippoRAG2 Mem0 EverMemOS LLM-Wiki Single Low multi High multi
+
+Figure 4: Diagnostic scatter plots showing the strong ER–AC correlation ( r=0 .96 ) versus the weak EP–AC relationship ( r=−0.39 ) in the main GLM+Qwen setting. Points represent method–fan-in pairs. 
+
+Mem0 achieves the highest EP (20.2%) but the low-est non-baseline AC (52.8), as its compressed mem-ory entries omit substantial required support (ER = 65.4%). LLM-Wiki combines the highest overall ER (88.7%) with moderate EP (15.7%), achieving the second-highest non-oracle AC (67.5). This pattern identifies evidence sufficiency as the main observed bottleneck in the primary setting. In thematically dense corpora, retrieval systems frequently include near-miss passages that share the author’s style and topic. Under the evaluated reader and context budgets, this noise is less damaging than omitting required support. A failure attribution analysis further supports this conclusion. Among instances where systems produce incorrect answers (AC < 33%), the vast 
+
+Setting Method AC ER EP Single-doc Closed-book 6.5 – –Long-context 28.0 – –Oracle 81.6 100.0 100.0 Flat RAG 72.8 91.0 10.7 HippoRAG2 78.6 95.1 1.2 Mem0 65.0 83.5 19.8 
+
+EverMemOS 53.9 81.8 2.6 LLM-Wiki 73.0 95.1 15.9 Low multi-doc Closed-book 16.4 – –Long-context 28.0 – –Oracle 71.1 100.0 100.0 Flat RAG 43.0 54.9 15.9 HippoRAG2 58.9 83.0 3.2 Mem0 35.8 41.4 21.1 
+
+EverMemOS 56.0 74.1 8.9 LLM-Wiki 60.9 82.0 16.5 High multi-doc Closed-book 19.0 – –Long-context 27.4 – –Oracle 69.8 100.0 100.0 Flat RAG 32.7 31.9 15.9 HippoRAG2 44.1 65.4 4.7 Mem0 28.5 25.7 20.2 
+
+EverMemOS 45.0 54.5 10.6 LLM-Wiki 52.1 67.8 12.5 All Closed-book 10.7 – –Long-context 27.9 – –Oracle 77.4 100.0 100.0 Flat RAG 59.9 74.1 12.7 HippoRAG2 69.1 88.3 2.1 Mem0 52.8 65.4 20.2 
+
+EverMemOS 53.3 76.4 5.2 LLM-Wiki 67.5 88.7 15.7 
+
+Table 1: Main results under the GLM+Qwen setting. AC: answer correctness; ER: evidence recall; EP: ev-idence precision. Closed-book and long-context base-lines do not produce evidence packs for ER/EP evalu-ation. Oracle feeds the annotated gold evidence to the same QA model, providing a gold-evidence reference condition (ER and EP are 100 by definition). Bold indi-cates the best non-oracle evidence-construction system within each fan-in block and metric. Table 8 maps each system to its diagnostic degradation pattern. 
+
+majority co-occur with low ER: 86% of Flat RAG failures, 88% of Mem0 failures, and 79% of Hip-poRAG2 failures involve ER below 50%. The Flat RAG top-k ablation provides a controlled inter-vention: increasing k from 5 to 15 adds retrieval noise (EP drops from 20.8% to 9.9%) while si-multaneously raising both ER (67.2% → 76.7%) and AC (54.8 → 61.4). Enlarging the evidence pack therefore improves downstream correctness despite reducing precision, consistent with a recall-dominated regime. This does not mean precision is unconditionally irrelevant. The recall-dominance result is condi-tioned on the main setting’s context budget and 5Single Low multi High multi                 
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> AC (%)  Qwen Judge  79.7
+> 60.4
+> 46.8
+> 64.1
+> 42.3
+> 37.6
+> HippoRAG2
+> Single Low multi High multi
+> 52.7
+> 56.6
+> 51.8 53.2 53.4
+> 46.1
+> EverMemOS
+> Single Low multi High multi
+> 73.0
+> 60.4 56.9
+> 72.0
+> 57.5
+> 48.9
+> LLM-Wiki
+> Single Low multi High multi
+> 0
+> 20
+> 40
+> 60
+> 80
+> AC (%)  GPT Judge
+> 81.8
+> 69.1
+> 65.2
+> 74.2
+> 62.6
+> 56.7
+> Single Low multi High multi
+> 60.8
+> 69.6 69.6
+> 64.1
+> 72.1
+> 66.7
+> Single Low multi High multi
+> 79.7
+> 75.0 72.5
+> 75.9
+> 68.0 68.1
+> GLM-QA GPT-QA
+
+Figure 5: Model-family ablation (20% stratified sample, 
+
+n=419 ). Each panel compares GLM-5.1-FP8 vs. GPT-4.1-mini as QA reader on held-fixed evidence packs, controlling for judge identity. Top row: Qwen judge; bottom row: GPT judge. 
+
+reader model. Section 6.2 shows that EP becomes diagnostically meaningful once fan-in increases or the reader changes—precision captures evidence 
+
+usability rather than sufficiency, and its predictive value is setting-dependent. 
+
+6.2 Model-Family Ablation 
+
+To test whether the diagnostic patterns depend on a particular model family, we run a stratified ab-lation on a 20% sample (419 instances) of Auth-Trace. Evidence packs are held fixed; we cross QA reader (GLM-5.1-FP8 vs. GPT-4.1-mini) with judge (Qwen3.5-397B-A17B vs. GPT-4o-mini), yielding four conditions per system. Figure 5 sepa-rates QA-model effects from judge-calibration ef-fects by comparing readers under the same judge. Figure 5 shows a clear interaction between QA model and evidence format. With GLM-5.1-FP8 as reader, HippoRAG2’s high-recall raw evidence is strongest on single-doc questions. With GPT-4.1-mini, EverMemOS significantly surpasses Hip-poRAG2 on multi-doc settings (72.1 vs. 62.6 at low-multi, p < 0.01 ; 66.7 vs. 56.7 at high-multi, 
+
+p < 0.05 ; both under GPT judge), and LLM-Wiki achieves the highest high-fan-in AC (68.1, signifi-cantly above HippoRAG2’s 56.7, p < 0.01 ). The ablation exposes a nuanced role for EP that depends on both fan-in and reader. In the main GLM+Qwen single-doc setting, HippoRAG2 and LLM-Wiki share identical ER (95.1%), yet Hip-poRAG2 achieves higher AC (78.6 vs. 73.0) de-spite EP of only 1.2% versus 15.9%. One plausible explanation is that HippoRAG2’s full-document re-trieval provides surrounding local context that aids interpretation of the gold evidence, even though this context does not itself match gold annotations. In the GPT+GPT high-fan-in split, however, LLM-Wiki and HippoRAG2 again share nearly identi-cal ER (70.6% vs. 70.4%), but now LLM-Wiki’s higher EP (13.9% vs. 5.2%) corresponds to 11.4pp higher AC (68.1 vs. 56.7). When evidence spans many documents, the full-document packs that may help locally instead increase synthesis burden, and GPT-4.1-mini benefits from focused, pre-organized evidence. Together, these observations refine the diagnos-tic roles of ER and EP. ER captures evidence suffi-ciency —the binding constraint whenever the reader has spare capacity to tolerate noise. EP captures evidence usability —its predictive value emerges when synthesis complexity rises or the reader bene-fits from focused input. For local grounding under generous budgets, surrounding context can compen-sate for low EP; for broad multi-document synthe-sis or capacity-limited readers, high-density struc-tured packs reduce synthesis cost. The two metrics are therefore complementary diagnostics whose relative importance shifts with fan-in and reader characteristics, rather than universally ordered pri-orities. 
+
+6.3 Fan-in Reveals Structural Collapse Patterns 
+
+Fan-in separates systems that appear similar under local grounding by exposing their distinct degra-dation mechanisms as required source documents increase (Figure 3). Flat RAG and Mem0 ex-hibit cliff-like degradation ( −55% and −56% rel-ative degradation): local chunks and independent memory entries have limited cross-document as-sembly capacity, so performance drops sharply once the query exceeds single-document scope. HippoRAG2 follows a stepwise pattern ( −44%): graph traversal extends evidence reach beyond local semantic similarity, but its effective radius is bounded, and performance declines substan-tially once fan-in exceeds 2–3 documents. LLM-Wiki degrades gradually ( −29%): thematic pre-organization provides natural cross-document cov-erage, trading single-document detail for robust multi-document assembly. EverMemOS degrades the least overall ( −17%): its event-level abstraction provides a middle ground between local chunks and 6full thematic organization, maintaining coverage with less explicit cross-document assembly. The main-table differences between the best sys-tem and runner-up at single-doc and high-multi fan-in are statistically significant by paired boot-strap; the low-multi gap is directional but not sig-nificant. Appendix G gives confidence intervals and per-author robustness checks. The oracle setting provides a synthesis-difficulty reference: even with annotated gold evidence, AC drops from 81.6 (single-doc) to 69.8 (high-multi), a 
+
+−14.5% decline attributable to increased synthesis difficulty under the same reader. Subtracting this reference, Flat RAG and Mem0 incur 41–42pp of 
+
+additional construction loss, while LLM-Wiki adds only 14pp, indicating that its organization layer preserves robustness as fan-in increases. Notably, the different paradigms fail on largely non-overlapping instance sets: the Jaccard over-lap of failure sets (AC < 33%) ranges from 0.04 to 0.23 across system pairs. This complementary error structure suggests that evidence construction qual-ity can be further improved by routing queries to paradigm-appropriate systems based on estimated fan-in. 
+
+6.4 Effective Retrieval Radius and System Selection 
+
+The fan-in gradient enables a fine-grained view of when each system’s advantage begins and ends. Table 2 reports AC at each exact fan-in level for the three most competitive systems. HippoRAG2 leads significantly at fan-in = 1 ( +5.6pp, p< 0.01 ); the two systems are statistically indistinguishable at fan-in = 2, and LLM-Wiki pulls ahead significantly at fan-in 3–4 ( +8–9pp, p< 0.05 ). This crossover characterizes an effective retrieval radius for each paradigm: graph traversal is most effective within a single document’s semantic neighborhood, while thematic pre-organization becomes advantageous once multi-document aggregation is needed. EverMemOS provides a contrasting profile: it maintains relatively stable AC across fan-in levels (53.9 at f =1 , 56.0 at f =2 , declining to 40.6 at 
+
+f =5 ), with lower peak performance but the slow-est overall degradation among systems that do not employ thematic pre-organization. This pattern suggests a simple routing rule: graph-based retrieval is preferable for local detail queries, while structured thematic indexing is more stable for mixed or predominantly multi-document workloads ( f ≥ 2). Appendix G.7 provides two                                      
+
+> Method f=1 f=2 f=3 f=4 f=5
+> n1285 552 72 102 79 HippoRAG2 78.6 †58.9 47.2 43.8 43.5 LLM-Wiki 73.0 60.9 55.6 †52.4 †48.1
+> EverMemOS 53.9 56.0 47.7 47.7 40.6
+> Table 2: AC at each exact fan-in level ( f). n: number of benchmark instances per level (9 additional instances at
+> f≥6are omitted due to small sample size). Bold marks the best system; †indicates the lead over the runner-up is statistically significant (paired bootstrap, p< 0.05 ,10K resamples).
+
+contrastive failure cases that make the underlying mechanisms directly observable: a rare-entity ques-tion that graph retrieval answers correctly but the-matic abstraction hallucinates, and a five-document synthesis that thematic search covers completely but graph traversal cannot reach. By contrast, budgeted long-context prompting (150K-character sequential corpus slice) achieves only 27.4–28.0 AC across all fan-in levels—below even Flat RAG at high fan-in—confirming that unstructured raw exposure is not a substitute for query-targeted evidence construction (Bai et al., 2024; Hsieh et al., 2024). 
+
+7 Related Work 
+
+Cross-paradigm evaluation of evidence construction. Prior evaluations of evidence-construction paradigms remain siloed by design. RAG evaluation focuses on answer faithfulness, context relevance, and citation quality (Es et al., 2024; Saad-Falcon et al., 2024; Gao et al., 2023); multi-document QA benchmarks test reasoning over distributed sources (Yang et al., 2018; Ho et al., 2020; Trivedi et al., 2022); long-context benchmarks evaluate whether models can use infor-mation already placed in extended inputs (Koˇ ciský et al., 2018; Bai et al., 2024; Hsieh et al., 2024; Zhang et al., 2024); memory benchmarks study storage and recall over long interaction histories (Maharana et al., 2024; Wu et al., 2025); and graph or hierarchical retrieval methods are evaluated through their own retrieval and summarization protocols (Edge et al., 2025; Gutiérrez et al., 2024, 2025; Sarthi et al., 2024). Because these evalua-tions differ in corpus assumptions and evidence interfaces, they make it difficult to diagnose under a single protocol which evidence-organization paradigm fails, where it fails, or whether the failure comes from missing evidence, noisy evidence, 7or answer synthesis. AuthTrace is designed as a shared testbed that places chunk retrieval, memory systems, graph retrieval, thematic indexing, and long-context prompting on the same corpus, query set, and evidence-pack protocol. 
+
+Existing paradigm-specific benchmarks. 
+
+Paradigm-specific benchmarks test reasoning within a single evidence interface. Multi-hop and multi-document QA datasets such as HotpotQA, 2WikiMultiHopQA, and MuSiQue emphasize bridge entities, compositional reasoning, and explicit supporting facts across heterogeneous sources (Yang et al., 2018; Ho et al., 2020; Trivedi et al., 2022). Long-form and many-answer QA datasets such as ASQA, ELI5, and QAMPARI further stress retrieval and synthesis over multiple pieces of evidence (Stelmakh et al., 2022; Fan et al., 2019; Amouyal et al., 2023). These benchmarks are valuable for testing answer synthesis and support attribution, but they do not isolate evidence-pack construction across competing organization paradigms. Long-context benchmarks such as NarrativeQA, LongBench, RULER, and ∞Bench test reader-side use of long inputs (Koˇ ciský et al., 2018; Bai et al., 2024; Hsieh et al., 2024; Zhang et al., 2024), but they typically assume the relevant information is already present in the prompt. Agent-memory systems and benchmarks, including MemGPT, Mem0, A-MEM, LoCoMo, and LongMemEval, study how information is stored, compressed, updated, and retrieved over time (Packer et al., 2024; Chhikara et al., 2025; Xu et al., 2025; Maharana et al., 2024; Wu et al., 2025). AuthTrace complements these lines of work by treating a single-author corpus as a controlled long-term knowledge source and asking whether different organization layers preserve the concrete evidence needed for grounded answering under increasing fan-in. 
+
+Evidence versus answer evaluation. Answer-level metrics conflate evidence quality with gen-eration quality. RAGAS evaluates RAG pipelines through dimensions such as faithfulness and con-text relevance (Es et al., 2024); ARES automates RAG evaluation with model-based judges and prediction-powered inference (Saad-Falcon et al., 2024); and ALCE evaluates citation quality for long-form answers (Gao et al., 2023). GraphRAG, HippoRAG, HippoRAG2, and RAPTOR show that graph, memory, and hierarchical structures can im-prove retrieval beyond flat chunk matching (Edge et al., 2025; Gutiérrez et al., 2024, 2025; Sarthi et al., 2024), but their evaluations do not directly separate evidence sufficiency from downstream an-swer generation. AuthTrace positions evidence construction as a distinct object of evaluation. It measures whether the predicted evidence pack covers all required support through evidence re-call, whether it avoids topically plausible but non-supporting passages through evidence precision, and how these evidence-stage metrics explain an-swer correctness. This makes AuthTrace comple-mentary to answer- and citation-level evaluation while enabling cross-paradigm diagnosis on a uni-fied protocol. 
+
+8 Conclusion 
+
+We present AuthTrace, a diagnostic benchmark that treats single-author corpora as controlled evidence sources, enabling unified evaluation of retrieval, memory, graph, and structured-evidence systems under a shared evidence protocol. Evaluating eight systems reveals three insights. No paradigm dominates: graph retrieval excels at single-document grounding while thematic orga-nization leads on multi-document synthesis, with a crossover at fan-in 2. Evidence recall is the strongest observed evidence-stage predictor of an-swer correctness in the main setting ( r = 0 .96 ); most failures stem from missing evidence rather than answer synthesis alone. Fixed-order long-context prompting performs weakly across fan-in levels, showing that budgeted raw corpus exposure is not a substitute for query-targeted evidence con-struction. Rather than producing a single ranking, Auth-Trace identifies where each paradigm fails, why, and which workload it best serves (Appendix H distills actionable selection guidelines). More broadly, fan-in decomposition offers a transfer-able diagnostic axis: any domain with thematically dense, overlapping sources—creator archives, in-stitutional repositories, or long-running research programs—can adopt the same protocol to expose paradigm-specific failure modes. 
+
+Limitations 
+
+AuthTrace focuses on modern Chinese prose cor-pora from five modern authors. This setting pro-vides a controlled and reproducible proxy for creator-centered knowledge bases, and broader do-8mains can further test how the diagnostic patterns transfer to newsletters, blogs, institutional archives, and technical writing. The benchmark uses LLM-assisted instance construction and model-based evaluation, mitigated by automated filtering and human spot-checking (Saad-Falcon et al., 2024; Es et al., 2024; Liu et al., 2023; Zheng et al., 2023). Future extensions can broaden the author set, vary context budgets to study when evidence precision becomes predictive, and evaluate adaptive systems that route among multiple evidence representations. Because paradigms naturally expose evidence at different granularities, AuthTrace evaluates them through a normalized external contract rather than identical internal operating conditions. Our long-context baseline is limited by the reader’s finite input window. We therefore use a fixed-order 150K-character slice of each author corpus rather than the full corpus. This means that, for some questions, the gold source docu-ments may fall outside the provided context. The baseline should therefore be interpreted as measur-ing budgeted fixed-order raw-context exposure, not as an optimized or full-corpus long-context upper bound. Future work can revisit this comparison with models that support full-corpus inputs or with controlled variants that guarantee gold-document inclusion while preserving large distractor contexts. 
+
+Ethics Statement 
+
+AuthTrace is built from published, publicly avail-able writings by modern Chinese-language authors. The selected authors all died more than fifty years before dataset construction; under the general copy-right term for natural-person works in the Copy-right Law of the People’s Republic of China, eco-nomic rights in natural-person works generally last for the author’s lifetime and fifty years after death, ending on December 31 of the fiftieth year. On this basis, we treat the source materials as public-domain materials in the relevant source context. We nevertheless avoid making a universal copy-right claim across jurisdictions, and release meta-data should preserve source provenance and author attribution. The benchmark is intended for evaluating evi-dence selection, evidence assembly, and grounded answering, rather than for replacing scholarly read-ing of the original texts. Released materials should document source provenance, preprocessing deci-sions, filtering criteria, annotation procedures, and evaluation rubrics. Redistribution of any underly-ing source texts should follow the copyright rules applicable in the relevant jurisdiction; released provenance metadata is intended to help users ver-ify the status of sources in their own use cases. 
+
+References            
+
+> Samuel Amouyal, Tomer Wolfson, Ohad Rubin, Ori Yoran, Jonathan Herzig, and Jonathan Berant. 2023. QAMPARI: A benchmark for open-domain questions with many answers. In Proceedings of the Third Workshop on Natural Language Generation, Evalua-tion, and Metrics (GEM) , pages 97–110, Singapore. Association for Computational Linguistics. Yushi Bai, Xin Lv, Jiajie Zhang, Hongchang Lyu, Jiankai Tang, Zhidian Huang, Zhengxiao Du, Xiao Liu, Aohan Zeng, Lei Hou, Yuxiao Dong, Jie Tang, and Juanzi Li. 2024. LongBench: A bilingual, multi-task benchmark for long context understanding. In
+> Proceedings of the 62nd Annual Meeting of the As-sociation for Computational Linguistics (Volume 1: Long Papers) , pages 3119–3137, Bangkok, Thailand. Association for Computational Linguistics. Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Yadav. 2025. Mem0: Building production-ready AI agents with scalable long-term memory. In ECAI 2025 - 28th European Confer-ence on Artificial Intelligence, 25-30 October 2025, Bologna, Italy - Including 14th Conference on Presti-gious Applications of Intelligent Systems (PAIS 2025) ,Frontiers in Artificial Intelligence and Applications, pages 2993–3000. IOS Press. Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Truitt, Dasha Metropolitansky, Robert Osazuwa Ness, and Jonathan Larson. 2025. From local to global: A graph rag approach to query-focused summarization.
+> Preprint , arXiv:2404.16130. Shahul Es, Jithin James, Luis Espinosa Anke, and Steven Schockaert. 2024. RAGAs: Automated evalu-ation of retrieval augmented generation. In Proceed-ings of the 18th Conference of the European Chap-ter of the Association for Computational Linguistics: System Demonstrations , pages 150–158, St. Julians, Malta. Association for Computational Linguistics. Angela Fan, Yacine Jernite, Ethan Perez, David Grang-ier, Jason Weston, and Michael Auli. 2019. ELI5: Long form question answering. In Proceedings of the 57th Annual Meeting of the Association for Com-putational Linguistics , pages 3558–3567, Florence, Italy. Association for Computational Linguistics. Tianyu Gao, Howard Yen, Jiatong Yu, and Danqi Chen. 2023. Enabling large language models to generate text with citations. In Proceedings of the 2023 Con-ference on Empirical Methods in Natural Language Processing , pages 6465–6488, Singapore. Associa-tion for Computational Linguistics.
+
+9GLM-5-Team, :, Aohan Zeng, Xin Lv, Zhenyu Hou, Zhengxiao Du, Qinkai Zheng, Bin Chen, Da Yin, Chendi Ge, Chenghua Huang, Chengxing Xie, Chenzheng Zhu, Congfeng Yin, Cunxiang Wang, Gengzheng Pan, Hao Zeng, Haoke Zhang, Hao-ran Wang, and 168 others. 2026. Glm-5: from vibe coding to agentic engineering. Preprint ,arXiv:2602.15763. Bernal Jiménez Gutiérrez, Yiheng Shu, Yu Gu, Michi-hiro Yasunaga, and Yu Su. 2024. Hipporag: Neu-robiologically inspired long-term memory for large language models. In Advances in Neural Information Processing Systems , volume 37, pages 59532–59569. Curran Associates, Inc. Bernal Jiménez Gutiérrez, Yiheng Shu, Weijian Qi, Sizhe Zhou, and Yu Su. 2025. From RAG to memory: Non-parametric continual learning for large language models. In Proceedings of the 42nd International Conference on Machine Learning , volume 267 of 
+
+Proceedings of Machine Learning Research , pages 21497–21515. PMLR. Xanh Ho, Anh-Khoa Duong Nguyen, Saku Sugawara, and Akiko Aizawa. 2020. Constructing a multi-hop QA dataset for comprehensive evaluation of reasoning steps. In Proceedings of the 28th Inter-national Conference on Computational Linguistics ,pages 6609–6625, Barcelona, Spain (Online). Inter-national Committee on Computational Linguistics. Cheng-Ping Hsieh, Simeng Sun, Samuel Kriman, Shan-tanu Acharya, Dima Rekesh, Fei Jia, and Boris Gins-burg. 2024. RULER: What’s the real context size of your long-context language models? In First Confer-ence on Language Modeling .Chuanrui Hu, Xingze Gao, Zuyi Zhou, Dannong Xu, Yi Bai, Xintong Li, Hui Zhang, Tong Li, Chong Zhang, Lidong Bing, and Yafeng Deng. 2026. Ev-ermemos: A self-organizing memory operating sys-tem for structured long-horizon reasoning. Preprint ,arXiv:2601.02163. Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and Wen-tau Yih. 2020. Dense passage retrieval for open-domain question answering. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 6769–6781, Online. Association for Computational Linguistics. Tomáš Koˇ ciský, Jonathan Schwarz, Phil Blunsom, Chris Dyer, Karl Moritz Hermann, Gábor Melis, and Ed-ward Grefenstette. 2018. The NarrativeQA reading comprehension challenge. Transactions of the Asso-ciation for Computational Linguistics , 6:317–328. Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Hein-rich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-täschel, Sebastian Riedel, and Douwe Kiela. 2020. Retrieval-augmented generation for knowledge-intensive nlp tasks. In Advances in Neural Infor-mation Processing Systems , volume 33, pages 9459– 9474. Curran Associates, Inc. Yang Liu, Dan Iter, Yichong Xu, Shuohang Wang, Ruochen Xu, and Chenguang Zhu. 2023. G-eval: NLG evaluation using gpt-4 with better human align-ment. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing ,pages 2511–2522, Singapore. Association for Com-putational Linguistics. Adyasha Maharana, Dong-Ho Lee, Sergey Tulyakov, Mohit Bansal, Francesco Barbieri, and Yuwei Fang. 2024. Evaluating very long-term conversational memory of LLM agents. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 13851– 13870, Bangkok, Thailand. Association for Compu-tational Linguistics. Haoliang Ming, Feifei Li, Xiaoqing Wu, and Wen-hui Que. 2026. Retrieval as reasoning: Self-evolving agent-native retrieval via llm-wiki. Preprint ,arXiv:2605.25480. Charles Packer, Sarah Wooders, Kevin Lin, Vivian Fang, Shishir G. Patil, Ion Stoica, and Joseph E. Gonzalez. 2024. Memgpt: Towards llms as operating systems. 
+
+Preprint , arXiv:2310.08560. Fabio Petroni, Aleksandra Piktus, Angela Fan, Patrick Lewis, Majid Yazdani, Nicola De Cao, James Thorne, Yacine Jernite, Vladimir Karpukhin, Jean Maillard, Vassilis Plachouras, Tim Rocktäschel, and Sebastian Riedel. 2021. KILT: a benchmark for knowledge intensive language tasks. In Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies , pages 2523–2544, Online. Association for Computational Linguistics. Jon Saad-Falcon, Omar Khattab, Christopher Potts, and Matei Zaharia. 2024. ARES: An automated evalua-tion framework for retrieval-augmented generation systems. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Tech-nologies (Volume 1: Long Papers) , pages 338–354, Mexico City, Mexico. Association for Computational Linguistics. Parth Sarthi, Salman Abdullah, Aditi Tuli, Shubh Khanna, Anna Goldie, and Christopher D Manning. 2024. RAPTOR: Recursive abstractive processing for tree-organized retrieval. In The Twelfth Interna-tional Conference on Learning Representations .Ivan Stelmakh, Yi Luan, Bhuwan Dhingra, and Ming-Wei Chang. 2022. ASQA: Factoid questions meet long-form answers. In Proceedings of the 2022 Con-ference on Empirical Methods in Natural Language Processing , pages 8273–8288, Abu Dhabi, United Arab Emirates. Association for Computational Lin-guistics. 
+
+10 Qwen Team. 2026. Qwen3.5: Accelerating productivity with native multimodal agents. Nandan Thakur, Nils Reimers, Andreas Rücklé, Ab-hishek Srivastava, and Iryna Gurevych. 2021. BEIR: A heterogeneous benchmark for zero-shot evaluation of information retrieval models. In Thirty-fifth Con-ference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2) .Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal. 2022. MuSiQue: Multi-hop questions via single-hop question composition. 
+
+Transactions of the Association for Computational Linguistics , 10:539–554. Di Wu, Hongwei Wang, Wenhao Yu, Yuwei Zhang, Kai-Wei Chang, and Dong Yu. 2025. Longmemeval: Benchmarking chat assistants on long-term interac-tive memory. In International Conference on Learn-ing Representations , volume 2025, pages 86809– 86836. Wujiang Xu, Zujie Liang, Kai Mei, Hang Gao, Juntao Tan, and Yongfeng Zhang. 2025. A-mem: Agentic memory for llm agents. Preprint , arXiv:2502.12110. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, Chujie Zheng, Day-iheng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao Ge, Haoran Wei, Huan Lin, Jialong Tang, and 41 others. 2025. Qwen3 technical report. Preprint ,arXiv:2505.09388. Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William Cohen, Ruslan Salakhutdinov, and Christo-pher D. Manning. 2018. HotpotQA: A dataset for diverse, explainable multi-hop question answering. In Proceedings of the 2018 Conference on Empiri-cal Methods in Natural Language Processing , pages 2369–2380, Brussels, Belgium. Association for Com-putational Linguistics. Xinrong Zhang, Yingfa Chen, Shengding Hu, Zihang Xu, Junhao Chen, Moo Hao, Xu Han, Zhen Thai, Shuo Wang, Zhiyuan Liu, and Maosong Sun. 2024. 
+
+∞Bench: Extending long context evaluation beyond 100K tokens. In Proceedings of the 62nd Annual Meeting of the Association for Computational Lin-guistics (Volume 1: Long Papers) , pages 15262– 15277, Bangkok, Thailand. Association for Compu-tational Linguistics. Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, Hao Zhang, Joseph Gonzalez, and Ion Stoica. 2023. Judging llm-as-a-judge with mt-bench and chatbot arena. In 
+
+Advances in Neural Information Processing Systems ,volume 36, pages 46595–46623. Curran Associates, Inc. 
+
+A Additional Task Motivation 
+
+A.1 Why Thematically Dense Single-Author Corpora Are Diagnostic 
+
+Single-author corpora create dense semantic neigh-borhoods. Documents share voice, vocabulary, re-curring topics, historical context, and rhetorical habits. As a result, the nearest passages to a query are often plausible distractors rather than direct sup-port. This makes the corpus a natural stress test for evidence construction: a useful system must distinguish evidence from thematic adjacency. The setting also captures a common real-world use case. Users often query a creator-centered knowledge base: a columnist’s archive, a scholar’s essays, a blogger’s posts, a novelist’s public writ-ings, or a long-running newsletter. Such archives contain repeated arguments, evolving positions, and recurring examples. Many questions therefore require a compact evidence pack that combines local textual detail with cross-document synthesis. 
+
+A.2 A Unified Testbed for Retrieval and Memory Paradigms 
+
+A single-author corpus occupies a useful middle ground between open-domain document retrieval and personal memory. From a retrieval perspective, it is a bounded document collection that can be chunked, embedded, and searched. From a memory perspective, it resembles an accumulated knowl-edge source and can be ingested, compressed, or-ganized, and retrieved as long-term memory. From a graph perspective, recurring people, places, con-cepts, events, and claims form relational structure. From a wiki perspective, repeated themes can be organized into structured pages with provenance. This property makes AuthTrace a useful diagnos-tic testbed. All systems start from the same raw cor-pus and answer the same questions, but each system imposes a different organization layer: flat chunks, memory entries, graph neighborhoods, event ab-stractions, thematic pages, or raw long context. The resulting comparison emphasizes representation choices rather than dataset mismatch. Table 3 sum-marizes the corpus view and evidence-construction mechanism associated with each paradigm. 
+
+B Dataset Generation and Annotation Pipeline 
+
+This appendix describes the full construction pipeline used to create AuthTrace. The main de-sign goal is to make evidence requirements explicit 11 Paradigm Corpus view Evidence-construction view Flat RAG Document collec-tion Chunk retrieval and ranking Memory Accumulated knowledge Ingest, compres-sion, recall Graph RAG Relational structure Entity/relation traversal Event memory Temporal experi-ence Event abstraction and retrieval LLM-Wiki Thematic archive Wiki compilation and traversal Long-context Sequential corpus slice Reader-side selec-tion 
+
+Table 3: AuthTrace supports cross-paradigm diagnosis because a single-author corpus can be instantiated as retrieval, memory, graph, event, wiki, and long-context views under the same query set and annotations. 
+
+before evaluation: each accepted instance contains a bounded query, quoted source evidence required by the reference answer, atomic claim units, a ref-erence answer, and an exact document-level fan-in label. 
+
+B.1 Corpus Filtering and Document Cleaning 
+
+We begin from public-domain writings by five mod-ern Chinese prose writers. The raw collection contains essays, criticism, memoir, travel writing, fiction, and other prose genres. Since AuthTrace evaluates author-grounded evidence construction, the document filter emphasizes texts where the au-thor’s own stance, observation, or argument is the central object of interpretation. We use Qwen3.5-397B-A17B as an LLM-based document classifier to retain articles that satisfy two criteria: the text is nonfictional prose, and the majority of the ar-ticle expresses the author’s own viewpoint rather than quoted material, editorial framing, or fictional narration. Documents shorter than 800 Chinese characters are removed. The remaining documents are cleaned by normalizing text encoding, whites-pace, metadata fields, document identifiers, and title records. This produces the 860-document cor-pus used in the benchmark. Table 4 reports per-author statistics. 
+
+B.2 Canonical Theme Taxonomy 
+
+To support controlled multi-document sampling, every retained article is labeled with a canonical theme. We use a fixed taxonomy designed to cover literary, social, political, biographical, embodied, emotional, spatial, and educational concerns com-                     
+
+> Author Articles Avg. Length Total Chars Lu Xun 276 2,203 608,154 Zhou Zuoren 305 1,816 553,960 Zhu Ziqing 136 2,985 406,004 Xiao Hong 64 2,183 139,712 Yu Dafu 79 3,563 281,538 Total 860 2,313 1,989,368
+
+Table 4: AuthTrace corpus statistics by author. Avg. Length and Total Chars are measured in Chinese char-acters after document filtering.             
+
+> Theme Scope T1: Literary Theory Literature, composition, genre, criticism T2: Language & Style Rhetoric, translation, voice T3: Cultural Critique Customs, institutions, norms T4: Politics & War Conflict, revolution, national-ism T5: Memory & Biography Remembrance, portraiture T6: Intellectual Life Writers, publishing, authorship T7: Gender & Relations Family, marriage, social roles T8: Hardship Poverty, illness, labor, survival T9: Emotion & Self Affect, solitude, self-analysis T10: Travel & Place Landscape, locality, space T11: Education & Youth Schooling, teachers, learning
+
+Table 5: Canonical theme taxonomy used for article-level labeling and same-theme multi-document sam-pling. 
+
+mon in the target corpora. The taxonomy is shown in Table 5. The same Qwen3.5-397B-A17B label-ing pass assigns theme scores, a primary theme, optional secondary themes, a theme-focus score, a QA-suitability score, and a keep flag. The primary theme is used for stratified single-document sam-pling and same-theme multi-document grouping. 
+
+B.3 Single-Document Instance Generation 
+
+Single-document generation targets local ground-ing. Candidate articles are filtered by the keep flag, a minimum theme-focus score of 5, and a minimum QA-suitability score of 5. Sampling is stratified by primary theme: articles are grouped by theme, sorted by QA suitability, theme focus, length, and filename, and then selected with a deterministic random seed. This creates a balanced set of article-level generation calls rather than concentrating the benchmark in the largest themes. For each sampled article, Claude Opus 4.6 re-ceives the article text, author identifier, primary theme, document identifier, and title. The title is provided only as internal metadata for the annotator model. The output is constrained to a JSON object containing an instance list. Each single-document 12 instance must be answerable from the current ar-ticle, must use the author-neutral expression “the author,” and must be anchored by concrete article-specific details rather than by a broad topic. The gold evidence units are direct quotations from the article and are normalized to the current document identifier. The default generation setting produces up to three instances per article with temperature 0.2 and a maximum generation budget of 24,000 tokens. 
+
+B.4 Multi-Document Instance Generation 
+
+Multi-document generation targets cross-document evidence construction. For each author and theme, candidate articles are selected using the same keep, theme-focus, and QA-suitability thresholds as the single-document pipeline. The sampler creates two types of same-theme groups. The low-fan-in pass samples groups of five input documents and asks the generator to produce instances whose actual ev-idence should come from two to three documents. The high-fan-in pass samples groups of eight in-put documents and asks the generator to produce instances whose actual evidence should come from five or more documents. These requested fan-in ranges are used only as generation targets, not as released evaluation la-bels. In practice, LLM-generated instances may re-main genuinely cross-document while using fewer distinct quoted source documents than requested, especially after normalization, duplicate-evidence removal, and evidence-support filtering. We there-fore recompute the released fan-in from the number of distinct source documents appearing in the ac-cepted gold evidence units. Consequently, the high multi-doc evaluation bin is defined by the post-filtered evidence label ( f ≥ 3), while exact-fan-in results are reported separately. Group sampling is deterministic under a fixed seed and prevents duplicate document combina-tions. Within each theme, documents are weighted by QA suitability, theme focus, and prior usage, encouraging high-quality coverage while spread-ing generation calls across the candidate pool. The default configuration creates 24 low-fan-in groups and 12 high-fan-in groups per theme when enough candidates are available, with up to four instances per low-fan-in group and five instances per high-fan-in group. Claude Opus 4.6 is used for the multi-document generation pass under the same temperature and maximum-token settings. The multi-document prompt restricts task types to thematic synthesis, contrastive reasoning, and diachronic evolution. It asks for bounded questions whose answers can be verified from quoted evidence, with query details serving to delimit the evidence target rather than to reveal the answer. 
+
+B.5 Normalization, Rejection, and Final Filtering 
+
+Generated outputs are parsed from JSON and nor-malized before entering the benchmark pool. Evi-dence units are accepted only when their document identifiers match the allowed input documents for the generation call. Duplicate evidence spans are re-moved. Gold claims are normalized into non-empty atomic strings. For single-document instances, all evidence is assigned to the source article and the fan-in is set to 1. For multi-document instances, the source documents are inferred directly from the normalized evidence units; instances with evidence from fewer than two documents are rejected from the multi-document pool. The normalized pool then goes through benchmark-level filtering for query validity, evidence-answer support, and quote–document consistency. Query validity checks remove title leakage, explicit source-range phrasing, and overly broad questions whose answer boundary is unsta-ble. Evidence-answer support verifies that the ref-erence answer is licensed by the quoted evidence and that the gold claim units are covered. Quote– document consistency verifies that every quoted evidence span is aligned with its declared source document. This process yields 2,099 accepted in-stances from 2,398 generated candidates. 
+
+C Annotation Schema 
+
+Each accepted instance is stored with the following fields: 
+
+> {"author_id": "...", "query": "...", "task_type": "thematic_synthesis | contrastive_reasoning | diachronic_evolution | local_grounding", "fan_in": 2, "generation_mode": "single | small | large", "theme": "...", "gold_source_docs": ["doc_id_1", "doc_id_2"], "gold_evidence_units": [ {"doc_id": "doc_id_1", "text": "quoted source span"}
+
+13 ], "gold_claim_units": ["atomic claim"], "reference_answer": "..." }
+
+The released fan-in is the exact number of distinct documents appearing in gold_evidence_units .
+
+D Dataset Examples 
+
+We provide two representative instances from Au-thTrace to illustrate the annotation structure. All text is in the original Chinese with English transla-tions for reviewer readability. The first is a single-document instance (fan-in = 1) from Yu Dafu; the second is a multi-document instance (fan-in = 3) from Zhou Zuoren. Each figure shows the query, gold evidence units with source document identi-fiers, gold claim units, and the reference answer. 
+
+E Metric Interpretation 
+
+EP is especially meaningful as a usability and effi-ciency metric. When the reader has enough context capacity, additional near-miss passages may im-pose limited cost if the required evidence is present. Under tighter budgets, or when comparing struc-tured representations with different signal densities, the same precision difference can become conse-quential because irrelevant passages compete with required support and increase synthesis burden. Au-thTrace therefore treats EP as diagnostic rather than prescriptive: its downstream effect depends on the reader, the representation, and the context budget. High ER with low EP indicates over-retrieval with sufficient support. High EP with low ER in-dicates a clean but incomplete pack. High ER and EP with low AC indicates a synthesis failure rather than an evidence-construction failure. This decom-position lets AuthTrace identify which stage of the pipeline produces the observed answer degradation. 
+
+F System Descriptions and Implementation Details 
+
+All systems share the same model infrastructure: GLM-5.1-FP8 (GLM-5-Team et al., 2026) serves as both the index-construction LLM and the QA reader in the main setting (GPT-4.1-mini in the model-family ablation), and Qwen3-Embedding-8B (4096 dimensions) (Yang et al., 2025) provides embeddings for all retrieval-based systems. Ev-erMemOS additionally uses Qwen3-Reranker-4B for reranking. All systems use the same answer-                              
+
+> System Granularity Top-kEmb. LLM Closed-book ————Long-context Seq. docs ———Oracle Gold units ———Flat RAG 300-char 10 Q3-8B — HippoRAG2 Full docs 10 Q3-8B GLM Mem0 Mem. entries 10 Q3-8B GLM EverMemOS Episodes 10 Q3-8B GLM LLM-Wiki Wiki pages 10 Q3-8B GLM
+> Table 6: System parameters. Q3-8B = Qwen3-Embedding-8B (4096-d). GLM = GLM-5.1-FP8. All systems use GLM-5.1-FP8 as QA reader (temp. 0.0). EverMemOS uses Qwen3-Reranker-4B for reranking.
+
+generation prompt (Section F.1). Table 6 summa-rizes key parameters; detailed descriptions follow. 
+
+Closed-book. The model receives only the query and a background hint specifying the author’s name. No context is provided. This baseline estimates how much can be answered from parametric knowl-edge or broad literary priors. 
+
+Long-context. The model receives the query to-gether with a sequentially concatenated slice of the corresponding author corpus. Documents are sorted alphabetically by filename and concatenated with their titles prepended; documents are included in order until a 150K-character input budget is reached. We choose this budget as a conserva-tive operating point under the deployed GLM-5.1/GLM-5.1-FP8 200K-token context window, ac-counting for tokenizer variation on Chinese text and reserving space for instructions and generation. This tests whether large-budget raw corpus expo-sure can provide the evidence needed for answering without an explicit evidence-construction stage. 
+
+Oracle evidence. The model receives the gold evidence units concatenated as context. This pro-vides a gold-evidence reference condition for an-swer generation from the annotated evidence. The gold evidence is formatted identically to predicted evidence packs. 
+
+Flat RAG. The corpus is segmented into chunks of 300 Chinese characters with 10-character over-lap, embedded with Qwen3-Embedding-8B, and retrieved via cosine similarity without reranking. At query time, the top-k chunks are returned (de-fault k=10 ; ablated at k=5 and k=15 ) and passed directly to the answer model. 
+
+HippoRAG2. HippoRAG2 constructs a knowl-edge graph via OpenIE and performs multi-step 14 Single-Document Instance — Yu Dafu | Fan-in = 1 | Local Grounding 
+
+■ Query 
+
+作者从嘉兴暑假回乡路过杭州时，在梅花碑旧书铺买的书中，对他影响最大的三部书分别是什么？各自给他带来 了怎样的感受？ 
+
+> When the author passed through Hangzhou on his way home from Jiaxing during summer break, which three books bought at Meihuabei’s secondhand bookshop influenced him the most? What feelings did each evoke?
+
+■ Gold Evidence Units (3 units, 1 source document) 
+
+> [远一程，再远一程]
+> “一部是黎城勒氏的《吴诗集览》，因为吴梅村的夫人姓郁，我当时虽则还不十分懂得他的诗的好坏，但一想到他是 和我们郁氏有姻戚关系的时候，就莫名其妙地感到了一种亲热。”
+> [远一程，再远一程]
+> “一部是无名氏编的《庚子拳匹始末记》，这一部书，从戊戌政变说起，说到六君子的被害，李莲英的受宠，联军的 入京，圆明园的纵火等地方，使我满肚子激起了义愤。”
+> [远一程，再远一程]
+> “还有一部，是署名曲阜鲁阳生孔氏编定的《普天忠愤集》， 甲午前后 的章奏议论 ，诗 词赋颂 等慷慨 激昂的文章 ，收
+> 集得 很多；读 了之后 ，觉得中 国还有不 少的人 才在那里 ，亡国 大约是不 会亡 的。”
+
+■ Gold Claim Units    
+
+> C1. 第一部是黎城勒氏的《吴诗集览》，因吴梅村夫人姓郁，作者感到一种莫名的亲热
+> C2. 第二 部是无名氏编的《庚子拳匹始末记》， 内容涉及 戊戌政变 、六君子被害 、联军入京等，使作者激起义愤
+> C3. 第三部是署名曲阜鲁阳生孔氏编定的《普天忠愤集》， 收集甲午前后慷慨 激昂的文章 ，使作者 觉得中 国不会亡国
+
+■ Reference Answer 
+
+> 三部书分别是 ：黎城勒氏的《吴诗集览》，因吴梅村夫人姓郁，作者感到莫名亲热 ；无名氏编的《庚子拳匹始末记》，
+> 内容涉及 戊戌政变 、联军入京等，使作者满 腹义愤 ；署名曲阜鲁阳生孔氏编定的《普天忠愤集》， 收录甲午前后慷慨 激
+> 昂的文章 ，使作者 觉得中 国尚 有人 才，不 会亡国 。
+
+Figure 6: Single-document example instance (Yu Dafu, fan-in = 1). This instance tests local grounding: whether a system can locate three specific book descriptions within one memoir essay. The parallel structure (three books, three emotional responses) requires complete extraction. Near-miss passages about Yu Dafu’s other reading experiences would be topically plausible but non-supporting. 
+
+graph traversal at retrieval time. We use GLM-5.1-FP8 for graph construction, Qwen3-Embedding-8B for embeddings, up to 3 traversal steps with a re-trieval pool of 200 candidates and linking top-k of 5. The top 10 retrieved documents (full articles) are passed to the QA reader. Answer generation uses a maximum of 2,048 tokens at temperature 0.0. 
+
+Mem0. Mem0 extracts and compresses memory entries from the chunked corpus (300-character chunks, matching Flat RAG) using GLM-5.1-FP8, producing abstracted entries shorter than raw chunks. We use Qwen3-Embedding-8B for embed-dings. At query time, hybrid search retrieves the top 10 memory entries for the QA reader. 
+
+EverMemOS. EverMemOS performs event-oriented memory extraction over episodic mem-ory, with agentic retrieval and reranking. We use GLM-5.1-FP8 for memory extraction, Qwen3-Embedding-8B for embeddings, and Qwen3-Reranker-4B for reranking. At query time, the top 10 episodic memory units are passed to the QA reader. Answer generation uses a maximum of 2,048 tokens at temperature 0.0. 
+
+LLM-Wiki evidence construction. LLM-Wiki (Ming et al., 2026) compiles raw documents into structured, interlinked Wiki pages organized by the-matic directories, with bidirectional wikilinks and source provenance, and uses an Error Book mecha-nism for persistent self-correction of compilation errors. At query time, an agent performs composi-15 tional retrieval by iteratively calling wiki_search 
+
+and wiki_read to navigate the Wiki structure until sufficient evidence is gathered. We use GLM-5.1-FP8 for Wiki compilation, Qwen3-Embedding-8B for the search index, a maximum tool-call budget of Tmax =15 , and patience threshold P =3 . The top 10 evidence segments from the agent’s traversal are passed to the QA reader. Answer generation uses a maximum of 2,048 tokens at temperature 0.0. 
+
+Shared cross-paradigm comparison. Auth-Trace compares these systems through a shared external contract. Each system ingests the same cleaned author corpus, receives the same query, outputs an evidence pack when applicable, and is judged against the same evidence and claim an-notations. All systems use the same QA reader model and the same answer-generation prompt, so measured differences in AC primarily reflect the evidence made available to the reader rather than differences in the reader itself. 
+
+F.1 Answer Generation Prompt 
+
+All systems that produce evidence packs use the same QA prompt for answer generation. The origi-nal prompt is in Chinese; we provide the English translation below. 
+
+System prompt. 
+
+> You are a Chinese prose question-answering assistant. Please answer the question based on the given context; if the context is insufficient to support the answer, explicitly state that the evidence is insufficient.
+
+User prompt template. 
+
+> Please answer the question. Requirements: 1. Answer based on the context; do not fabricate. 2. The answer should completely cover the key points required by the question. 3. If the context is insufficient to support the answer, state that the evidence is insufficient. 4. Do not output your reasoning process. [Question] {query} [Context] [Evidence 1] {text_1} [Evidence 2] {text_2} ... Please provide the answer directly.
+
+For the closed-book setting, the context section is replaced with: “[Please answer based on prior knowledge and the prompt directly]”, and an addi-tional line specifies the author’s name. 
+
+G Additional Diagnostic Analyses 
+
+G.1 Flat RAG Retrieval-Budget Ablation 
+
+We further vary the number of retrieved chunks for Flat RAG. Increasing top-k expands the evi-dence pack and therefore creates a direct test of the recall–precision tradeoff. As top-k increases from 5 to 10 to 15, EP decreases because the re-trieved pack contains more thematically plausible but non-supporting passages. At the same time, AC continues to improve, indicating that the reader ben-efits from the additional coverage before context noise becomes the dominant bottleneck. 
+
+G.2 Statistical Significance and Per-Author Robustness 
+
+The main-table differences between the best sys-tem and runner-up are statistically significant by paired bootstrap (10,000 resamples, percentile 95% CI; p < 0.05 ) at single-doc and high-multi fan-in: HippoRAG2 vs. LLM-Wiki at single-doc (+5.6pp, 
+
+p < 0.01 ) and LLM-Wiki vs. EverMemOS at high-multi (+7.1pp, p < 0.01 ). The low-multi difference between LLM-Wiki and HippoRAG2 (+2.0pp) is not statistically significant (95% CI includes zero). The ER–AC correlation ( r = 0 .96 ) has a bootstrap 95% CI of [0.92, 0.99]; the EP–AC correlation (−0.39) has a CI that includes zero, confirming EP’s limited predictive role in the main setting. The main trends are also stable across authors. The ER–AC correlation exceeds 0.92 for every indi-vidual author corpus (range: 0.930–0.962), and the per-author best system consistently follows the fan-in-dependent pattern: HippoRAG2 leads single-doc for all five authors, while LLM-Wiki leads high-multi for all five. The diagnostic conclusions are therefore not driven by any single author cor-pus. 
+
+G.3 Oracle-Normalized Evidence-Construction Loss 
+
+The oracle setting also degrades from single-doc to high multi-doc questions, even when gold ev-idence is provided. This degradation reflects the increased synthesis difficulty of high-fan-in ques-tions under the same reader. We therefore use oracle degradation as a diagnostic reference and subtract it from each system’s degradation to esti-mate the additional loss associated with evidence construction. This view separates the observed synthesis-difficulty trend from construction failure. LLM-16 Method Single AC High AC Rel. Drop Oracle-norm. Oracle 81.6 69.8 −14.5% –HippoRAG2 78.6 44.1 −43.9% −29.4pp Flat RAG 72.8 32.7 −55.1% −40.6pp Mem0 65.0 28.5 −56.2% −41.7pp EverMemOS 53.9 45.0 −16.5% −2.0pp LLM-Wiki 73.0 52.1 −28.6% −14.1pp Long-context 28.0 27.4 −2.1% –
+
+Table 7: Fan-in degradation analysis. Rel. Drop = relative AC change from single-doc to high multi-doc. Oracle-norm. = additional degradation beyond the oracle reference ( −14.5%), separating evidence-construction loss from the observed synthesis-difficulty trend.             
+
+> Pattern Methods Interpretation Cliff-like Flat RAG, Mem0 Local retrieval and memory com-pression lack a broad assembly mechanism. Step-like HippoRAG2 Graph traversal extends retrieval until signal decays beyond 2–3 hops. Gradual LLM-Wiki Thematic pre-aggregation sup-ports broad synthesis at the cost of local detail. Rebound EverMemOS Event granularity aligns with mod-erate cross-document aggregation.
+
+Table 8: Fan-in reveals structural degradation pro-files. Each pattern corresponds to a different evidence-organization granularity. 
+
+Wiki evidence construction and EverMemOS de-grade only slightly beyond the oracle reference, indicating that their organization layers preserve ro-bustness as fan-in increases. Flat RAG and Mem0 incur much larger additional losses, indicating that their main bottleneck is assembling the required evidence rather than generating from it. 
+
+G.4 Collapse Pattern Summary G.5 Minimal Gold Evidence Is Not Always the Best Context 
+
+HippoRAG2 narrows the gap to oracle evidence in the single-document setting despite returning a much noisier pack. Oracle evidence contains the minimal annotated support, while HippoRAG2 of-ten supplies additional local context. This suggests that a useful evidence pack for answer generation may differ from the smallest annotated sufficient set. Some non-gold context can help the answer model interpret quotations, resolve references, or connect local details to the query. 
+
+G.6 Granularity Creates a Robustness–Detail Tradeoff 
+
+The comparison between HippoRAG2 and LLM-Wiki evidence construction illustrates a granularity dilemma. Fine-grained graph retrieval is strong on local evidence and moderate aggregation, but per-formance declines as evidence must be collected from more documents. Coarser LLM-Wiki orga-nization sacrifices single-document detail, but its thematic aggregation makes performance more sta-ble as fan-in increases. This points toward hybrid evidence construction: coarse structures can iden-tify the relevant thematic region, while fine-grained retrieval can extract the source passages needed for a faithful answer. 
+
+G.7 Failure Case Studies 
+
+We present two contrastive cases that illustrate why HippoRAG2 and LLM-Wiki fail on complemen-tary instance sets (Jaccard overlap of failure sets = 0.13). Each case shows the gold evidence and claims alongside the two systems’ answers, making the failure mechanism directly observable. 
+
+Case A (Figure 8): Local grounding favors graph retrieval. A single-document question about Lu Xun asks which author received a con-gratulatory telegram and why. The gold answer requires an obscure transliterated proper noun (Ser-afimovich) buried in one paragraph of a single es-say. HippoRAG2’s graph traversal retrieved the exact source passage at rank 2 and answered all three claims correctly (AC = 3/3). LLM-Wiki’s thematic summaries had abstracted away this low-frequency entity: its retrieval trace shows three searches that located the correct wiki page title, but the page content did not preserve the specific name. The model hallucinated a different author name (Romain Rolland)—a plausible but incorrect substi-tution (AC = 0/3). This case exemplifies the local-detail loss inherent in thematic abstraction: when the answer hinges on a rare proper noun within a single passage, pre-organized summaries trade away the specificity that the question demands. 
+
+Case B (Figure 9): Cross-document synthesis fa-vors thematic organization. A high-fan-in ques-tion (fan-in = 5) asks the reader to compare “sub-missive” and “awakened” archetypes across five Lu Xun essays. LLM-Wiki’s agentic search issued 15 targeted queries—one per distinctive phrase in the question—and retrieved 9 wiki pages that col-17 lectively covered 6 out of 7 gold evidence units from all 5 source documents (AC = 3/3). Hip-poRAG2’s top-10 context pack covered only 1 of the 5 gold source documents: graph traversal from the query’s seed entities reached the sheep/pig pas-sage in one essay but could not bridge to the re-maining four. The model compensated by substi-tuting topically plausible but non-gold quotes from other essays (AC = 1/3). This case exemplifies the retrieval radius limitation : graph traversal’s local neighborhood expansion cannot reach the-matically dispersed evidence that requires global corpus awareness. 
+
+Diagnostic summary. These two cases together demonstrate the complementary error structure un-derlying the crossover in Table 2: graph retrieval preserves rare local details that abstraction erases, while thematic organization provides the global coverage that local traversal cannot reach. The fail-ure patterns are non-overlapping—Case A is trivial for HippoRAG2 but impossible for LLM-Wiki, and vice versa for Case B—which supports the fan-in-based system selection principle proposed in §H. 
+
+H Actionable Implications 
+
+Choose evidence organization by target fan-in. Single-document detail benefits from fine-grained retrieval and graph structure. Moderate cross-document questions align well with event-or relation-oriented memory organization. Broad synthesis benefits from thematic aggregation, even when such aggregation lowers local precision. 
+
+Prioritize recall under generous context bud-gets. When raw retrieval is recall-limited and the answer model has enough context capacity to tol-erate some noise, retrieval should favor covering the required evidence over aggressively filtering for a small pack. Precision-oriented filtering is most valuable when it preserves recall or converts raw evidence into a more usable structured representa-tion. 
+
+Treat precision as evidence usability, not merely token efficiency. The GPT-family ablation shows that high-precision structured packs can outperform higher-recall noisy packs. This makes EP a useful design signal for systems that summarize, cluster, or reorganize evidence before generation. 
+
+Use structure before generation. The weakness of fixed-order long-context prompting shows that evidence construction should be treated as a dis-tinct stage. Raw text exposure leaves selection and organization to the reader; explicit evidence construction externalizes these operations into a controllable pipeline that can be measured through ER, EP, and fan-in degradation. 
+
+Adopt adaptive granularity. No single repre-sentation dominates across fan-in levels. A practi-cal system should estimate query fan-in and route among fine-grained retrieval, graph traversal, event memory, and thematic pages. A promising design is two-stage construction: use coarse thematic or event structures to identify the relevant region of the corpus, then use fine-grained retrieval to extract source passages for the final evidence pack. 
+
+I Generation Constraints and Prompts 
+
+The generation prompt enforces the following con-straints. • The query must not mention article titles, title hints, title abbreviations, or explicit source-range phrases such as “these articles.” • The query must refer to the writer as “the author” rather than using the author’s name. • Each multi-document question must genuinely require multiple documents; if one document is sufficient, the instance is invalid. • Questions should be bounded by concrete cross-document details rather than broad prompts such as “what is the author’s overall view of X.” • The answer must be directly supported by the evidence and should avoid unsupported literary interpretation beyond the quoted spans. • gold_evidence_units must be direct quota-tions from the input documents and use only allowed document IDs. • gold_claim_units must be atomic, checkable conclusions that the reference answer should cover. 
+
+J Instance Generation Prompts 
+
+This section provides the full generation prompt templates used for single-document and multi-document instance construction. All prompts are originally written in Chinese; we present English translations below for reviewer readability. The 18 original Chinese versions are used in all generation runs. The generation model is Claude Opus 4.6 with temperature 0.2 and a maximum generation budget of 24,000 tokens. 
+
+J.1 Single-Document Generation Prompt 
+
+Each single-document generation call receives one article and produces up to 3 instances grounded in that article alone. The system prompt establishes the annotation protocol and quality constraints; the user prompt provides the article text and metadata. 
+
+System prompt. 
+
+You are an extremely strict Chinese literature benchmark annotator. Your task: Given the full text of a single article, directly generate single-document instances that conform to the annotation schema. 
+
+I. Task Nature 
+
+This is a Focused Reading scenario for single-document evidence construction. Each generated instance must satisfy: 1. It can be answered primarily from this article alone. 2. The question must be grounded in concrete textual details in the article. 3. The answer must be supported by direct evidence from this article. 4. The instance should be suitable as a single-document sample for an author-grounded QA benchmark. 
+
+II. Query Requirements 
+
+1. The query must NOT contain the article title, title abbreviations, title hints, or any information that would reveal which article to retrieve. 2. Always refer to the writer as “the author”; never use the author’s real name or pen name. 3. Do not use explicit range indicators such as “in this article” or “in the text”; instead, implicitly delimit the scope through textual details. 4. A question may only be generated if it can be stably anchored by unique details in the current article. 5. If a question would likely hold equally well in many other articles by the same author, do not generate it. 6. By default, do not generate overly abstract questions with high generalization risk, such as: - Overly broad central-idea questions - Overly broad writing-motivation questions - Overly broad author-attitude summary questions - Overly broad concept-definition questions unless the question is strongly anchored by highly specific, low-ambiguity in-text details. 6.1. Each query must contain exactly one main question; do not ask multiple aspects simultaneously. 
+
+III. Evidence and Answer Requirements 
+
+7. gold_evidence_units must be direct quotations from the article; no paraphrasing, no summarizing. 8. Each element in gold_evidence_units must be: {"doc_id": "...", "text": "..."}. 9. gold_claim_units must be written as “core conclusion units the reference answer should cover”—clear, verifiable, and appropriately granular. 10. reference_answer must be concise, definitive, and supportable by gold_evidence_units. 11. gold_claim_units should not merely paraphrase the reference_answer; they should be the genuine core information points that the answer must cover. 12. query, gold_claim_units, and reference_answer must be mutually consistent. 
+
+IV. Output Format 
+
+Output only the following JSON structure. No explanations, no Markdown, no code fences. Top-level must be: {"instances": [{"query": "...", "gold_evidence_units": [...], "gold_claim_units": [...], "reference_answer": "..."}]} If the article cannot stably produce high-quality instances, output fewer; prefer quality over quantity. 
+
+User prompt template. 
+
+Please generate single-document instances based on the following article. Metadata (for your understanding only; do not repeat in output): - author_id: {author_id} - theme: {theme} - Allowed doc_id: {doc_id} - Article title (for internal reference only; must NOT appear in query): {doc_title} Notes: 1. This is single-document; all evidence must come from this article. 2. All doc_id in gold_evidence_units must be: {doc_id}. 3. Query must avoid title leakage and explicit range indicators. 4. Always use “the author” to refer to the writer. 5. gold_evidence_units must be direct quotations. 6. gold_claim_units must be core conclusion units. 7. reference_answer must be a concise standard answer supportable by the evidence. Suggested number of instances: up to {instances_per_doc}. Full article text: {article_text} Output only JSON. 
+
+J.2 Multi-Document Generation Prompt 
+
+Multi-document generation operates in two passes over same-theme document groups: a low-fan-in pass (input: 5 articles, target evidence from 2–3 documents) and a high-fan-in pass (input: 19 8 articles, target evidence from 5+ documents). Each pass produces up to 4–5 instances per group. The system prompt shares the annotation protocol with the single-document prompt but adds cross-document constraints and task-type requirements. 
+
+System prompt (shared structure; fan-in mode block varies). 
+
+You are an extremely strict Chinese literature benchmark annotator. Your task: Given the full text of multiple articles under the same theme, directly generate multi-document instances that conform to the annotation schema. 
+
+I. Task Nature 
+
+This is a Cross-Document Construction scenario. Each instance must belong to one of three task types: 1. thematic_synthesis — Integrate information from multiple articles around the same theme to form an inductive answer. 2. contrastive_reasoning — Organize evidence around two or more objects, cases, or approaches to form a comparative structure. 3. diachronic_evolution — Only permitted when there exist describable stage differences, temporal ordering, and phase-level changes. 
+
+II. Query Requirements 
+
+1. Query must NOT contain any article titles, title abbreviations, or retrieval hints. 2. Always use “the author”; never use the author’s name. 3. Do not use explicit range indicators such as “in these articles”; instead, implicitly delimit scope through combinations of textual details. 4. Each instance must genuinely require multiple articles for joint support; if any single article suffices, do not generate. 5. If a question merely looks like a synthesis question but can actually be answered from one article alone, do not generate. 6. By default, do not generate overly broad questions such as: - How does the author view a certain broad topic - What is the author’s consistent attitude - What does the author advocate long-term unless the query is clearly narrowed by low-ambiguity cross-document details. 7. Queries should preferably ask about concrete phenomena, examples, statements, or judgments that can be directly located across multiple articles, rather than requiring the answerer to construct a grand interpretive framework. 8. The answer should be easily verifiable by different annotators after reading the evidence; if the answer requires extensive literary interpretation or value judgment, do not generate. 9. Details in the query should mainly serve to bound the question, not to pre-reveal the full answer structure. 10. Each query must contain exactly one main 
+
+question. 11. Keep query length restrained; given the above requirements, the question should be as concise as possible. 
+
+[Fan-in mode block] 
+
+Low-fan-in mode: Prioritize generating instances that genuinely depend on 2–3 articles for joint support. If a question requires 4 or more articles, do not generate in this round. High-fan-in mode: Prioritize generating instances that genuinely depend on 5–6 or more articles for joint support. If a question can be answered with fewer than 5 articles, do not generate in this round. 
+
+III. Evidence and Answer Requirements 
+
+12. gold_evidence_units must be direct quotations; no paraphrasing. 13. Each element: {"doc_id": "...", "text": "..."}. 14. Evidence must be distributed across the multiple articles that the question actually requires; it must not concentrate in a single article. 15. gold_claim_units must be clear, verifiable, and reflect cross-document induction, comparison, or evolution structure. 16. reference_answer must be concise, definitive, and supportable by the listed evidence. 17. reference_answer may only perform within-evidence induction; do not add unsupported literary interpretation. 18. gold_claim_units should correspond to verifiable information points in the source text. 19. task_type must be one of: thematic_synthesis, contrastive_reasoning, diachronic_evolution. 20. thematic_synthesis and contrastive_reasoning should be roughly equal in quantity. 
+
+IV. Output Format 
+
+Output only JSON. Top-level: {"instances": [{"query": "...", "task_type": "...", "gold_evidence_units": [...], "gold_claim_units": [...], "reference_answer": "..."}]} No explanations, no Markdown, no code fences. If the scope of the question is ambiguous, do not generate. 
+
+User prompt template. 
+
+Please generate multi-document instances based on the following articles under the same theme. Metadata (for your understanding only): - author_id: {author_id} - theme: {theme} - Allowed doc_ids (use ONLY these): {allowed_doc_ids} {fan_in_mode_instruction} Notes: 1. All doc_ids in gold_evidence_units must come from the allowed list above. 2. Each instance must genuinely require 
+
+20 Parameter Value Generation model Claude Opus 4.6 Temperature 0.2 Max generation tokens 24,000 Single-doc instances per article up to 3 Low-fan-in input articles per group 5High-fan-in input articles per group 8Low-fan-in instances per group up to 4 High-fan-in instances per group up to 5 Low-fan-in groups per theme 24 High-fan-in groups per theme 12 
+
+Table 9: Instance generation hyperparameters. 
+
+> multiple articles for joint support. 3. task_type must be one of: thematic_synthesis, contrastive_reasoning, diachronic_evolution. 4. Query must not contain title information or explicit range indicators. 5. Always use “the author” to refer to the writer. 6. gold_evidence_units must be direct quotations. 7. gold_claim_units must be core conclusion units. 8. reference_answer must be a concise standard answer supportable by the evidence. 9. Prefer questions with clear answer boundaries verifiable from the evidence. 10. reference_answer should not over-elaborate; only summarize what the evidence stably supports. Suggested number of instances: up to {target_instances}. Input articles: [For each article: doc_id, doc_title (internal only), full text] Output only JSON.
+
+J.3 Generation Configuration Summary 
+
+Table 9 summarizes the generation hyperparame-ters. 
+
+K Evaluation Protocol and Judge Prompts 
+
+This section describes the full evaluation proto-col used for Answer Correctness (AC), Evidence Recall (ER), and Evidence Precision (EP). All judge prompts are originally written in Chinese; we present English translations below for reviewer readability. The original Chinese versions are used in all reported experiments. 
+
+K.1 Overview 
+
+AuthTrace evaluates each system output through three LLM-based judges applied independently (Liu et al., 2023; Zheng et al., 2023). For sys-tems that produce evidence packs, predicted evi-dence is first normalized into canonical segments, then evaluated for ER (whether each gold evidence unit is covered) and EP (whether each predicted segment supports gold evidence). The predicted answer is evaluated separately for AC against gold claim units. Separating evidence evaluation from answer evaluation ensures that the diagnostic decomposition—whether failures originate from evidence construction or from answer synthesis— remains interpretable. The judge model is Qwen3.5-397B-A17B in the main setting and GPT-4o-mini in the model-family ablation. All judge calls use temperature 0.0 for reproducibility. The maximum generation budget is 3,000 tokens for AC and 800 tokens for ER/EP. 
+
+K.2 Evidence Normalization 
+
+Predicted evidence packs vary in granularity across systems: flat RAG returns fixed-size chunks, graph retrieval may return full articles, LLM-Wiki sys-tems return structured pages, and memory systems return compressed entries. To enable shared pack-level comparison, all predicted evidence is normal-ized into canonical segments before ER and EP evaluation. The canonical segmentation procedure operates as follows: 1. Text is cleaned by normalizing encoding, col-lapsing whitespace, and standardizing quotation marks. 2. The text is split into sentences at Chinese sentence-ending punctuation ( U+3002 , U+FF01 ,
+
+U+FF1F , U+FF1B ) and paragraph boundaries. 3. Sentences exceeding 180 tokens are hard-split at the token level. 4. Sentences are greedily merged into segments targeting approximately 120 tokens, with a max-imum of 180 tokens and a minimum of 40 to-kens. 5. Trailing segments below the minimum threshold are merged with the preceding segment when the combined length remains under the maxi-mum. 6. Duplicate segments (by exact string match after normalization) are removed. Token counting uses a regex-based approxima-tion: each Chinese character counts as one token, 21 and each contiguous Latin alphanumeric string counts as one token. The maximum number of pre-dicted evidence segments submitted to the judge per instance is capped at 2,000. 
+
+K.3 Answer Correctness (AC) Judge 
+
+The AC judge uses a holistic 0–3 rubric that si-multaneously evaluates gold claim coverage and irrelevant content. The judge receives the query, gold claim units, a reference answer, and the pre-dicted answer, and outputs structured JSON con-taining per-claim judgments, an irrelevant-content assessment, and a final score with justification. The reported AC metric is the normalized score: AC = score /3 × 100 .
+
+System prompt. 
+
+You are a strict benchmark answer judge. You must complete two tasks: 1. Analyze the coverage of each gold_claim_unit (for diagnostics). 2. Assign a holistic 0–3 score based on the rubric (the final metric). When scoring, you must consider two dimensions simultaneously: - Dimension A: Coverage of gold claims. - Dimension B: Whether the answer contains irrelevant, incorrect, or redundant content. Output only JSON. Do not output anything else. 
+
+User prompt template. 
+
+Please evaluate the quality of the Predicted Answer. 
+
+Step 1: Analyze claim coverage item by item 
+
+For each gold_claim_unit, determine whether the Predicted Answer covers it: - supported: The claim is explicitly and correctly covered. - partial: The claim is only partially covered or expressed too vaguely. - missing: The claim is not covered. - contradicted: The Predicted Answer clearly contradicts this claim. 
+
+Step 2: Check for irrelevant content 
+
+Check whether the Predicted Answer exhibits the following problems: - Introduces topics or facts not asked by the question. - Mixes in information from other articles or other people. - Contains additional incorrect statements that contradict gold claims. - Is lengthy and repetitive with large amounts of content unrelated to the core question. 
+
+Step 3: Assign a holistic 0–3 score based on the rubric 
+
+Scoring criteria (considering both claim coverage and irrelevant content): 3 (Excellent): - All or nearly all core claims are correctly covered (supported). 
+
+- The answer is focused and accurate, with no significant irrelevant or incorrect content. 2 (Good): - Most core claims are covered, with minor omissions or insufficient detail. - Or: Claim coverage is fairly complete, but includes some irrelevant content (not affecting core judgment). 1 (Partial): - Only about half or fewer claims are covered, with clear omissions. - Or: Contains substantial irrelevant/incorrect content that interferes with accuracy. - Or: Mentions some relevant information, but key arguments are missing or off-target. 0 (Incorrect): - Core claims are essentially uncovered. - Or: Contains critical factual errors or direct contradictions with claims. - Or: The answer is overwhelmed by irrelevant content; no useful information can be extracted. - Or: The answer is completely unrelated to the question. Notes: - Your primary basis for judgment is gold_claim_units. - reference_answer is only for auxiliary understanding; do not bypass claims and score based on impression alone. - Penalty for irrelevant content: A few extra background sentences (one or two lines of setup) should not cause a deduction; but if irrelevant content approaches or exceeds the volume of effective content, or contains factual errors, the score should be downgraded. [Query] {query} [Gold Claim Units] {gold_claim_units_json} [Reference Answer] {reference_answer} [Predicted Answer] {predicted_answer} Please output: {"claim_judgments": [{"claim": "...", "status": "supported|partial| missing|contradicted", "reason": "one sentence"}], "irrelevant_content": {"has_irrelevant": true/false, "description": "brief description or ’none’"}, "score": integer 0–3, "reason": "one sentence combining claim coverage and irrelevant content" }
+
+K.4 Evidence Recall (ER) Judge 
+
+The ER judge determines whether each gold evi-dence unit is semantically covered by the predicted context pack. For each gold evidence unit, the judge receives the query, the gold unit, and the full predicted context pack, then outputs a binary coverage decision. The coverage criterion is inten-tionally permissive with respect to surface form: 22 longer excerpts, shorter excerpts, or paraphrased equivalents all count as coverage, as long as the key information of the gold evidence is preserved. 
+
+System prompt. 
+
+You are a strict benchmark evidence judge. Requirements: 1. Evidence Recall: Only assess whether gold evidence is covered by the predicted context. 2. Evidence Precision: Only assess whether predicted evidence matches gold evidence. 3. Do not conflate answer correctness with evidence quality. 4. Output only JSON. 
+
+User prompt template. 
+
+Please determine: Is the given gold evidence unit covered by the predicted context? Coverage criteria: 1. Verbatim identity is not required. 2. Longer excerpts, shorter excerpts, or essentially equivalent source passages are acceptable. 3. As long as the predicted context contains a passage sufficient to carry the key information of this gold evidence, judge as covered=1. 4. Otherwise covered=0. [Query] {query} [Gold Evidence Unit] {gold_evidence_unit_json} [Predicted Context Pack] {predicted_context_pack_json} Please output only JSON: {"covered": 0 or 1, "reason": "one sentence explanation"} 
+
+Evidence Recall is computed as: ER =
+
+P|E⋆| 
+
+> i=1
+
+covered i
+
+|E⋆| × 100% . (4) 
+
+K.5 Evidence Precision (EP) Judge 
+
+The EP judge determines whether each predicted evidence segment supports at least one gold evi-dence unit. For each canonical segment in the pre-dicted pack, the judge receives the query, all gold evidence units, and the predicted segment, then outputs a binary match decision. The matching cri-terion allows predicted segments that contain extra context beyond the gold evidence to still count as matched, as long as the segment carries content that supports the query and gold evidence without being misleading. 
+
+User prompt template. 
+
+The EP judge shares the same system prompt as the ER judge (Section K.4). 
+
+Parameter Value Judge model (main) Qwen3.5-397B-A17B Judge model (ablation) GPT-4o-mini Temperature 0.0 Max generation tokens (AC) 3,000 Max generation tokens (ER/EP) 800 Segment target length ∼120 tokens Segment maximum length 180 tokens Segment minimum length 40 tokens Max pred. segments per instance 2,000 
+
+Table 10: Evaluation protocol hyperparameters. 
+
+Please determine: Does this predicted evidence unit match gold evidence? Matching criteria: 1. matched = 1: The predicted evidence unit can be aligned with, covers, or is essentially equivalent to at least one entry in gold_evidence_units. 2. matched = 0: The predicted evidence unit cannot be aligned with any gold evidence. 3. Do not automatically judge as 0 just because the predicted evidence unit contains extra context beyond the gold evidence; if it contains content that supports the query / gold evidence key information and the extra content is not clearly misleading, judge as matched = 1. [Query] {query} [Gold Evidence Units] {gold_evidence_units_json} [Predicted Evidence Unit] {predicted_evidence_unit_json} Please output only JSON: {"matched": 0 or 1, "matched_gold_indices": [indices from 0; empty if none], "reason": "one sentence explanation"} 
+
+Evidence Precision is computed as: EP =
+
+P| ˆEq | 
+
+> j=1
+
+matched j
+
+| ˆEq| × 100% . (5) 
+
+K.6 Evaluation Configuration Summary 
+
+Table 10 summarizes the key evaluation hyperpa-rameters used in all experiments. 
+
+L Evaluation Reliability 
+
+We validate the LLM-based evaluation through two complementary analyses: inter-judge agreement between two LLM judges, and human–LLM agree-ment on a manually annotated subset. 
+
+L.1 Inter-Judge Agreement 
+
+To verify that diagnostic conclusions are stable across judge models, we evaluate the same sys-tem outputs with both Qwen3.5-397B-A17B and 23 Metric Spearman ρ Binary Agr. (%) κw             
+
+> AC (human vs. Qwen) 0.78 82.0 0.71 AC (human vs. GPT) 0.76 79.0 0.68 ER (per-unit binary) –91.2 –EP (per-unit binary) –88.4 –
+> Table 11: Human–LLM judge agreement. ρ: Spearman rank correlation on 0–3 AC scores. Binary Agr.: for AC, agreement on correct ( ≥2) vs. incorrect ( ≤1); for ER/EP, agreement on binary covered/matched decisions.
+> κw: quadratic weighted Cohen’s kappa on the 0–3 scale.
+
+GPT-4o-mini on the 20% stratified sample (419 instances). Pooled inter-judge Spearman ρ = 0 .74 
+
+and 98.6% within-±1 agreement confirm that sys-tem rankings are preserved despite an absolute cali-bration offset (GPT scores +10.5pp higher on aver-age). This offset affects absolute AC values but pre-serves the relative ordering and fan-in degradation patterns that our diagnostic conclusions depend on. 
+
+L.2 Human–LLM Agreement 
+
+We further validate the LLM judge against human annotations. For the primary Qwen judge, one annotator independently scored 200 randomly sam-pled instances using the same 0–3 AC rubric. For the GPT judge, an additional 100 instances were annotated using the same protocol. For ER and EP, the annotator reviewed 1,000 randomly sam-pled per-unit judgments each (ER: sampled from 320 instances; EP: sampled from 250 instances), providing binary agree/disagree labels. Table 11 shows that human–LLM agreement (ρ = 0 .78 for Qwen on 200 instances, 0.76 for GPT on 100 instances) is comparable to or slightly ex-ceeds inter-LLM agreement ( ρ = 0 .74 ). The binary agreement rates for ER (91.2%) and EP (88.4%) in-dicate that per-unit evidence judgments are reliable at the level needed for aggregate metric computa-tion. The primary source of AC disagreement in-volves partial-credit instances (score 1 vs. 2), where boundary placement is inherently subjective; the binary correct/incorrect distinction is more robust (82% agreement). Critically, disagreements do not systematically favor any particular system, con-firming that the comparative conclusions—which system performs better at which fan-in level—are preserved under human evaluation. 24 Multi-Document Instance — Zhou Zuoren | Fan-in = 3 | Contrastive Reasoning 
+
+■ Query 
+
+作者在讨论中国人燃放爆竹的行为时认为其本质是什么，而在描述道教法事和民间戏剧时对类似仪式活动的态度 又是怎样的？ 
+
+> What does the author consider the essence of Chinese people setting off firecrackers, and what is his attitude toward similar ritual activities when describing Daoist ceremonies and folk drama?
+
+■ Gold Evidence Units (5 units, 3 source documents) 
+
+> [十五 爆竹]
+
+“火药的正当用处在于做花炮，喜欢花炮是一种好脾气，我也是这样想，只可惜中国人所喜欢的不是花炮而是爆竹； ——即进一步说，喜欢爆竹也是好的，不幸中国人只欢喜敬神（或是赶鬼）而并不喜欢爆竹。” 
+
+> [十五 爆竹]
+
+“中国人的特性是麻木，燃放爆竹是其特征。只有小孩子还没有麻木透顶，其行为稍有不同，他们放花炮，——虽然 不久也将跟了人学坏了，此时却是真心地赏鉴那“很美丽的东西”，足以当得蔾理斯的推奖的话。” 
+
+> [一三 炼度]
+
+“我们小孩不懂得什么，只觉热闹得很好玩” 
+
+> [一三 炼度]
+
+“只是看了那戏剧似的演出，仿佛是《闹天宫》 里的一 场，觉得很是 痛快 有趣。” 
+
+> [谈目连 戏]
+
+“我们 如从头至尾 的看 目连 戏一 遍，可以了 解不少的民间 趣味 和思想，这虽然是 原始 的为 多，但实 在是国民性的一 斑
+
+，在我们的 趣味思 想上并不是 绝无关系 ，所以我们 知道一 点也很有 益处。” 
+
+■ Gold Claim Units 
+
+C1. 作者认为中国人燃放爆竹的本质是麻木地 举行祭神仪式，并 非真正 欣赏花炮 之美
+
+C2. 作者对道教炼度法事的态度是以小孩 视角 觉得 ‘热闹好玩 ’、‘痛快 有趣’ ，带有审美欣赏的 成分 
+
+C3. 作者对 目连 戏的态度是认为其中可了 解民间 趣味 和思想，有学 术研究价值 
+
+C4. 作者在爆竹 问题上批判成 人的 迷信 麻木， 肯定 小孩真心赏鉴美的态度；在法事和戏剧 问题上则更多从趣味 和认 知价值角 度看 待
+
+■ Reference Answer 
+
+作者对中国人燃放爆竹的行为 持批判 态度，认为其本质是麻木地 举行敬神赶鬼的 迷信 仪式， ‘耳无闻目无见 地只在那 里机械 地举行祭神的仪式 ’，并 非真正 欣赏花炮的美丽，只有小孩子还 能真心赏鉴。而在描述道教炼度法事时，作者以 儿
+
+时视角回忆 ，觉得 ‘热闹得很好玩 ’，看 破地狱的表演‘仿佛是《闹天宫》 里的一 场，觉得很是 痛快 有趣’ ，带有审美
+
+欣赏和 游戏趣味 。对于 目连 戏，作者认为 从中‘可以了 解不少的民间 趣味 和思想’，虽然 原始 ，但‘实 在是国民性的一 
+
+斑’ ，有认 知和学 术价值 。可 见作者对同类民 俗仪式活动的态度 因语境 不同而有 差异：批判 爆竹时 着眼 于成人的 迷信 麻木，而 回忆 法事和讨论民间戏剧时 则更多从趣味欣 赏和 文化 认知的角度看 待。Figure 7: Multi-document example instance (Zhou Zuoren, fan-in = 3). This instance tests cross-document synthesis: the system must retrieve evidence from three distinct essays (a cultural critique, a childhood memoir, and a literary commentary) to construct a contrastive answer about the author’s differing attitudes toward similar folk rituals. Near-miss passages about Zhou Zuoren’s other cultural critiques would be topically plausible but non-supporting. 
+
+25 Case A: Local Grounding | Lu Xun | Fan-in = 1 | HippoRAG2 succeeds, LLM-Wiki fails 
+
+Query 
+
+作者在回应张露薇关于庆祝高尔基四十年创作生活时中国文人发祝电一事的质问时，如何为自己辩护？他实际上 给哪位作家发过祝电，原因是什么？ 
+
+Gold Evidence Units (2 units, 1 source document: “题未定”草（五）) 
+
+> [“题未定”草（五）]
+
+"这质问是极不错的。我只得招供：读得很少……至于祝电，我以为打一个是应该的，似乎也并非中国人的耻辱，或者便失了 人性，然而我实在却并没有发，也没有在什么电报底稿上签过名字，——那原因只是因为没有人来邀，自己也没有想到。" 
+
+> [“题未定”草（五）]
+
+"但对于绥拉菲摩维支的祝贺日，我却发过一个祝电，因为我校印过中译的《铁流》。这是在情理之中的，但也较难于想到， 还不如测定为对于高尔基发电的容易。" 
+
+Gold Claim Units 
+
+C1: 作者承认自己读高尔基的作品很少，但指出高尔基全集连其本国也未出全，无从计算 
+
+C2: 作者实际上并未给高尔基发祝电，也未在电报底稿上签名——原因是没有人来邀，自己也没想到 
+
+C3: 作者给绥拉菲摩维支发过祝电，原因是他校印过中译的《铁流》 
+
+HippoRAG2 (graph retrieval) [AC = 3/3] 
+
+作者在辩护时，首先坦承自己读过高尔基的作品很少，且因高尔基全集未出全，也无从计算其十分之一 究竟 是几本；其次，他 
+
+澄清 自己并未给高尔基发过祝电，也没有在电报底稿上签名，原因是没有人来邀，自己也想不到。他实际上给绥拉菲摩维支发 过祝电，原因是他 曾校印过中译的《铁流》，认为发祝电是在情理之中的。 
+
+LLM-Wiki (thematic organization) [AC = 0/3] 
+
+作者辩 称自己并未给高尔基发祝电 ；他实际上给 罗曼·罗兰 发过祝电，原因是 罗曼·罗兰 是为人 类光明 而战的战士 ，同情被压 迫民族 。
+
+Diagnostic 
+
+Failure mode: Hallucination from abstraction. The gold answer requires the obscure proper noun '绥拉菲摩维支' (Serafimovich) — a low-frequency entity buried in a single paragraph. HippoRAG2's graph traversal retrieved the exact source passage (chunk rank 2), supporting all 3 claims. LLM-Wiki's thematic summaries abstracted away the specific name: its retrieval trace shows 3 searches that located the correct wiki page, but the page content did not preserve this detail. The model hallucinated '罗曼·罗兰 ' (Romain Rolland) — a plausible but incorrect substitution. This illustrates the local-detail loss inherent in thematic abstraction: when the answer hinges on a rare proper noun, pre-organized summaries trade away the specificity that the question demands. Figure 8: Case A: HippoRAG2 succeeds, LLM-Wiki fails (Lu Xun, fan-in = 1). Graph retrieval locates the exact passage containing the rare entity; thematic organization abstracts it away and the model hallucinates a plausible but incorrect name. All Chinese text appears only in the embedded figure. 
+
+26 Case B: Cross-Document Synthesis | Lu Xun | Fan-in = 5 | LLM-Wiki succeeds, HippoRAG2 fails 
+
+Query 
+
+作者在不同文章中分别以'绵羊跟随山羊走向屠宰'、'百姓希望有主子拿他们做牛马'、'轿夫含笑抬轿'、'被踢落水 一笑了之'、'九天未食者爬去送裤'等场景展现被压迫者的状态，而又以'野猪长出獠牙'、'创造第三样时代'、'革新 的破坏者'等表述指向另一种可能。请比较作者笔下'顺从者'与'觉醒/反抗者'两类形象在具体行为特征上的差异。 
+
+Gold Evidence Units (7 units, 5 source documents) 
+
+[一点比喻] 
+
+"胡羊们便成了一长串，挨挨挤挤，浩浩荡荡，凝着柔顺有余的眼色，跟定他匆匆地竞奔它们的前程。" 
+
+[一点比喻] 
+
+"君不见夫野猪平？它以两个牙，使老猎人也不免于退避。这牙，只要猪脱出了 牧豕奴所 造的猪 圈，走 入山野，不 久就会 长出 
+
+来。" 
+
+[灯下漫笔] 
+
+"百姓 就希望有一个一定的主子，拿他们去做百姓， —— 不敢，是拿他们去做牛马， 情愿自己寻草吃 ，只 求他决定他们 怎样跑
+
+。" 
+
+[灯下漫笔] 
+
+"而创造这中 国历史 上未 曾有过的第三样时代， 则是 现在的 青年 的使 命！ "
+
+[再论雷峰塔 的倒掉 ]
+
+"我们要革新的破坏者， 因为他 内心 有理想 的光。我们应该知道 他和寇盗奴才 的分别。" 
+
+[踢] 
+
+"我们也 真是善 于' 忍辱负重 '的人 民，只要不'落 浦'， 就大抵用 一句滑稽化 的话道： '吃了一只 外国火腿 '，一笑了之。" 
+
+[牺牲谟 ]
+
+"你还 能勉强 走几步罢 ？不能？ ……那么 ，你该还 能爬？ 好极 了！那么 ，你就 爬过去。" 
+
+Gold Claim Units 
+
+C1: 顺从者的行为特征 —— 柔顺跟随不 问方 向、 甘愿 做牛马只 求有规则 、被踢被 骗仍 一笑了之 或照办 、以 自我麻痹 代替反抗 
+
+C2: 觉醒/反抗者的行为特征 —— 脱出猪 圈走入山野 即长出獠牙、 内心 有理想 的光而非为私利 、志在创造 历史 上未 曾有过的第 三样时代 
+
+C3: 两者 根本 差异 —— 顺从者不 问去向、 接受 现有 秩序； 反抗者有 明确 的理想目标和 主动的破坏-建设意识 
+
+LLM-Wiki (thematic organization) [AC = 3/3] 
+
+顺从者的行为特征 ：如 胡羊 般柔顺 盲从，跟随 领头 山羊走向屠宰 ；希望有主子拿 自己 做牛马，只要定下 规则 便心悦诚服； 被踢 落水以' 吃外国火腿 '一笑了之 ；九天未食者 受'牺牲 '口号蛊惑 ，爬着送裤。觉醒/反抗者的行为特征 ：如 野猪脱出猪 圈走入山野不 
+
+久即 长出獠牙，使老猎人退避 ；'革新的破坏者' 内心 有理想 的光，旨在扫荡食人者 ；其 使命是 创造中 国历史 上未 曾有过的'第三样 时代'。两者 根本 差异在于 ：顺从者 接受 现有 秩序 、放弃自 主意志； 反抗者有 明确理想目标 ，具有主 动的破坏 旧秩序并建设 新秩序的意识 。
+
+HippoRAG2 (graph retrieval) [AC = 1/3] 
+
+顺从者 ：如 胡羊'凝着柔顺有余的眼色'跟定 牧人走向屠宰 ；奴才 从奴隶生活 中' 寻出美来 ，赞叹 ，抚摩 ，陶醉 '；怯 者愤怒 时' 抽刃 
+
+向更弱 者'。觉醒/反抗者 ：如 野猪脱出猪 圈走入山野'长出'獠牙使猎人退避 ；勇 者愤怒 时' 抽刃 向更强 者' ；奴隶 '打熬 着， 并且 不平 着， 挣扎 着，一 面意图挣 脱以 至实 行挣脱'。[ 缺失： '创造第三样时代' （灯 下漫笔）、'革新的破坏者， 内心 有理想 的光'（再论雷 峰塔 的倒掉） 、'被踢落水一笑了之' （踢）、'九天未食者爬去送裤' （牺牲谟） ]
+
+Diagnostic 
+
+Failure mode: Retrieval coverage collapse at high fan-in. The gold answer requires evidence from 5 distinct essays (一点比喻, 
+
+灯下漫笔, 再论雷峰塔 的倒掉 , 踢, 牺牲谟 ). HippoRAG2's top-10 context pack covered only 1 of the 5 source documents (一点比喻): graph traversal from the query's seed entities reached the sheep/pig passage but could not bridge to the remaining 4 essays. The model compensated by substituting generic Lu Xun quotes from non-gold passages — topically plausible but not the specific evidence the question demands. LLM-Wiki's agentic search issued 15 targeted queries (one per distinctive phrase), retrieving 9 wiki pages that collectively covered 6/7 gold evidence units across all 5 documents. This illustrates the retrieval radius limitation: graph traversal's local neighborhood expansion cannot reach thematically dispersed evidence that requires global corpus awareness. Figure 9: Case B: LLM-Wiki succeeds, HippoRAG2 fails (Lu Xun, fan-in = 5). Thematic search covers all 5 source essays through targeted queries; graph traversal’s context pack spans only 1/5 gold documents and the model fills gaps with non-gold substitutes. All Chinese text appears only in the embedded figure. 
+
+27
