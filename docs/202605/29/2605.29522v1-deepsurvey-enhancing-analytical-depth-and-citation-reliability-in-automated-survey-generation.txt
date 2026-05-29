@@ -1,0 +1,871 @@
+Title: DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation
+
+URL Source: https://arxiv.org/pdf/2605.29522v1
+
+Published Time: Fri, 29 May 2026 01:11:55 GMT
+
+Number of Pages: 54
+
+Markdown Content:
+# DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Ziyue Yang *1, Da Ma *1, Hanqi Li 1,4 , Zijian Wang 1, Tiancheng Huang 1, Zijian Hu 1, Chenrun Wang 1,2 , Yunzhe Zhang 1, Xiaobao Wu 1, Kai Yu 1,3,4 , Lu Chen †1,2,3,4 1X-LANCE Lab, School of Computer Science, Shanghai Jiao Tong University, Shanghai, China, 
+
+> 2
+
+Shanghai Innovation Institution, Shanghai, China, 3Jiangsu Key Lab of Language Computing, Suzhou, China, 4Suzhou Laboratory, Suzhou, China 
+
+> *
+
+Equal Contribution †Correspondence to: chenlusz@sjtu.edu.cn 
+
+As scientific literature grows rapidly, automated survey generation has become a key capability for AI scientists and human researchers. However, existing systems suffer from limited analytical depth due to reliance on abstracts and isolated paper processing, and unreliable citations from imprecise retrieval and post-hoc grounding, producing superficial surveys and may mislead researchers. We present DeepSurvey , an agentic system that addresses both. To enhance depth, DeepSurvey extracts structured keynotes from full-text papers, models cross-paper relationships through clustering and comparative analysis, and integrates code-repository analysis to recover implementation-level details. To fortify reliability, it combines citation-graph expansion with hybrid filtering for topic-focussed retrieval, enforces evidence-constrained citation assignment, and deploys multi-granularity agentic refinement to validate citation-claim alignment. Experiments show that DeepSurvey achieves the highest content score (8.644/10) and citation quality (12.3% and 9.3% recall and precision gains over the strongest baseline), generalizes more robustly across domains (0.14 vs. 0.22 to 0.69 CS-to-non-CS drop), and is preferred over human-written surveys by domain experts (83.3% overall quality, 100% content depth). 
+
+Publish Date: 2026.05.28 
+
+# 1 Introduction 
+
+As scientific literature continues to grow rapidly, AI scientists are increasingly expected to au-tonomously survey a field, identify open questions, and design experiments [ 1, 2]. This requires first synthesizing prior work into a deep and structured understanding of the literature. Accordingly, automated survey generation has become an important capability for both AI agents and human re-searchers navigating complex research landscapes. Recent work has shown that end-to-end generation is feasible [3]. 1
+
+> arXiv:2605.29522v1 [cs.AI] 28 May 2026
+
+DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 1: Brief introduction and limitations of the current method. The current methods typically divide the generation into paper retrieval, draft and evaluation with limitations in survey depth, citation reliability and evaluation benchmark. However, existing automatic survey generation systems suffer from three fundamental limitations (Fig-ure 1). 1) Limited survey depth: Most methods rely solely on abstracts [ 3 , 4] or domain-specific tem-plates [ 5] that fail to generalize across diverse fields. Furthermore, they process papers in isolation without modeling cross-paper relationships [ 6 , 7]. Crucially, by overlooking non-textual artifacts such as repositories [ 8 ], these systems fail to capture key technological details and implementation-level insights that are often omitted or heavily condensed in the main text. 2) Weak citation reliability: On the retrieval front, dense semantic matching often introduces tangentially related papers that dilute the sur-vey content [ 9 ]. On the grounding front, citations are typically attached via post-hoc alignment rather than derived directly from cited evidence, leaving substantial claims without verifiable support [ 3 ]. 3) Unconvincing evaluation. Existing evaluations are narrowly restricted to computer science [ 10 , 11 , 8], adopt outdated metrics [ 12 ] or metrics with weak discriminative power [ 3 ], and compare against only a handful of baselines [9, 13, 14], making it difficult to reliably assess and differentiate methods. To address these limitations, we propose DeepSurvey, a comprehensive framework optimized along three core axes: 1) Enhancing survey depth: To achieve scalable, domain-agnostic analysis, DeepSurvey extracts structured, high-level notes from full-text literatures (§2.2). Moving beyond isolated paper pro-cessing, we explicitly model cross-paper relationships by clustering literatures and conducting multi-dimensional comparative analysis (e.g., via structural relation graphs and joint question-answering reasoning). Furthermore, we integrate a dedicated code-agent subsystem to cross-reference official repositories; this allows DeepSurvey to retrieve and complement critical technological dimensions that are missing from pure text, ensuring a more comprehensive and holistic literature synthesis (§2.3). 
+
+2) Fortifying citation reliability: We combine citation-graph expansion with LLM-based re-ranking to maintain strict topical consistency and filter out irrelevant papers (§2.1). Instead of relying on vulnerable post-hoc alignment, we enforce strict source attribution throughout the entire generation lifecycle (§2.3): directly anchoring citations during multi-stage outline planning (§2.4), and deploying an agentic refinement loop to rigorously validate citation-claim pairs (§2.5). 3) Strenthen evaluation: we construct a cross-domain evaluation protocols grounded in existing influential benchmarks, redesign the evaluation protocol with more discriminative and fine-grained criteria, and include a broader set of competitive baselines to enable more rigorous and informative comparisons (§3.1). Extensive experiments demonstrate that DeepSurvey achieves an overall content score of 8.644/10 with a depth score of 8.333/10, substantially surpassing prior methods, and reaches 0.728 recall and 0.681 precision in citation quality, outperforming 12.3% and 9.3% over the strongest baseline (§3.2). The code-repository analysis further boosts content depth (§3.4). DeepSurvey also generalizes more robustly across domains, exhibiting a much smaller performance drop in non-CS field than existing 2DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation methods (0.14 vs. 0.22–0.69) (§3.2). In pairwise human evaluation, domain experts prefer DeepSurvey over human-written surveys, especially in overall quality (83.3% win rate) and content depth (100% win rate) (§3.3). Our evaluation protocol is also validated through meta-evaluation: the LLM judge achieves a low coefficient of variation of 0.244% indicating its stability and a Cohen’s κ of 0.6463 with human experts, approaching human–human agreement (0.6958) (§3.5). Overall, DeepSurvey provides an end-to-end system for generating in-depth and reliable surveys across diverse domains, offering practical literature-synthesis support for both human researchers and AI scientists. Our main contributions are as follow: • We propose DeepSurvey , an agentic system that builds a reusable analysis substrate for analytical depth via full-text reading, cross-paper relation modeling, and code-repository analysis. • We design closed-loop reliability mechanisms across the entire generation pipeline, including graph-based retrieval, evidence-constrained writing, and multi-granularity agentic refinement. • Extensive experiments show that DeepSurvey achieves the best content and citation quality, strong cross-domain stability, and human expert preference over human-written surveys. 
+
+# 2 DeepSurvey 
+
+In this section, we propose DeepSurvey, an agentic system that produces an in-depth and reliable survey together with a structured, reusable analysis knowledge substrate for a given research topic (Figure 2). Stages 1-3 build the analysis substrate: Stage 1 performs graph-based retrieval with hybrid filtering to collect evidence; Stage 2 extracts full-text keynotes; Stage 3 clusters papers and performs multi-perspective relation analysis with code repository analysis. Stage 4 generates the survey consulting analysis substrate, with outline-driven planning and citation assignment. Stage 5 
+
+applies multi-granularity agentic refinement from section to survey level. Engineering mechanisms for robustness are in Appendix B.3. 
+
+## 2.1 Graph-based Literature Retrieval 
+
+Given a research topic, DeepSurvey retrieves seed papers from Semantic Scholar [ 15 , 16 , 17 ], providing broader coverage than static local databases. A judge agent filters initial candidates by topical alignment to reduce seed-stage drift. Starting from the seed set, DeepSurvey expands papers through the edges in citation graph in both directions, capturing inter-paper relations that flat semantic search misses. A two-stage filtering strategy controls expansion noise: a coarse semantic filter(encode abstract and title) preserves high-recall candidates, while a fine-grained LLM re-ranking removes topically irrelevant papers. Overall, this graph expansion with hybrid filtering yields an evidence set that is both structurally connected and topic focused, providing a stronger paper grounding for later analysis than flat retrieval alone. 
+
+## 2.2 Full-text Understanding 
+
+For each paper, DeepSurvey reads the full text and generates a structured keynote covering contri-butions, methods, experiments, assumptions, and limitations. Since key technological details and implementation-level insights are often omitted or heavily condensed in abstracts, full-text reading is essential for capturing the fine-granularity information needed for meaningful cross-paper compari-son [ 18 ]. The open-ended structure avoids fixed templates, enabling domain-adaptive representation that supports cross-domain summarization without sacrificing specificity. 3DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 2: Overview of DeepSurvey. Stage 1 performs graph-backed retrieval with hybrid filtering to collect evidence papers. Stage 2 extracts structured keynotes from full papers. Stage 3 clusters papers and conducts multi-perspective relation modeling (comparable tables, paper graph, inter-cluster Q&A) and code repository analysis. Stage 4 drafts an outline with citation assignment, then generates the survey subsections in parallel. Stage 5 applies multi-granularity agentic refinement (section, subsection, survey levels) to ensure reliability and citation correctness. 
+
+## 2.3 Clustering and Relation Analysis 
+
+After keynotes generation, DeepSurvey designs cluster themes based on the complete keynote col-lection and assigns papers to clusters through a clustering agent and a partitioning agent. Papers spanning multiple cluster topics may be assigned to multiple clusters. A verification-retry loop corrects missing or hallucinated assignments Within each cluster, three complementary perspectives are used to model cross-paper analysis: re-lation graphs model typed citation relations (e.g., foundation, extension, substitution) for technical lineage, comparison tables compare papers along key dimensions, and guided Q&A extracts cross-paper patterns. A code-analysis agentic subsystem explores the repositories, retrieves fine-grained implementation details and examines technological dimensions overlooked by purely textual anal-ysis.(details illustrations in Appendix B.1, and case in Appendix G). Inter-cluster analysis is also performed to capture cross-cluster differences. Analyses require explicit source paper attribution, with monitoring to detect and correct hallucinated sources. All outputs are stored in the global knowledge substrate(details in Appendix B.2). Cases are in Appendix B.1 and F. 4DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 3: The iterative refinement subsystem. A centralized planning agent coordinates specialized roles (keynote reader, reviewer, reviser) with global memory for cross-round consistency at multiple granularities. 
+
+## 2.4 Outline Draft and Scoped Writing 
+
+DeepSurvey firstly generates a hierarchical outline from the clustering results with structured evidence in the analysis knowledge substrate, and iteratively refines it against retrieved paper keynotes. The outline specifies the content scope and constraints of each section and subsection. Following outline generation, papers are explicitly assigned to appropriate sections based on keynotes and cluster analyses in knowledge substrate. This citation-anchoring process creates a localized evidence constraint: each writing unit depends only on its assigned paper subset. This mechanism improves model’s overall performance and reduces hallucination risk by limiting the context [ 19 , 20 ,21]. Writing proceeds bottom-up. Subsection drafts receive the outline, subsection description, relevant cluster based analyses, and keynotes for the assigned papers from knowledge substrate. Section drafts 
+
+aggregate subsection content with overview-level analysis to form higher-level narratives. After each paragraph is generated, a citation verification mechanism checks for consistency and authenticity against the assigned paper set. Detected citation errors trigger retry generation with error memory, ensuring strict alignment between the generated text and the evidence collection. Compared with previous methods that simply hard-match hallucinated citations against a database, our approach better aligns claims with citations. 
+
+## 2.5 Multi-granularity Refinement 
+
+After initial draft generation, DeepSurvey applies multi-granularity refinement at section, subsection, and survey levels to improve content quality and validate citation–claim pairs (Figure 3). A centralized planning agent inspects the draft, outline, revision history, and relevant evidence, then coordinates specialized skills: readers retrieve keynotes and source passages; the reviewer assesses quality and provide suggestions; and the reviser applies edits. The planning agent iteratively invokes these skills until planner consider draft as satisfactory or a maximum round count reached. Two mechanisms improve refinement quality. First, global memory preserves reviewer feedback, score changes, and revision states across rounds. Second, multi-granularity optimization performs section-level refinement for organization and logic, subsection-level refinement for local analysis, readability and citation–claim validation, and survey-level refinement for coherence. We also include a simplified skill-loop fallback for weaker backbones models. 5DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation             
+
+> Method Coverage Structure Relevance AutoSurvey 555DeepSurvey 555DeepSurvey-code 555
+
+Table 1: Scores under AutoSurvey’s original evaluation protocol. AutoSurvey, DeepSurvey, DeepSurvey-code all saturate at the maximum score(5), indicating insufficient discriminative power. 
+
+# 3 Experiments 
+
+Reliable evaluation of survey generation requires benchmarks that are both diverse and discriminative. However, existing protocols remain limited: they are either restricted to computer science [ 4] or lack sufficient discriminative power (Table 1, details in Appendix C.1), and they often compare against only a narrow set of baselines, frequently just AutoSurvey [ 5 ]. These limitations motivate a more rigorous, multi-dimensional, cross-domain evaluation setup. 
+
+## 3.1 Experiment Setup 
+
+To address these limitations, we construct a multi-domain evaluation setup by combining the com-plementary strengths of prior benchmark efforts. The resulting setup preserves strong discriminative topics, extends beyond CS domain, and contain competitive baselines. For topic selection, we draw a high-quality subset from SurveyBench [ 4] and AutoSurvey [ 3] in computer science, focusing on well-defined topics in LLMs and machine learning. To extend the evaluation beyond CS, we further select a subset of SurveyGen [ 12 ] covering high-interest topics in life science, nutrition, and interdisciplinary areas(details in Appendix D.1). Together, these subsets provide a balanced multi-domain setting for evaluating survey generation methods under diverse content distributions. Note that we use MiMo-V2-Flash [22] as evaluation model(reason in Appendix C.2). 
+
+3.1.1 Evaluation Metrics 
+
+We evaluate generated surveys along two dimensions: content quality measures whether generated surveys achieve sufficient depth and research value, while citation quality assesses the reliability and accuracy of references(detailed metric are presented in Appendix D.2). 
+
+Content Quality is assessed using LLM rubric judge on a 1–10 scale, improving upon AutoSurvey’s influential framework [ 3] and Agentic AutoSurvey’s discriminative standard [ 14 ]. We evaluate three aggregated dimensions: Core Quality (synthesis, organization, comprehensiveness, relevance), Writ-ing Quality (readability, academic rigor, clarity and coherence), and Content Depth (critical analysis, novelty and insights, specificity, future directions). The final score is computed as 0.4 × Core + 0.2 ×
+
+Writing + 0.4 × Depth. 
+
+Citation Quality follows AutoSurvey [ 3] and is measured by Citation Recall, Citation Precision, and Valid Citation Ratio. Citation Recall measures whether claims are supported by citations, Citation Precision measures whether cited papers are truly relevant to the claims. In addition, we add Valid Citation Ratio to measure citation formatting correctness and authenticity. 
+
+3.1.2 Baselines 
+
+We compare DeepSurvey against four representative automated survey generation systems spanning diverse methodological approaches. AutoSurvey [3] pioneered the paradigm of semantic retrieval with 6DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Method Recall Precision Valid Ratio AutoSurvey 0.648 0.623 0.998 SurveyForge 0.379 0.395 0.985 SurveyX 0.344 0.287 1.000 LiRA 0.337 0.211 1.000 DeepSurvey (ours) 0.728 0.681 1.000 
+
+DeepSurvey-code 0.700 0.654 1.000 
+
+Table 2: Citation quality evaluation (recall, precision, and valid ratio).                                                                                                            
+
+> Method Weighted Total Core Quality Writing Quality Content Depth Total Synth. Org. Comp. Rel. Total Read. Rigor Clarity Total Crit. Novel. Spec. Future AutoSurvey 8.483 8.938 8.833 8.917 9.000 9.000 8.417 8.000 8.917 8.333 8.063 8.083 7.917 8.250 8.000 SurveyForge 8.101 8.708 8.333 9.000 8.917 8.583 7.795 7.636 7.833 7.917 7.646 7.583 7.750 7.750 7.500 SurveyX 7.244 7.667 7.933 7.333 7.533 7.867 7.222 7.667 6.800 7.200 6.833 6.933 6.333 7.000 7.067 LIRA 8.004 8.455 8.364 8.273 8.636 8.545 7.793 7.833 7.818 7.727 7.659 8.091 7.636 7.364 7.545 DeepSurvey 8.644 9.100 9.000 9.000 9.000 9.400 8.356 8.067 8.933 8.067 8.333 8.867 8.200 8.000 8.267 DeepSurvey-Code 8.676 9.083 9.067 8.867 9.000 9.400 8.311 8.000 8.933 8.000 8.450 8.933 8.400 7.933 8.533
+
+Table 3: Performance comparison of different survey generation methods on overall and fine-grained evaluation metrics. parallel generation. SurveyX [ 5] leverages AttributeTree for template-based literature understanding 1.
+
+SurveyForge [4 ] introduces SANA for high-quality retrieval. LiRA [6] employs a multi-agent workflow with specialized roles 2. The variant incorporating code repository analysis is denoted as 
+
+DeepSurvey-code . Complete parameter settings are presented in Appendix D.3 and the specific topics for evaluation is presented in Appendix D.1. 
+
+## 3.2 Main Results 
+
+Content Quality Result. Table 3 shows that DeepSurvey-code achieves the highest overall content score (8.676), while DeepSurvey obtains the best Core Quality (9.100). Notably, DeepSurvey-code further improves Content Depth to 8.450 and 8.333, outperforming the second highest baseline by 0.387 and 0.270, which suggests that DeepSurvey acheive significant content depth with outstanding comprehensive quality. A case study versus the strongest baseline AutoSurvey (Figure 11) further confirms DeepSurvey’s superiority: topic focused, human-expert-aligned insights, while AutoSurvey shows topic drift and superficial analysis(details in Appendix H.1). 
+
+Citation Quality Result. Table 2 shows that DeepSurvey achieves the best citation quality, with 0.728 recall and 0.681 precision, outperforming AutoSurvey by 12.3% and 9.3%, respectively, while maintaining a perfect valid citation ratio 1.0, highlighting the effect of systematic reliability mechanism. Overall, DeepSurvey system improves both survey depth and citation reliability(Detailed per-baseline analysis is supplemented in Appendix D.6). 
+
+Cross-domain Evaluation Figure 4 seperate fields in Table 3, highlighting a clear limitation of prior work: most existing methods are centered on the CS domain, and their performance degrades 
+
+> 1
+
+Due to the absence of the retrieval code in SurveyX’s open-source repository, we use AutoSurvey’s retrieval code to substitute. 
+
+> 2
+
+Due to the absence of the retrieval code in LiRA’s open-source repository, we use AutoSurvey’s retrieval code to substitute. 
+
+7DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation sharply under domain shift. DeepSurvey is consistently the strongest method across all the domain settings(8.72, 8.58, and 8.676) surpassing AutoSurvey , the strongest prior baseline and maintains a much smaller drop when shifting to non-CS domain than all other methods (0.14 vs. 0.22–0.69). This confirms that DeepSurvey provides substantially stronger domain generalization than existing survey generation systems. 
+
+Figure 4: Cross-domain generalization across CS and non-CS domains. The left panel compares overall, CS, and non-CS scores for each method, and the right panel shows the absolute total-score gap between domains. 
+
+## 3.3 Human Expert Evaluation 
+
+We further conduct blinded pairwise evaluations where domain experts compare DeepSurvey against human-written surveys on the same topic set, where human experts do not knowing each response’s origin(details setting in Appendix D.5). Figure 5 summarizes the results: DeepSurvey is preferred in overall quality(winning rate 83.3%), with the strongest advantage (winning rate 100%) in Content Depth. Writing Quality(winning rate 54.5%) is comparatively weaker, which is consistent with the automatic evaluation results. 
+
+Figure 5: Comparison between DeepSurvey-generated and human-written surveys on the same topic set ,derived from pairwise comparative annotations by human experts. 8DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation                                
+
+> Method Total Core Writing Depth w/o collector 4.452 3.643 3.762 5.607 w/o keynote 8.500 8.964 8.286 8.143 w/o analyzer 8.367 8.857 8.333 7.893 w/o writer 6.890 7.357 6.810 6.464 w/o refinement 8.405 9.107 8.095 7.857 DeepSurvey-revise-loop 8.544 8.967 8.289 8.250 DeepSurvey-code-revise-loop 8.571 9.050 8.089 8.333 DeepSurvey 8.644 9.100 8.356 8.333 DeepSurvey-code 8.676 9.083 8.311 8.450
+
+Table 4: Ablation study of content quality when removing each core module (denoted as “w/o”).                             
+
+> Method Recall Precision Valid Ratio w/o analyzer 0.724 0.690 1.000
+> w/o collector 0.538 0.486 0.952 w/o keynote 0.696 0.648 1.000
+> w/o writer 0.531 0.485 0.151 w/o refinement 0.547 0.525 1.000
+> DeepSurvey-revise-loop 0.708 0.668 1.000
+> DeepSurvey-code-revise-loop 0.696 0.649 0.999 DeepSurvey 0.728 0.681 1.000
+> DeepSurvey-code 0.700 0.654 1.000
+
+Table 5: Ablation study of citation quality when removing each core module (denoted as “w/o”). 
+
+## 3.4 Ablation Studies 
+
+We evaluate the contribution of each core module by removing it from the full system: w/o collector 
+
+replaces graph-based retrieval with static database lookup; w/o keynote uses only abstracts instead of full-text keynotes; w/o analyzer skips clustering and relation modeling; w/o writer generates directly from retrieval results without outline-driven writing or citation checks; w/o refinement disables iterative agentic optimization. -revise-loop replaces the central-planner agentic refinement system with a skill-loop(iteratively calling review and revise). Tables 4 and 5 show that DeepSurvey’s gains come from complementary components rather than any single module. The collector is the most critical: its removal causes the largest degradation (total: 8.644 to 4.452; recall/precision: 0.728/0.681 to 0.538/0.486). The writer is essential for reliability: its removal collapses valid citation ratio to 0.151 and precision to 0.485. The keynote and analyzer modules mainly contribute to depth. Removing the analyzer slightly improves precision (0.681 to 0.690) but substantially reduces depth, revealing a mild depth–reliability trade-off that the full system balances via coordinated design. The refinement stage brings consistent gains to both content and citation metrics. The scores and analysis of detailed dimension in the ablation experiment are supplemented in Appendix E.4. 
+
+Agentic Planning over Skill-Loop. The central planning agent consistently outperforms the simple skill-loop (8.644 vs. 8.544 and 8.676 vs . 8.571), with the largest gains in Writing Quality. This suggests that global coordination where the planner jointly inspects draft state, evidence, and revision history before dispatching targeted review or revision, is more effective than locally iterating review and revise without shared planning context. 
+
+Code Analysis as a Complementary Signal. 
+
+Integrating code analysis (DeepSurvey-Code) improves content depth (8.333 to 8.450) but slightly reduces writing fluency and citation precision/recall. The overall gain on the full benchmark is modest. Considering that code is sparse in non-CS fields, we further analyze CS and non-CS subsets separately (Figure 6). The benefit is more significant for CS - domain surveys, while non - CS topics see no improvement. Hence code analysis is best used as an optional module, most valuable when relevant code data is available and target domain demands strong technical depth. We also perform case study in Appendix H.2 which further illustrate code analysis extend survey analyses to implementation granularity. Other ablation experiments on refinement granularity, citation mark, etc. demonstrated in Appendix E show that DeepSurvey is not a stacking of architectures but a dedicated design system. 
+
+## 3.5 Meta-evaluation 
+
+Meta-evaluation is performed to examine the reliability of the evaluation protocol, which previous works neglect. Although LLM-as-judge has shown effective [ 23 , 24 ], its reliability needs further 9DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 6: Performance comparison across CS-domain, non-CS-domain, and overall settings between AutoSurvey, DeepSurvey, DeepSurvey-code. Content score are annotated in graph. evaluation [ 25 , 26 ]. We repeatedly evaluate the same survey set and calculate the coefficient of variation (CV) [ 27 , 28 , 29 ]. As shown in Table 6, all settings exhibit low CV, and MiMo-no-exp [ 22 ] achieves a CV of 0.244%, significantly lower than 5% which is considered a standard for stable evaluation 34 (detailed data and illustration in Appendix C.2).                     
+
+> Configuration std CV% max_abs_dev range GPT-exp 0.041 0.49 0.044 0.081 GPT-no-exp 0.023 0.279 0.024 0.046 MiMo-exp 0.077 1.03 0.078 0.152 MiMo-no-exp 0.020 0.244 0.022 0.035
+
+Table 6: Aggregated stability statistics across four judge configurations. -exp indicate the LLM must give score with explanation while -no-exp indicate the reverse. Beside stability, we evaluate agreement between LLM-judge and human experts at both the pairwise and group levels(detail experiment settings and illustrations are in Appendix C.3). At the pairwise level, the LLM judge achieves a mean Cohen’s κ [30 ] of 0.6463 with individual human experts, close to the human–human agreement of 0.6958 and far above the human–random baseline ( −0.0016). At the group level, replacing one human with the LLM yields a Fleiss’ κ [31] of 0.6578, which is comparable to the all-human panel (0.6398) and the all-LLM panel (0.6918), and substantially higher than the replacing human with random baseline (0.2462). These results indicate that the LLM judges are highly coherent with human experts. 
+
+# 4 Related Work 
+
+## 4.1 Traditional Literature Summarization 
+
+Traditional literature summarization relies on content selection and citation-based relation modeling. Early extractive methods used frequency-based heuristics [ 32 ] and trainable models [ 33 ], with graph-based centrality such as LexRank [ 34 ] improving salience estimation. In scientific domains, citation 
+
+> 3https://metricgate.com/docs/coefficient-of-variation/
+> 4https://scienceinsights.org/what-is-considered-an-acceptable-standard-deviation/
+
+10 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 7: Agreement between human and LLM-judge. The left panel shows Fleiss’ κ for compositions including full humans, leave-one-human-out, replacing one human with an LLM, and random-replacement baselines. The right panel shows pairwise Cohen’s κ between human, LLM, and random evaluator groups. indexing [ 35 ] and co-citation analysis [ 36 ] revealed that citation patterns encode field structure, while citation-aware summarization [ 18 , 37 ] showed the benefit of combining content understanding with inter-paper relation modeling. 
+
+## 4.2 LLM-Based Survey Generation 
+
+Recent LLM-based methods decompose survey generation into retrieval, planning, and writing stages. AutoSurvey [ 3] established the paradigm of semantic retrieval with parallel generation, extended by AutoSurvey2 [ 9] and LLM ×MapReduce [ 13 ]. Subsequent work addressed specific dimensions: SurveyForge [ 4] introduced memory-augmented retrieval; SurveyX [ 5] proposed AttributeTree for structured representation; SurveyGen [ 12 ] incorporated quality-aware feedback; and multi-agent systems [6, 14] explored collaborative generation. 
+
+# 5 Conclusion 
+
+We present DeepSurvey , an agentic system for in-depth and reliable automated survey generation. For analytical depth, DeepSurvey builds a reusable analysis substrate through graph-based retrieval, full-text reading, cross-paper relation modeling, and code repository analysis. For citation reliabil-ity, it combines graph expansion with hybrid filtering, evidence-constrained writing with citation verification, and multi-granularity agentic refinement. Experiments across multiple domains show that DeepSurvey achieves the best content quality (8.676/10) and citation quality (0.728 recall, 0.681 precision—12.3%/9.3% above the strongest baseline), exhibits strong cross-domain stability, and is preferred over human-written surveys by domain experts. 11 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+# Limitations 
+
+Despite its effectiveness, DeepSurvey still has several limitations. First, the code-analysis module is inherently CS-centric: it substantially improves content depth in computer science (8.38 →8.71) but yields little gain in non-CS domains where code repositories are sparse, and slightly degrades writing quality and citation metrics on the full benchmark, suggesting that the additional complexity introduces noise when code evidence is marginal. Second, LLM hallucination cannot be fully eliminated: although DeepSurvey substantially outperforms all baselines in citation quality, the absolute recall (0.728) and precision (0.681) remain below a level that would be considered fully reliable, indicating that a non-trivial proportion of claims in the generated surveys may still lack adequate evidential support. Third, although DeepSurvey incorporates extensive engineering optimizations (Appendix B.3), the deep analysis pipeline still incurs substantially higher time and token costs than simpler retrieval-then-write baselines, posing a trade-off between survey depth and generation cost. Future work may explore modality-agnostic analysis for non-CS domains, joint optimization of depth and reliability objectives, and lightweight substrates that selectively apply deep processing to the most salient papers. 12 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+# References 
+
+[1] C. Lu, C. Lu, R. T. Lange et al. , “The ai scientist: Towards fully automated open-ended scientific discovery,” 
+
+ArXiv , vol. abs/2408.06292, 2024. [Online]. Available: https://api.semanticscholar.org/CorpusID:271854887 [2] Y. Yamada, R. T. Lange, C. Lu et al. , “The ai scientist-v2: Workshop-level automated scientific discovery via agentic tree search,” ArXiv , vol. abs/2504.08066, 2025. [Online]. Available: https: //api.semanticscholar.org/CorpusID:277741107 [3] Y. Wang, Q. Guo, W. Yao et al. , “Autosurvey: Large language models can automatically write surveys,” 
+
+ArXiv , vol. abs/2406.10252, 2024. [Online]. Available: https://api.semanticscholar.org/CorpusID:270560509 [4] X. Yan, S. Feng, J. Yuan et al. , “Surveyforge: On the outline heuristics, memory-driven generation, and multi-dimensional evaluation for automated survey writing,” in Annual Meeting of the Association for Computational Linguistics , 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:276813240 [5] X. Liang, J. Yang, Y. Wang et al. , “Surveyx: Academic survey automation via large language models,” ArXiv ,vol. abs/2502.14776, 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:276482768 [6] G. H. T. Go, K. Ly, A. Sogaard et al. , “Lira: A multi-agent framework for reliable and readable literature review generation,” in AAAI Conference on Artificial Intelligence , 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:281886200 [7] Y. Chao, S. Lin, X. Wang et al. , “Llm ×mapreduce-v3: Enabling interactive in-depth survey generation through a mcp-driven hierarchically modular agent system,” in Conference on Empirical Methods in Natural Language Processing , 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:282057493 [8] M.-A. Nguye, M. D. Nguyen, H. L. N.T. et al. , “Surveyg: A multi-agent llm framework with hierarchical citation graph for automated survey generation,” ArXiv , vol. abs/2510.07733, 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:281951129 [9] S. Wu, C. X. Liang, Z. Bi et al. , “Autosurvey2: Empowering researchers with next level automated literature surveys,” ArXiv , vol. abs/2510.26012, 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID: 282592838 [10] X. Shi, Q. Kou, Y. Li et al. , “Scisage: A multi-agent framework for high-quality scientific survey generation,” 
+
+ArXiv , vol. abs/2506.12689, 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:279402998 [11] W. Su, A. Xie, Q. Ai et al. , “Surge: A benchmark and evaluation framework for scientific survey generation,” 
+
+arXiv preprint arXiv:2508.15658 , 2025. [12] T. Bao, M. T. Nayeem, D. Rafiei et al. , “SurveyGen: Quality-aware scientific survey generation with large language models,” in Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing ,C. Christodoulopoulos, T. Chakraborty, C. Rose et al. , Eds. Suzhou, China: Association for Computational Linguistics, Nov. 2025, pp. 2712–2736. [Online]. Available: https://aclanthology.org/2025.emnlp-main.136/ [13] Z. Zhou, C. Li, X. Chen et al. , “LLM ×MapReduce: Simplified long-sequence processing using large language models,” in Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , W. Che, J. Nabende, E. Shutova et al. , Eds. Vienna, Austria: Association for Computational Linguistics, Jul. 2025, pp. 27 664–27 678. [Online]. Available: https://aclanthology.org/2025.acl-long.1341/ [14] Y. Liu, Y. Wu, D. Zhang et al. , “Agentic autosurvey: Let llms survey llms,” ArXiv , vol. abs/2509.18661, 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:281495800 [15] A. D. Wade, “The semantic scholar academic graph (s2ag),” Companion Proceedings of the Web Conference 2022 ,2022. [Online]. Available: https://api.semanticscholar.org/CorpusID:251597885 [16] K. Lo, L. L. Wang, M. Neumann et al. , “S2ORC: The semantic scholar open research corpus,” in Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics , D. Jurafsky, J. Chai, N. Schluter et al. ,Eds. Online: Association for Computational Linguistics, Jul. 2020, pp. 4969–4983. [Online]. Available: https://aclanthology.org/2020.acl-main.447/ 
+
+13 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+[17] C. Xiong, R. Power, and J. Callan, “Explicit semantic ranking for academic search via knowledge graph embedding,” Proceedings of the 26th International Conference on World Wide Web , 2017. [Online]. Available: https://api.semanticscholar.org/CorpusID:1644335 [18] A. Cohan and N. Goharian, “Scientific article summarization using citation-context and article’s discourse structure,” in Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing ,L. Màrquez, C. Callison-Burch, and J. Su, Eds. Lisbon, Portugal: Association for Computational Linguistics, Sep. 2015, pp. 390–400. [Online]. Available: https://aclanthology.org/D15-1045/ [19] N. F. Liu, K. Lin, J. Hewitt et al. , “Lost in the middle: How language models use long contexts,” 
+
+Transactions of the Association for Computational Linguistics , vol. 12, pp. 157–173, 2023. [Online]. Available: https://api.semanticscholar.org/CorpusID:259360665 [20] Y. Du, M. Tian, S. Ronanki et al. , “Context length alone hurts llm performance despite perfect retrieval,” 
+
+ArXiv , vol. abs/2510.05381, 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID:281826429 [21] S. Liu, K. Halder, Z. Qi et al. , “Towards long context hallucination detection,” in North American Chapter of the Association for Computational Linguistics , 2025. [Online]. Available: https://api.semanticscholar.org/CorpusID: 278165123 [22] X. Xiao, B. Xia, B. Yang et al. , “Mimo-v2-flash technical report,” ArXiv , vol. abs/2601.02780, 2026. [Online]. Available: https://api.semanticscholar.org/CorpusID:284513060 [23] L. Zheng, W.-L. Chiang, Y. Sheng et al. , “Judging llm-as-a-judge with mt-bench and chatbot arena,” ArXiv ,vol. abs/2306.05685, 2023. [Online]. Available: https://api.semanticscholar.org/CorpusID:259129398 [24] Y. Liu, D. Iter, Y. Xu et al. , “G-eval: NLG evaluation using gpt-4 with better human alignment,” in Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , H. Bouamor, J. Pino, and K. Bali, Eds. Singapore: Association for Computational Linguistics, Dec. 2023, pp. 2511–2522. [Online]. Available: https://aclanthology.org/2023.emnlp-main.153/ [25] L. Zhu, X. Wang, and X. Wang, “Judgelm: Fine-tuned large language models are scalable judges,” ArXiv , vol. abs/2310.17631, 2023. [Online]. Available: https://api.semanticscholar.org/CorpusID:264490588 [26] S. Kim, J. Suk, S. Longpre et al. , “Prometheus 2: An open source language model specialized in evaluating other language models,” ArXiv , vol. abs/2405.01535, 2024. [Online]. Available: https://api.semanticscholar.org/CorpusID:269502688 [27] K. Pearson, “Mathematical contributions to the theory of evolution.—on a form of spurious correlation which may arise when indices are used in the measurement of organs,” Proceedings of the royal society of london ,vol. 60, no. 359-367, pp. 489–498, 1897. [28] G. F. Reed, F. Lynn, and B. D. Meade, “Use of coefficient of variation in assessing variability of quantitative assays,” Clinical and Vaccine Immunology , vol. 9, pp. 1235 – 1239, 2002. [Online]. Available: https://api.semanticscholar.org/CorpusID:231319 [29] M. M. Shoukri, N. Elkum, and S. D. Walter, “Interval estimation and optimal design for the within-subject coefficient of variation for continuous and binary variables,” BMC Medical Research Methodology , vol. 6, pp. 24 – 24, 2006. [Online]. Available: https://api.semanticscholar.org/CorpusID:264815049 [30] J. Cohen, “A coefficient of agreement for nominal scales,” Educational and Psychological Measurement , vol. 20, pp. 37 – 46, 1960. [Online]. Available: https://api.semanticscholar.org/CorpusID:15926286 [31] J. L. Fleiss, “Measuring nominal scale agreement among many raters.” Psychological Bulletin , vol. 76, pp. 378–382, 1971. [Online]. Available: https://api.semanticscholar.org/CorpusID:143544759 [32] H. P. Luhn, “The automatic creation of literature abstracts,” IBM J. Res. Dev. , vol. 2, pp. 159–165, 1958. [Online]. Available: https://api.semanticscholar.org/CorpusID:15475171 [33] J. Kupiec, J. O. Pedersen, and F. R. Chen, “A trainable document summarizer,” in Annual International ACM SIGIR Conference on Research and Development in Information Retrieval , 1995. [Online]. Available: https://api.semanticscholar.org/CorpusID:5775833 
+
+14 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+[34] G. Erkan and D. R. Radev, “Lexrank: Graph-based lexical centrality as salience in text summarization,” 
+
+CoRR , vol. abs/1109.2128, 2011. [Online]. Available: http://arxiv.org/abs/1109.2128 [35] E. Garfield, “Citation indexes for science,” Science , vol. 122, no. 3159, pp. 108–111, 1955. [Online]. Available: https://www.science.org/doi/abs/10.1126/science.122.3159.108 [36] H. Small, “Co-citation in the scientific literature: A new measure of the relationship between two documents,” 
+
+Journal of the American Society for Information Science , vol. 24, no. 4, pp. 265–269, July 1973. [Online]. Available: https://ideas.repec.org/a/bla/jamest/v24y1973i4p265-269.html [37] J. Wang, C. Zhang, M. Zhang et al. , “Citationas: A tool of automatic survey generation based on citation content,” Journal of Data and Information Science , vol. 3, pp. 20–37, 06 2018. [38] D. J. de Solla Price, “Networks of scientific papers,” Science , vol. 149, no. 3683, pp. 510–515, 1965. [Online]. Available: https://www.science.org/doi/abs/10.1126/science.149.3683.510 [39] V. Qazvinian and D. R. Radev, “Scientific paper summarization using citation summary networks,” CoRR ,vol. abs/0807.1560, 2008. [Online]. Available: http://arxiv.org/abs/0807.1560 [40] A. Abu-Jbara and D. Radev, “Coherent citation-based summarization of scientific papers,” in Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies , D. Lin, Y. Matsumoto, and R. Mihalcea, Eds. Portland, Oregon, USA: Association for Computational Linguistics, Jun. 2011, pp. 500–509. [Online]. Available: https://aclanthology.org/P11-1051/ [41] T. Mikolov, K. Chen, G. S. Corrado et al. , “Efficient estimation of word representations in vector space,” in International Conference on Learning Representations , 2013. [Online]. Available: https://api.semanticscholar.org/CorpusID:5959482 [42] Q. V. Le and T. Mikolov, “Distributed representations of sentences and documents,” in International Conference on Machine Learning , 2014. [Online]. Available: https://api.semanticscholar.org/CorpusID:2407601 [43] D. Cer, Y. Yang, S.-y. Kong et al. , “Universal sentence encoder for English,” in Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , E. Blanco and W. Lu, Eds. Brussels, Belgium: Association for Computational Linguistics, Nov. 2018, pp. 169–174. [Online]. Available: https://aclanthology.org/D18-2029/ [44] N. Reimers and I. Gurevych, “Sentence-BERT: Sentence embeddings using Siamese BERT-networks,” in 
+
+Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) , K. Inui, J. Jiang, V. Ng et al. , Eds. Hong Kong, China: Association for Computational Linguistics, Nov. 2019, pp. 3982–3992. [Online]. Available: https://aclanthology.org/D19-1410/ [45] A. Cohan, S. Feldman, I. Beltagy et al. , “SPECTER: Document-level representation learning using citation-informed transformers,” in Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics , D. Jurafsky, J. Chai, N. Schluter et al. , Eds. Online: Association for Computational Linguistics, Jul. 2020, pp. 2270–2282. [Online]. Available: https://aclanthology.org/2020.acl-main.207/ [46] B. Wang, C. Xu, X. Zhao et al. , “Mineru: An open-source solution for precise document content extraction,” 2024. [Online]. Available: https://arxiv.org/abs/2409.18839 [47] P. Lewis, E. Perez, A. Piktus et al. , “Retrieval-augmented generation for knowledge-intensive nlp tasks,” 
+
+ArXiv , vol. abs/2005.11401, 2020. [Online]. Available: https://api.semanticscholar.org/CorpusID:218869575 [48] R. M. Kinney, C. Anastasiades, R. Authur et al. , “The semantic scholar open data platform,” ArXiv , vol. abs/2301.10140, 2023. [Online]. Available: https://api.semanticscholar.org/CorpusID:256194545 [49] H. Wang, Y. Fu, Z. Zhang et al. , “Llm ×mapreduce-v2: Entropy-driven convolutional test-time scaling for generating long-form articles from extremely long resources,” 2025. [Online]. Available: https://arxiv.org/abs/2504.05732 [50] P. Manakul, A. Liusie, and M. J. F. Gales, “Selfcheckgpt: Zero-resource black-box hallucination detection for generative large language models,” ArXiv , vol. abs/2303.08896, 2023. [Online]. Available: https://api.semanticscholar.org/CorpusID:257557820 
+
+15 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+[51] L. Madaan, D. Esiobu, P. Stenetorp et al. , “Lost in inference: Rediscovering the role of natural language inference for large language models,” ArXiv , vol. abs/2411.14103, 2024. [Online]. Available: https://api.semanticscholar.org/CorpusID:274165430 [52] W.-F. Chen, Z. Zhao, A. Karimi et al. , “Explainable hallucination through natural language inference mapping,” in Findings of the Association for Computational Linguistics: ACL 2025 , W. Che, J. Nabende, E. Shutova et al. , Eds. Vienna, Austria: Association for Computational Linguistics, Jul. 2025, pp. 1888–1896. [Online]. Available: https://aclanthology.org/2025.findings-acl.96/ [53] W. Wang, H. Bao, S. Huang et al. , “Minilmv2: Multi-head self-attention relation distillation for compressing pretrained transformers,” ArXiv , vol. abs/2012.15828, 2020. [Online]. Available: https://api.semanticscholar.org/CorpusID:229923069 [54] A. Singh, A. Fry, A. Perelman et al. , “Openai gpt-5 system card,” 2026. [Online]. Available: https://arxiv.org/abs/2601.03267 [55] DeepSeek-AI, A. Liu, B. Feng et al. , “Deepseek-v3 technical report,” ArXiv , vol. abs/2412.19437, 2024. [Online]. Available: https://api.semanticscholar.org/CorpusID:275118643 
+
+16 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+# Appendix 
+
+# A Theoretical And Technical Base 
+
+This section introduces the theoretical and technical foundations of DeepSurvey. 
+
+## A.1 Traditional Methods for Literature Summarization 
+
+DeepSurvey’s core mechanisms are grounded in three lines of pre-deep-learning research. 
+
+Citation network analysis originated from Garfield’s citation indexing [ 35 ], with Price’s network analysis [ 38 ] and Small’s co-citation method [ 36 ] establishing that citation patterns reveal latent knowledge structures among papers. Subsequent work demonstrated that graph-based centrality aids summarization [ 34 ] and that citation networks effectively capture inter-paper dependencies for survey generation [ 39 , 37 , 40 ]. These findings motivate DeepSurvey’s relation graph and multi-perspective analysis modules. 
+
+Extractive summarization research showed that important information is distributed across full texts rather than concentrated in abstracts [ 32 , 33 ], motivating DeepSurvey’s full-text understanding and open-form keynote extraction. 
+
+Representation learning from Word2Vec [ 41 ] and Doc2Vec [ 42 ] to sentence embeddings [ 43 , 44 ]and document-level models like SPECTER [ 45 ], which pretrains on the citation graph, provides the semantic foundations for our retrieval system. 
+
+## A.2 Technical Support 
+
+Document Parsing. MinerU [ 46 ] converts academic PDFs into Markdown/JSON while preserving layout, reading order, and formula structure, serving as the full-text extraction backbone. 
+
+Retrieval-Augmented Generation. RAG [ 47 ] injects retrieved documents as context to mitigate hallucination and enable source traceability. DeepSurvey adopts RAG as its core paradigm, extending it with full-text analysis results as high-quality context. 
+
+Academic Literature Retrieval. Semantic Scholar [ 48 ] maintains an academic graph of 225M+ papers, and its full-text corpus S2ORC [ 16 ] provides over 8M open-access full texts with structured annotations. DeepSurvey uses both as its primary retrieval and data sources. 
+
+# B DeepSurvey System Supplement 
+
+## B.1 Code Analysis Subsystem 
+
+Beyond paper text, DeepSurvey analyzes open-source code repositories linked in collected papers to supplement implementation details not fully described in the text. 
+
+Pseudocode generation. The code analysis subsystem downloads repositories and produces repository-level pseudocode through a multi-agent loop centered on a planning agent. At each step, the planner selects one of five operations: GET _SOURCE _CODE reads a specific file from the repository;  
+
+> CREATE
+
+generates initial pseudocode from retrieved context; REVISE refines the pseudocode based on reviewer feedback; REVIEW invokes a reviewer that scores the current pseudocode on conciseness, logical structure, and implementation specificity (each 0–10) with concrete improvement suggestions; and FINISH terminates the loop. The planner is required to read at least 3–5 key source files (entry 17 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation points, core algorithm modules, key utilities) before creating pseudocode, and to call REVISE at least once every 3 rounds. For the integrity of the plan, the planner gives several steps(a sub-plan) each times rather than one step. A memory mechanism tracks operation history and review feedback across steps, with automatic compression when token count exceeds a threshold to prevent context overflow. 
+
+Report generation. The system produces two types of reports. Code reports are generated by processing pseudocode in batches (batch size 5): each batch is analyzed along dimensions including problem modeling, core algorithm classification, optimization strategies, and topic-specific dimensions (e.g., agent architectures for LLM systems); batch reports are then integrated into a final report, with multi-round fallback when combined content exceeds the context window. The prompt enforces traceability—each claim must reference specific pseudocode components. Environment reports extract configuration files (requirements.txt, README) from repositories, analyzing framework choices, dependency versions, and deployment patterns. Both reports use semi-open prompts that mandate coverage of core dimensions (algorithm classification, data modeling, engineering optimizations) while allowing the model to identify topic-specific insights. 
+
+## B.2 Analysis Knowledge Base 
+
+The analysis knowledge base serves as the central artifact connecting DeepSurvey’s understanding and generation stages. Rather than treating survey generation as a one-shot text production task, DeepSurvey first constructs a structured, reusable knowledge repository from the collected literature, then grounds all subsequent writing and refinement in this repository. This design separates analysis 
+
+from generation , enabling deeper reasoning without overwhelming the writing model. The knowledge base is organized into three hierarchical levels, each building on the previous: • Paper level : Full-text keynotes recording core mechanisms, experimental settings, key assump-tions, applicable ranges, and limitations for each paper. Additionally, for papers with linked code repositories, code reports and environment reports are generated to capture implementation-level details such as module decomposition, execution flow, engineering dependencies, and runtime configurations—information that is typically absent from paper text. • Cluster level : Papers are organized into thematic clusters, each annotated with three complemen-tary analysis views: relation graphs that model typed citation relationships (foundation, extension, substitution) with abstracted descriptions; comparison tables that conduct structured cross-paper comparison along key technical dimensions; and guided Q&A analyses that integrate evidence to answer high-value research questions within and across clusters. • Survey level : Hierarchical outlines, section drafts, and revision plans that directly serve the generation process. These representations are linked through explicit mappings: paper keynotes reference their cluster assignments, cluster analyses cite specific papers, and section drafts trace their evidence to both paper keynotes and cluster analyses. This traceability supports the verification mechanisms throughout the pipeline and enables the iterative refinement subsystem to identify and correct inconsistencies. The knowledge base is designed with two complementary objectives. First, it serves as the evidential foundation for survey generation: the outline-driven writing module assigns papers to sections based on cluster analysis results, and the refinement module retrieves keynotes and code reports to verify and deepen individual paragraphs. By grounding generation in structured intermediate representations rather than raw retrieval results, the system maintains content depth while constraining hallucination. Second, the knowledge base constitutes an independently valuable research artifact. The paper-level keynotes, cluster-level relation graphs, and comparison tables provide fine-grained, traceable insights into a research landscape—supporting tasks such as literature reviews, method comparisons, and 18 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation research direction analysis beyond the immediate scope of survey writing. This dual utility reflects our design philosophy: the analysis knowledge base is not merely a byproduct of survey generation, but a reusable substrate for scientific inquiry. 
+
+## B.3 Engineering Details 
+
+To support large-scale processing, DeepSurvey incorporates several engineering optimizations. 
+
+Multi-domain support. DeepSurvey uses fallback mechanisms to improve robustness across do-mains. When Semantic Scholar returns insufficient relevant papers or fails during retrieval, the system invokes the arXiv API to supplement the evidence pool. When full texts are unavailable which is a common phenomenon in ceratin fields, DeepSurvey falls back to abstracts or TLDRs as lightweight substitutes for full-text keynotes, preserving basic paper coverage while allowing downstream analysis to proceed. 
+
+Unified paper identifier. DeepSurvey retrieves papers from multiple sources (Semantic Scholar, arXiv), each with its own identifier system. To ensure consistent caching and deduplication across the pipeline, we construct a unified paper_id for each paper: if an arXiv ID is available, it serves as the canonical identifier; otherwise, the Semantic Scholar ID is used as a fallback. All downstream caches (keynotes, relation graphs, analysis results) are hash-keyed by this unified paper_id , enabling cross-session reuse and preventing redundant processing of the same paper retrieved from different sources. 
+
+Robust paper downloading. Paper downloads support streaming writes and resumable transfer through HTTP range requests. After downloading, PDF files are validated with pypdfium2 ; corrupted or incomplete files are removed and retried to ensure reliable downstream parsing. 
+
+Multi-level caching. A three-tier caching system minimizes redundant computation and API costs: (1) API-level caching stores raw responses from external services (Semantic Scholar, LLMs, embedding models) keyed by request parameters, with configurable expiration; (2) Task-level caching persists results of major pipeline stages (literature collection, keynotes, clustering, analysis) as JSON files for session-level reuse; (3) Runtime caching maintains in-memory results within pipeline stages to eliminate intra-stage redundancy. Task-level caching is implemented via diskcache , enabling cross-session reuse of expensive computations such as full-text keynotes and relation graphs. 
+
+Parallel processing. Independent operations execute concurrently via ThreadPoolExecutor : keynote generation for different papers, comparison table construction across clusters, and batch LLM API calls all proceed in parallel. Thread pool sizes are configured per task type to balance throughput against API rate limits. Each request includes timeout control to prevent individual failures from blocking the pipeline. A checkpoint mechanism enables resuming interrupted pipelines from the last completed stage rather than restarting from scratch. 
+
+Error recovery. LLM API calls are wrapped with automatic retry via the tenacity library, using exponential backoff (1–300 s) for up to 10 attempts on recoverable HTTP errors (408, 429, 500, 502, 503, 504). At the pipeline level, a structured error memory accumulates recent failure messages (capped at 10 entries with deduplication) and injects them into subsequent prompts, enabling the model to adapt its output based on prior failure patterns. This mechanism is particularly effective in multi-round tasks such as outline generation and citation assignment. 19 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Document parsing. Full-text analysis relies on MinerU [ 46 ] to convert PDFs into structured Mark-down while preserving layout, reading order, and mathematical notation. Each paper is parsed into an independent output directory containing the structured text and intermediate layout annotations, which serve as input to the full-text understanding module. 
+
+Context window management. Given LLM context limits, DeepSurvey employs adaptive input construction: token counts are estimated via tiktoken (falling back to the cl100k_base encoder), and inputs exceeding the model’s window are progressively compressed—first by trimming retrieval-augmented context (halved iteratively), then by truncating paper content while preserving core keynotes and outline structure. In the citation assignment stage, this progressive reduction ensures that essential paper–outline mappings are retained even under tight context constraints. 
+
+Device adaptation. The embedding model uses lazy loading with automatic GPU-to-CPU fallback on out-of-memory errors. Batch encoding sizes are configurable to balance throughput against memory footprint during large-scale similarity computation. 
+
+Agent memory management. For multi-step agentic tasks, DeepSurvey stores operation history, intermediate outputs, review feedback, and revision states in structured memory. When the token budget is exceeded, older long-context entries are compressed or truncated while recent actions and a compact state summary are preserved for subsequent planning. 
+
+# C Evaluation Protocol Validation Supplement 
+
+## C.1 AutoSurvey Evaluation Experiment 
+
+AutoSurvey [ 3] established the dominant evaluation paradigm for automated survey generation, assessing content quality across three dimensions—Coverage, Structure, and Relevance—on a 1– 5 scale using LLM-as-judge. Its evaluation framework has been widely adopted by subsequent work [ 9, 49 , 5, 4, 6, 10 ], and its original meta-evaluation demonstrated moderate positive correlation with human judgments (Spearman’s ρ up to 0.5429), confirming its validity at the time. To assess whether this benchmark remains discriminative under current model capabilities, we replicate AutoSurvey’s evaluation protocol exactly—using its original dimensions, prompts, and scoring criteria—to evaluate AutoSurvey, DeepSurvey, and DeepSurvey-code. As shown in Table, all three methods achieve the maximum score (5) across all dimensions, rendering the benchmark unable to differentiate between approaches. This saturation arises because AutoSurvey’s 5-point scale and coarse-grained dimensions were de-signed for an earlier generation of models. As LLM capabilities have advanced, state-of-the-art systems—regardless of their architectural differences—now consistently meet the ceiling criteria for basic coverage, structural coherence, and topic relevance. 
+
+## C.2 LLM-Judge Stability Experiment 
+
+LLM-as-judge has emerged as a scalable alternative to human evaluation for open-ended text quality assessment. Prior work has shown that strong judge models (e.g., GPT-4) achieve over 80% agreement with human preferences [ 23 ], and frameworks such as G-Eval [ 24 ] demonstrate reliable human correlation on summarization tasks. However, LLM judges are not inherently stable—JudgeLM [ 25 ]and subsequent studies on position bias [ 26 ] show that scoring reliability is sensitive to prompt format, answer ordering, and task configuration. It is therefore necessary to explicitly validate judge stability before relying on LLM scores for cross-method comparison. 20 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation We evaluate four judge configurations along two axes: model (GPT series vs. MiMo series) and prompt style (with explanation, -exp , vs. without explanation, -no-exp ). For each configuration, we score the same set of generated surveys multiple times and compute per-sample standard deviation, coefficient of variation (CV%), maximum absolute deviation, and pairwise maximum difference. Aggregated results are reported in Table 6; fine-grained breakdowns by metric and method are provided in Table 9. Note that we do not perform a separate judge-stability study for the NLI-based citation evaluation because prior work has shown that NLI remains informative for LLM evaluation and is widely used for fact verification and hallucination detection [50, 51, 52, 3]. 
+
+Results. The mimo-no-exp configuration achieves the best stability across all four metrics (std = 0.020, CV = 0.244%, max_abs_dev = 0.022, pairwise_max_diff = 0.035), representing absolute fluctuations below 5%—well within acceptable bounds for cross-method ranking. Compared to gpt-no-exp ,
+
+mimo-no-exp reduces standard deviation by 13.0% and CV by 12.5%. The improvement over mimo-exp 
+
+is even more pronounced: std, range, CV, max_abs_dev, and pairwise_max_diff decrease by 74.0%, 77.0%, 76.3%, 71.8%, and 77.0% respectively, indicating that requiring the judge to produce explanations introduces substantial additional variance that undermines scoring consistency. 
+
+Choice of MiMo-V2-Flash as judge model. We select mimo-no-exp (MiMo-V2-Flash without expla-nation prompts) as the primary judge for our evaluation setup for two reasons. First, it offers the highest scoring stability among all candidates, ensuring that observed differences between methods reflect genuine quality distinctions rather than judge noise. Second, MiMo-V2-Flash is an open-source model with low inference cost, enabling reproducible and scalable evaluation without dependence on proprietary APIs. The detailed per-metric stability breakdowns in Table 9 further confirm that 
+
+mimo-no-exp maintains consistently low variance across different methods (AutoSurvey, DeepSurvey) and evaluation dimensions (Core Quality, Writing Quality, Content Depth), validating its suitability as a unified evaluation standard. 
+
+## C.3 Consistency Between LLM Judge And Human Experts Experiment 
+
+We report agreement at both the pairwise and group levels. Pairwise agreement is measured with Cohen’s κ, and panel-level consistency is measured with Fleiss’ κ. Since our labels are nominal ( A, B,and Tie), every item has a fixed number of annotations, and there are no missing judgments, nominal Krippendorff’s α is mathematically equivalent to Fleiss’ κ in our setting. We therefore report Fleiss’ κ
+
+as the group-level metric to avoid redundant notation. 
+
+Cohen’s κ. For two annotators, Cohen’s κ is defined as 
+
+κ = po − pe
+
+1 − pe
+
+, (1) where po is the observed agreement and pe is the chance agreement implied by the annotators’ marginal label distributions. We compute Cohen’s κ between the LLM judge and each human expert, and between pairs of human experts, then average over all valid pairs. 
+
+Fleiss’ κ. For multi-rater agreement, let nic be the number of annotators who assign category c to item i, and let n be the number of annotators per item. Fleiss’ κ is computed as 
+
+Pi = 1
+
+n(n − 1) ∑
+
+> c
+
+nic (nic − 1), (2) ¯P = 1
+
+N
+
+> N
+
+# ∑
+
+> i=1
+
+Pi, (3) 
+
+pc = 1
+
+Nn 
+
+> N
+
+# ∑
+
+> i=1
+
+nic , (4) 21 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Pe = ∑
+
+> c
+
+p2 
+
+> c
+
+, (5) 
+
+κ = ¯P − Pe
+
+1 − Pe
+
+. (6) Here, Pi measures agreement on item i, ¯P is the average observed agreement, and Pe is the agreement expected by chance from the marginal label frequencies. 
+
+Evaluation settings. We evaluate several group configurations to separate human consistency, LLM contribution, and random baselines: • Human full. All human annotators are included. This setting measures the intrinsic consistency of the human panel and serves as the main human reference. • Human leave-one-out. We remove one human annotator at a time and compute group agreement on the remaining human panel. This setting estimates the natural variation of the human panel under a one-rater perturbation. • Human leave-one-out + actual LLM judge. We replace the removed human with one LLM judge and recompute group agreement. This is the main test of whether the LLM can substitute for one human without degrading panel consistency. • Human leave-one-out + random human judge. We replace the removed human with another hu-man judge sampled from the human pool. This setting provides an empirical human-replacement baseline and approximates the agreement level expected when the missing annotator is replaced by a genuine human. • Human leave-one-out + random evaluator. We replace the removed human with a random evaluator that assigns A, B, or Tie with equal probability 1 / 3. This is a null baseline that estimates the agreement expected from an uninformative judge. • LLM full. All LLM judges are included. This setting measures the internal consistency of the LLM panel and serves as a reference for LLM-to-LLM agreement. 
+
+Experiment result. The pairwise results show that the LLM judge is close to human experts in fine-grained agreement. Its mean Cohen’s κ of 0.6463 is only 0.0495 below the human–human agreement of 0.6958, while remaining far above the human–random baseline ( −0.0016). This gap indicates that the LLM judge captures human preference patterns rather than behaving like a random scorer. The group-level results lead to the same conclusion. Human-1 + LLM achieves a Fleiss’ κ of 0.6578, which is slightly above the all-human panel (0.6398) and close to the all-LLM panel (0.6918). In contrast, human-1 + random drops sharply to 0.2462, showing that the gain from the LLM is not explained by a generic additional label source. The difference between human-1 + LLM and human-1 + random is large enough to suggest that the LLM contributes structured, human-aligned signal to the panel. Overall, these numbers support two claims. First, the LLM judge is well aligned with human experts at the pairwise level. Second, when inserted into a multi-rater panel, it preserves overall consensus at a level comparable to human annotators. This makes the LLM judge a stable and credible component of the evaluation protocol. 
+
+# D Main Evaluation Supplement 
+
+## D.1 Test Dataset 
+
+We will present the specific input topics in our evaluation setup in this section: 22 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation • Life Sciences – Microbial Enzymes in Pollutant Bioremediation 
+
+– Lactic Acid Bacteria and Bacteriocins • Nutrition – Dietary Sugars and Body Weight in Randomised Controlled Trials • Chemistry – Flavonoids and Phenolic Compounds from Medicinal Plants • Psychology – Neuroimaging Studies of Internet and Gaming Addiction 
+
+– Technology-Delivered Interventions for Youth Depression and Anxiety • Machine Learning (General) – Multimodal Machine Learning Taxonomy 
+
+– Deep Learning Applications in Computer Vision 
+
+– 3D Gaussian Splatting • Large Language Models (LLMs) – Hallucination in LLMs 
+
+– Instruction Tuning for LLMs 
+
+– Acceleration for LLMs 
+
+– LLMs-based Agents • Interdisciplinary – LLMs in Medicine 
+
+– Challenges of LLMs in Education 
+
+## D.2 Detailed Evaluation Criteria 
+
+This section provides detailed definitions for the content quality sub-dimensions described in the main paper (Section 3.1.1). Our evaluation adopts a hierarchical scoring framework where content quality is decomposed into three aggregated dimensions, each comprising fine-grained sub-dimensions scored on a 1–10 scale. Specific meanings for each sub-dimensions are shown in Table 10. Due to space limit and readability, the detailed rubric standards are not presented, which can later be found in our open-source repository once published. 
+
+Score aggregation. The final content quality score combines the three dimensions with weights reflecting our definition of a high-quality survey: Total = 0.4 × Core + 0.2 × Writing + 0.4 × Depth (7) Core Quality and Content Depth each receive 0.4 weight as they jointly constitute the primary eval-uation objectives—correct coverage and analytical value—while Writing Quality (0.2) supports ex-pressiveness but is secondary to substance. This weighting prevents, for example, high fluency alone from being rewarded as a high-quality survey. Each generated survey is independently scored on every sub-dimension, with the average across multiple evaluation rounds reported as the final result to improve stability. 
+
+Citation Quality. Citation quality evaluates the accuracy, relevance, and completeness of references in generated surveys. We adopt NLI-based metrics following AutoSurvey [ 3], which have been widely used in subsequent work [ 49 , 5, 12 ]. The core idea is to judge whether each cited reference actually supports the corresponding claim in the survey. Specifically, the evaluation first extracts all citation-bearing claims C = {c1, c2, . . . } from the survey, where each claim ci is associated with a set of cited references Ref i = {ri1, ri2, . . . }. An NLI model h
+
+then determines whether the reference set entails the claim. 23 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Citation Recall measures whether every claim in the survey is supported by its cited references—i.e., the completeness of evidential coverage: 
+
+R = ∑|C| 
+
+> i=1
+
+I[h(ci, Ref i) = 1]
+
+|C| (8) where h(ci, Ref i) = 1 indicates that the reference set collectively supports claim ci, I[·] is an indicator function, whose value is 1 when the condition is true, and 0 otherwise. A high recall means the survey’s claims are well-grounded in cited literature. 
+
+Citation Precision measures whether each individual reference is actually relevant to the claim it supports—i.e., the accuracy of citation assignment. We define an auxiliary function g to assess the necessity of each reference: 
+
+g(ci, rik ) = I[h(ci, {rik }) = 1] ∨ I[h(ci, Ref i \ { rik }) = 0] (9) This function judges that reference rik is relevant to claim ci if either (1) rik alone can support ci, or (2) removing rik from Ref i causes the remaining set to fail to support ci (i.e., rik is necessary). Precision is then computed as: 
+
+P = ∑|C| 
+
+> i=1
+
+∑|Ref i | 
+
+> k=1
+
+I[h(ci, Ref i) = 1 ∧ g(ci, rik ) = 1]
+
+∑|C| 
+
+> i=1
+
+|Ref i| (10) A high precision means that cited references are genuinely relevant rather than spurious. 
+
+Valid Citation Ratio reports the fraction of citations that are successfully parsed and used for evalua-tion, excluding entries with formatting errors or unresolvable references: Valid Ratio = |Valid Citations ||Total Citations | (11) This metric serves as a basic sanity check: a ratio below 1.0 indicates citation formatting issues or hallucinated references that could not be matched to any paper in the database. The full evaluation pipeline proceeds as follows: (1) extract citation-bearing claims from the survey text and identify their reference numbers; (2) use the NLI model to judge entailment between each claim and its reference set; (3) for supported claims, further assess the relevance of individual references via the auxiliary function g; (4) aggregate all metrics into the final citation quality report. 
+
+## D.3 Detailed Evaluation Parameters 
+
+Table 12 lists the key system parameters used in DeepSurvey. Note that we use MiniLMv2 [ 53 ] as embedding model. For DeepSurvey model, we choose MiMo-V2-Flash for its lower cost and fast speed. In addition, MiMo-V2-Flash is an open-source model that facilitate reproduction. For judge models, besides MiMo-V2-Flash [ 22 ] and GPT-5-mini [ 54 ], we also introduce Gemini-3 5, DeepSeek-V3 [ 55 ] and GPT-5.4 for some small-scale experiment. 
+
+## D.4 Cost Evaluation 
+
+Under the setting in Appendix D.3, we run DeepSurvey for multiple time and have that: the average time cost is 1496s(24min+56s) and the token assumption is 4.93 million. If use MiMo-V2-Flash, the money cost is $0.53. 
+
+> 5https://blog.google/products-and-platforms/products/gemini/gemini-3/?utm_source=chatgpt.com
+
+24 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+## D.5 Human Expert Experiment Supplement 
+
+Human Expert Recruiting The evaluators were recruited from students and researchers with aca-demic writings and evaluation experience in corresponding scientific domains. Participation was voluntary. No crowdworkers were used. 
+
+Annotation Requirements 
+
+Annotation Requirements 
+
+Annotation Task Instructions You will complete multiple comparison groups. Each task contains two surveys, labeled A and B. Please read both survey in each group, and then judge which is better on the following three dimensions, and give an overall judgment. The data obtained from this task will be used exclusively for research purposes. Any results made public will be reported only in aggregate, and no identifying information (such as your name or other personal identifiers) will be included. Annotation Format If A is better than B on a dimension, fill in A; if B is better than A, fill in B; if they are tied, fill in Tie. Example: If A is better than B on Core Quality, note it as Core Quality: A. Group 1 Core Quality: Writing Quality: Content Depth: Overall Judgment: Group 2 Core Quality: Writing Quality: Content Depth: Overall Judgment: ... Brief Description of Annotation Dimensions 1. Core Quality Measures whether the review stays closely on topic, effectively integrates the literature, and builds a systematic synthesis. Key aspects: synthesis, organization, comprehensiveness, relevance. Staying on-topic and building a systematic synthesis. Synthesis: integrates papers into a coherent whole, not just listing Organization: logical section flow and hierarchy Comprehensiveness: covers key methods, works, branches Relevance: minimal off-topic content 2. Writing Quality Measures whether the language expression is clear, rigorous, and coherent, and whether technical details are accurately conveyed. Key aspects: readability, academic rigor, clarity & coherence. Clear, rigorous, and coherent writing. Readability: fluent, natural, easy to follow Academic Rigor: precise, well-supported academic expression Clarity & Coherence: clear technical descriptions; consistent narrative across sections 3. Content Depth Measures whether the review goes beyond simple summary to offer critical analysis, unique insights, and actionable research suggestions. 
+
+25 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+> Key aspects: critical analysis, novelty & insights, specificity, future directions. Going beyond summary to offer insight and actionable directions. Critical Analysis: discusses strengths, limitations, boundaries Novelty & Insights: new perspectives or cross-work understanding Specificity: fine-grained technical/experimental details Future Directions: concrete, feasible, gap-linked suggestions Overall Judgment Please synthesize the performance across the above three dimensions and provide an overall comparison result for the two reviews.
+
+## D.6 Baselines Analysis in Evaluation 
+
+This section provides detailed analysis of baseline performance in Section 3.2, offering insights into the characteristics of different survey generation approaches under cross-domain evaluation. 
+
+Content quality analysis. As shown in Table 3, AutoSurvey achieves the highest baseline score (8.483), leading in Writing Quality (8.417) and Content Depth (8.063). SurveyForge (8.101) and LIRA (8.004) follow, while SurveyX (7.244) trails significantly. Notably, SurveyForge attains the highest Organization score (9.000) among all methods, yet its Writing Quality (7.795) and Content Depth (7.646) are substantially lower, suggesting that structural sophistication alone does not translate to overall quality. The relative ranking among baselines reveals a counterintuitive pattern: AutoSurvey, despite being an early approach, outperforms more recent systems. We attribute this to two factors. First, methods such as SurveyForge and SurveyX were primarily designed and validated on computer science topics. Their architectural choices(e.g., SurveyX’s AttributeTree template) may introduce domain-specific inductive biases that generalize poorly to the topics in non-CS domains. Second, AutoSurvey’s straightforward pipeline (retrieval → parallel generation → integration) is relatively insensitive to hyperparameter tuning and domain shifts, yielding more stable performance across heterogeneous topics. In contrast, SurveyX’s structured representation approach struggles in cross-domain settings, as evidenced by its low Content Depth (6.833) and Academic Rigor (6.800). 
+
+Insights for Evaluation. These results highlight the value of cross-domain evaluation. On CS-only benchmarks, methods like SurveyForge and SurveyX have demonstrated competitive or superior performance to AutoSurvey [ 5 , 4]. Their underperformance on our evaluation protocols suggests that existing predominantly CS-focused benchmarks may overestimate the generalizability of complex architectural innovations. Our experiment setup’s multi-domain design exposes a critical gap: meth-ods optimized for a single domain can degrade when applied to topics with different conventions, terminology, and literature structures. This finding underscores the need for evaluation frameworks that test domain robustness, not just in-domain peak performance. 
+
+# E Ablation Experiment Supplement 
+
+## E.1 Multi-granularity Refinement Component Ablation 
+
+The iterative refinement module operates at three granularity levels: section-level, subsection-level, and survey-level. To assess the individual contribution of each, we ablate them independently. w/o Section Refinement removes section-level optimization; w/o Subsection Refinement removes subsection-level optimization; w/o Survey Refinement removes survey-level optimization; w/o Refinement removes all three. 26 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation                         
+
+> Method Total Core Writing Depth DeepSurvey-code 8.676 9.083 8.311 8.450
+> w/o Sec. 8.544 9.042 8.389 8.125 w/o Sub. 8.487 9.000 8.333 8.050 w/o Sur. 8.487 9.050 8.333 8.000 w/o All 8.473 9.107 7.810 7.857
+
+Table 7: Ablation results on refinement components. Table 7 presents the main dimension results and Table 8 presents the detailed dimension results. We highlight three key findings. (1) Subsection-level refinement is the most critical component. Removing it causes the largest total score drop (8.676 →8.487, ∆=0.189) and a substantial content depth decrease (8.450 →8.050, ∆=0.400). Since subsections constitute the basic writing unit of a survey, optimizing at this granularity directly improves the quality of individual research discussions, yielding the strongest impact on overall performance. (2) Survey-level refinement is indispensable for cross-section consistency. Although its total score impact equals that of subsection-level removal (both ∆=0.189), survey-level refinement uniquely affects content depth more severely ( ∆=0.450, the largest single-component depth drop). This indicates its irreplaceable role in harmonizing cross-section terminology, eliminating redundancy, and ensuring global narrative coherence—issues that local refinement cannot address. (3) The three levels are complementary, not redundant. Removing all refinement (w/o Refinement) degrades writing quality to 7.810 and content depth to 7.857, both significantly worse than any single ablation. This confirms that subsection-level refinement targets local readability, section-level refinement enhances analytical depth within sections, and survey-level refinement maintains global consistency. Together they form a complete multi-granularity optimization system. From a resource allocation perspective, subsection-level and survey-level refinement each contribute 0.189 to the total score, while section-level contributes 0.132. When computational budget is con-strained, prioritizing subsection and survey-level refinement yields the highest marginal benefit. 
+
+## E.2 Citation Mark Ablation 
+
+DeepSurvey uses paper IDs (e.g., <2406.10252> ) as citation marks in generated surveys. To validate this design choice, we compare it against an alternative using paper titles (e.g., <AutoSurvey: Large Language Models Can Automatically Write Surveys> ). The two strategies represent a trade-off: paper IDs are short and format-uniform, reducing context window consumption and enabling direct lookup via academic databases, whereas paper titles carry richer semantic information that may help the LLM more accurately associate claims with their supporting references, but at the cost of significantly increased input length. Figure 8 shows that title-based citation marks achieve a substantially higher valid citation ratio. A plausible explanation is that paper titles provide explicit semantic cues—such as method names, task descriptions, and key terms—that help the LLM ground its citations during generation, reducing hallucinated or misattributed references. In contrast, paper IDs are semantically opaque identifiers that require the model to maintain ID–content mappings from context alone, a burden that intensifies in long-text generation scenarios. This finding suggests that the representational format of input infor-mation materially affects LLM generation quality, and that careful design of citation representations can improve reliability without modifying the underlying model. 27 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 8: Valid citation ratio comparison between paper ID and paper title citation marks. 
+
+Figure 9: Quality dimension scores before and after multi-granularity refinement, averaged across expert LLM judges. 
+
+## E.3 Draft Quality Improvement in Refinement 
+
+To validate that the multi-granularity refinement subsystem (Section 2.5) genuinely improves draft quality rather than merely altering surface expression, we conduct a controlled evaluation comparing survey drafts before and after refinement described in Section 2.5. We evaluate whether this agentic coordination yields measurable quality gains. Specifically, we employ a panel of expert LLMs spanning multiple model families (GPT-series, Gemini-series, and DeepSeek-series) to independently assess draft quality along four dimensions before and after refinement: critical analysis depth (whether arguments are substantiated with comparative reasoning rather than superficial description), logical coherence (whether paragraphs follow a clear argumentative thread with appropriate transitions), academic rigor (whether claims are properly qualified and supported by citations), and readability (whether the text is clear, concise, and free of redundancy). Each model scores drafts on a 1–10 scale for each dimension, and we report the average across all models. Figure 9 presents the results. The refinement subsystem yields consistent improvements across all four dimensions, with the most pronounced gains in critical analysis depth and academic rigor. This aligns with the design intent: the reviewer role specifically targets analytical weaknesses and citation issues, while the multi-granularity optimization strategy addresses coherence at local (subsection), structural (section), and global (survey) levels. 
+
+## E.4 Detail Score In Module Ablation 
+
+Due to space constraints in the main body, we present fine-grained dimension scores for the module ablation in Table 11. Below we highlight key findings that complement the aggregated analysis in Section 4.3. Table 11 reveals several patterns obscured by the aggregated scores. 28 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation                                                             
+
+> Metric Full w/o Sur. w/o Sub. w/o Sec. w/o All
+> Core Quality
+> Synthesis Quality 9.067 9.000 9.000 9.000 9.000 Organization 8.867 9.000 9.000 9.000 9.000 Comprehensiveness 9.000 8.833 9.000 9.000 9.000 Relevance 9.400 9.333 9.000 9.200 9.429
+> Writing Quality
+> Readability 8.000 8.000 8.000 8.000 8.000 Academic Rigor 8.933 9.000 9.000 9.000 8.286 Clarity & Coherence 8.000 8.167 8.000 8.000 8.000
+> Content Depth
+> Critical Analysis 8.933 8.667 8.800 8.600 8.286 Novelty and Insights 8.400 8.167 8.200 8.000 8.143 Specificity 7.933 7.500 7.200 7.400 7.000 Future Directions 8.533 8.167 8.000 8.000 8.000
+
+Table 8: Ablation results of multi-granularity refinement on Core Quality, Writing Quality, and Content Depth. “w/o Sur./Sub./Sec.” denotes removal of survey-, subsection-, and section-level refinement, respectively; “w/o All” removes all three. 
+
+The collector is the primary bottleneck across nearly all dimensions. Removing graph-based col-lection causes catastrophic drops in Comprehensiveness (9.000 →1.000) and Relevance (9.400 →1.000), confirming that without curated evidence, the system cannot cover the topic space. The damage ex-tends to writing quality—Academic Rigor falls to 2.429 and Clarity & Coherence to 3.857—indicating that evidence scarcity degrades not only content depth but also the coherence of the generated text. This validates our design choice of treating graph-based retrieval as the foundational stage. 
+
+The writer primarily governs synthesis and structural organization. Its removal causes Synthesis Quality (9.000 →7.429) and Organization (9.000 →6.429) to drop sharply, while Comprehensiveness and Relevance remain more resilient (7.571 and 8.000). This confirms that outline-driven writing with explicit citation assignment is essential for integrating evidence into coherent narratives rather than for evidence coverage per se. Notably, Critical Analysis drops to 6.429—the lowest among all ablations—suggesting that without structured writing, the system cannot synthesize comparative insights across papers. 
+
+The analyzer contributes primarily to depth-oriented metrics. Its removal most affects Novelty and Insights (8.200 →7.429, the largest single-metric drop for this component) and Specificity (8.000 →7.000), while Core Quality metrics remain near ceiling. This aligns with its role in constructing relation graphs and comparison tables that enable cross-paper synthesis—capabilities that directly support novelty and specificity but are less critical for basic coverage. 
+
+Refinement polishes rather than transforms. Removing refinement causes moderate, uniform declines across most metrics rather than catastrophic failures in any single dimension. The largest drops occur in Academic Rigor (8.933 →8.286) and Critical Analysis (8.933 →8.286), consistent with the refinement module’s role in iterative quality improvement. The full DeepSurvey system (2) shows gains over DeepSurvey (1) on several depth metrics (e.g., Specificity: 7.667 →8.000, Critical Analysis: 8.800 →8.867, Academic Rigor: 8.800 →8.933), confirming that agentic refinement provides cumulative benefits beyond initial generation. 29 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+# F Clustering and Analysis Cases 
+
+In this section we will demonstrate the specific case in the global knowledge substrate. 
+
+## F.1 Keynote Case 
+
+We use ’AutoSurvey’ as the input topic. The generated keynotes are as follow: Keynotes Case 
+
+"title": "AutoSurvey: Large Language Models Can Automatically Write Surveys", "authors": ["Yidong Wang", "Qi Guo", "Wenjin Yao", "Hongbo Zhang", "Xin Zhang", "Zhen Wu", "Meishan Zhang", "Xinyu Dai", "Min Zhang", "Qingsong Wen", "Wei Ye", "Shikun Zhang", "Yue Zhang"], "abstract": "This paper introduces AutoSurvey, a speedy and well-organized methodology for automating the creation of comprehensive literature surveys in rapidly evolving fields like artificial intelligence. Traditional survey paper creation faces challenges due to the vast volume and complexity of information, prompting the need for efficient survey methods. While large language models (LLMs) offer promise in automating this process, challenges such as context window limitations, parametric knowledge constraints, and the lack of evaluation benchmarks remain. AutoSurvey addresses these challenges through a systematic approach that involves initial retrieval and outline generation, subsection drafting by specialized LLMs, integration and refinement, and rigorous evaluation and iteration.", "key_contributions": [ "Introduction of AutoSurvey, a comprehensive system for automatically generating academic surveys using LLMs.", "A two-stage parallel generation approach (outline generation and subsection drafting) to overcome context window limitations and speed up the process.", "Integration of Retrieval-Augmented Generation (RAG) for real-time knowledge updates to ensure citations are current and accurate." "Development of a Multi-LLM-as-Judge evaluation framework with metrics for citation quality (recall and precision) and content quality (coverage, structure, relevance).", "Experimental validation demonstrating AutoSurvey\ 's effectiveness in terms of speed, citation quality, and content quality, approaching human performance.", "Open-sourcing of resources and prompts to facilitate further research."], "methodology": "AutoSurvey follows a four-phase pipeline: (1) Initial Retrieval and Outline Generation, where a database of papers is scanned using embedding-based retrieval to generate a structured outline; (2) Subsection Drafting, where specialized LLMs draft each section in parallel using the outline and retrieved papers; (3) Integration and Refinement, where sections are refined for coherence, corrected for citation errors, and merged into a cohesive document; (4) Rigorous Evaluation and Iteration, where the survey is assessed using Multi-LLM-as-Judge and the best among multiple candidate surveys is selected. The system uses a retrieval database of 530,000 arXiv papers and leverages parallel processing to enhance efficiency." "experiments": { "setup": "Comparisons were made against human-authored surveys and naive RAG-based LLM generation across 20 computer science topics. Surveys of varying lengths (8k, 16k, 32k, 64k tokens) were generated. Claude-3-Haiku was used as the base writer for AutoSurvey and naive RAG, while evaluations employed a combination of GPT-4, Claude-3-Haiku, and Gemini-1.5-Pro. Metrics included survey creation speed, citation quality (recall and precision), and content quality (coverage, structure, relevance) scored on a 5-point rubric.", "baselines": [ "Human-authored surveys collected from arXiv", "Naive RAG-based LLM generation (iterative prompting with retrieved papers)"], "main_results": { "speed": "AutoSurvey is significantly faster: for 64k-token surveys, it generates 73.59 surveys per hour vs. 12.56 for naive RAG and 0.07 for humans.", "citation_quality": "AutoSurvey achieves near-human recall and precision (e.g., at 64k tokens: recall 82.25%, precision 77.41% vs. human 86.33% and 77.78%), outperforming naive RAG (68.79% and 61.97%).", 
+
+30 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+"content_quality": "AutoSurvey scores highly (e.g., at 16k tokens: coverage 4.66, structure 4.33, relevance 4.86, average 4.60) compared to human (4.66, 4.38, 5.00, 4.66) and naive RAG (4.46, 3.66, 4.73, 4.23)."}, "additional_studies": { "meta_evaluation": "Spearman\ 's rank correlation between LLM-based and human rankings showed moderate to strong positive correlation (0.5429 for mixed models), indicating alignment with human preferences.", "ablation_study": "Removing retrieval drastically reduces citation quality; removing reflection slightly impacts content quality. Different base LLMs (GPT-4, Claude-haiku, Gemini-1.5-Pro) all yield competitive results, with GPT-4 slightly best.", "knowledge_enrichment_test": "Providing AutoSurvey-generated surveys improved accuracy on multiple-choice questions by 9.2% over direct answers and 2.4% over naive RAG surveys."}}, "results": "AutoSurvey demonstrates a strong balance between speed and quality, achieving near-human performance in citation and content quality while being orders of magnitude faster. It outperforms naive RAG-based generation in all metrics, particularly in structure and citation accuracy. The system is robust across different survey lengths and base LLMs.", "significance": "AutoSurvey addresses a critical bottleneck in academic research: the time-consuming process of literature review. By automating survey generation with high quality and speed, it can accelerate knowledge synthesis, help researchers stay current in fast-moving fields, and fill gaps in survey coverage. The open-sourced methodology and evaluation framework provide a foundation for future work in automated academic writing.", "limitations": [ "Citation errors, particularly overgeneralization (51% of errors), indicate reliance on parametric knowledge over retrieved information.", "The evaluation, while correlated with human judgment, is still automated and may not capture all nuances.", "The system is currently focused on computer science topics; generalizability to other domains needs exploration.", "Ethical considerations around authorship and potential misuse of auto-generated surveys."], "future_directions": [ "Improving citation accuracy by reducing overgeneralization through better integration of retrieved knowledge.", "Extending the system to other domains and document types (e.g., project reports, white papers).", "Enhancing the evaluation framework with more nuanced metrics and human-in-the-loop refinement.", "Exploring iterative refinement where the system incorporates feedback from initial drafts to improve subsequent versions.", "Investigating the use of more advanced or specialized LLMs to further boost quality."], "critical_reflections": [ "AutoSurvey\ 's parallel generation approach elegantly tackles context window limits, but the merging step may introduce coherence issues; the refinement phase mitigates this but adds computational cost.", "The Multi-LLM-as-Judge strategy reduces single-model bias, yet the moderate correlation with human experts suggests room for improvement in evaluation fidelity.", "While AutoSurvey outperforms naive RAG, the gap between it and human performance in structure and overall quality indicates that LLMs still struggle with holistic document organization and logical flow.", "The cost analysis shows AutoSurvey is cost-effective (e.g., $1.2 per 32k survey with Claude-haiku), making it practical for large-scale use.", "The system\ 's reliance on arXiv papers may limit coverage of non-open-access literature, potentially introducing source bias.", "The example survey on emotion recognition (Appendix F) demonstrates the system\ 's capability to generate coherent outlines and content, but human oversight is still recommended for final quality assurance."], "tldr": "AutoSurvey automates the creation of academic surveys by leveraging LLMs in a parallel, retrieval-augmented pipeline: it generates outlines, drafts sections concurrently, refines for coherence, and evaluates with multi-LLM judges. It significantly speeds up survey writing while achieving citation and content quality close to human experts, outperforming naive RAG approaches. This offers a scalable tool for synthesizing research literature in fast-evolving fields." 
+
+31 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+## F.2 Clustering Result 
+
+We use ’AutoSurvey’ as the input topic. The clustering result is shown in Table 13. 
+
+## F.3 Intra-cluster Q&A Analysis Example 
+
+We use “AutoSurvey” as the input topic for retrieval, clustering, and intra-cluster Q&A analysis. One example of the Q&A analysis is shown below. 
+
+Cluster 1 Question: Several papers propose explicit hierarchical structures (e.g., knowledge trees, citation graphs) to organize surveys, while others rely on iterative outline refinement without such explicit models. How do these fundamentally different approaches to structural planning compare in terms of their ability to capture research evolution and ensure logical flow, and what are the trade-offs in complexity versus performance? 
+
+Related Papers: 
+
+2601.09504 2510.07733 (2) 2510.21900 (3) 2510.05138 (4) 2509.18661 (5) 
+
+Answer: Explicit hierarchical structures (e.g., knowledge trees, citation graphs) directly model research evolution and logical flow. MVSS uses Hierarchical Knowledge Trees to explicitly map conceptual evolution and paradigm shifts, yielding superior structural quality and citation precision <MVSS>. Similarly, SurveyG’s layered citation graph (Foundation/Development/Frontier) captures temporal progression, enhancing synthesis and critical analysis <SurveyG>. These approaches ensure strong logical flow but increase complexity and cost (e.g., MVSS costs $0.94/topic). Iterative refinement methods (e.g., IterSurvey, LiRA) rely on incremental outline updates without explicit models. IterSurvey mimics human research via recurrent outline generation and paper cards, improving coverage and structure iteratively <IterSurvey>. LiRA uses multi-agent workflows for parallel drafting and refinement, focusing on readability and citation accuracy <LiRA>. These methods are more flexible and efficient but may lack explicit evolutionary modeling. **Trade-offs**: Explicit hierarchies offer better structural coherence and evolution capture at higher computational cost. Iterative methods are more adaptable and efficient but may produce less explicitly organized narratives. 
+
+## F.4 Inter-cluster Analysis Example 
+
+We use “AutoSurvey” as the input topic for retrieval, clustering, intra-cluster analysis, and cross-cluster analysis. An example of the cross-cluster analysis result is shown below. Inter-cluster Analysis Case 
+
+> Cross-group analysis reveals that automated survey generation is caught in a fundamental tension between structural proficiency and scholarly depth. Systems excel at organizing skeletons---outlines, taxonomies, and citations---but consistently fail to produce the critical analysis, novel synthesis, and nuanced argumentation that characterize expert work. This "skeleton-versus-flesh" trade-off is evident across evaluations, where models score highly on structural metrics but poorly on academic value and insight generation. The field 's architectural evolution shows a clear pattern: initial one-shot generation methods are being supplanted by iterative, agentic frameworks. However, the choice between explicit hierarchical planning (e.g., knowledge trees in <MVSS>, taxonomies in <TAXOALIGN>) and dynamic, memory-guided refinement (e.g., <IterSurvey>, <WebWeaver>) presents a core trade-off. Explicit structures ensure logical flow and evolution capture but risk rigidity; iterative methods offer adaptability but may lack coherent conceptual modeling. The most promising pipelines, like <SURVEYFORGE> and <ARISE>, combine learned heuristics with rubric-guided, multi-agent refinement to balance these strengths.
+
+32 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+A critical bottleneck has shifted from retrieval to information utilization and hierarchical reasoning. Even with perfect retrieval, models struggle with taxonomy organization (<TaxoBench>) and under-utilize available references (<SurGE>). This indicates a core deficit in how LLMs infer and represent expert knowledge structures from literature. Solutions may lie in hybrid approaches: using symbolic reasoning or reinforcement learning (<2601.09858>) to enforce structural constraints, and integrating quality-aware re-ranking (<QUAL-SG>) at the retrieval-generation interface. The proliferation of specialized, multi-agent systems (e.g., <MetaGPT>, <MEDAGENTS>) for survey and research tasks demonstrates that task decomposition aligned with expert workflows boosts performance. However, these architectures introduce coordination costs and error propagation risks. The finding that a single, well-prompted agent can match multi-agent discussion on certain tasks (<Rethinking the Bounds of LLM Reasoning>) suggests that value is derived from *structured* specialization and iterative consensus, not agent count alone. Evaluation remains a fragmented and unsolved challenge. Benchmarks emphasize disparate dimensions---structural fidelity, citation accuracy, reader answerability, and academic depth---with no single paradigm capturing holistic quality. The persistent gap between automated metrics (often biased or superficial) and human expert judgment highlights a need for hybrid evaluation. Future standards should incorporate discipline-specific norms (<SurveyLens>), grounded answerability tests (<SurveyBench>), and depth-focused academic value metrics (<DeepSurvey-Bench>) while developing more reliable automated proxies for scholarly synthesis. Key unresolved challenges persist across the pipeline. Systems lack mechanisms for **uncertainty quantification** and **reproducibility-by-design**, limiting their epistemic humility and verifiability. **Cross-domain generalization** is poor, as models exploit domain-specific data patterns (<TaxoBench>) and struggle with less structured fields. Furthermore, the goal of autonomous science remains distant, with critical missing capabilities in experimental execution, causal reasoning, and closed-loop verification. In conclusion, the field is advancing rapidly in pipeline engineering and agentic control, yet remains nascent in generating genuine scholarly contribution. The most significant future progress will likely come from integrating explicit structural inductive biases with dynamic, memory-driven synthesis, all grounded in robust, human-aligned evaluation that prioritizes critical insight over mere coverage. 
+
+## F.5 Comparison Table Example 
+
+We use “AutoSurvey” as the input topic for retrieval and clustering analysis, and construct comparison tables. Table 14 presents an example comparing different baselines under the “AutoSurvey” topic. 
+
+## F.6 Relation Graph Example 
+
+We use “AutoSurvey” as the input topic for retrieval, clustering, and graph construction. An example is shown in Figure 10, which illustrates the relationships between different papers under this topic. 
+
+# G Code Analysis Case 
+
+## G.1 Code Report Example 
+
+We use “AutoSurvey” as the input topic to generate a code report example, which analyzes data structures, design architectures, and other implementation-specific details. Due to space constraints, only executive summary and problem modeling parts are shown. 33 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 10: Example of a relation graph among papers Code Report Case 
+
+# Integrated Comprehensive Report: AutoSurvey and Related Papers ## 1. Executive Summary The synthesis of multiple batch analyses reveals a clear evolutionary trajectory in automated survey generation: from monolithic, single-pass systems toward **modular, multi-agent, iterative frameworks** that mimic human research workflows. The dominant implementation pattern is a **hierarchical pipeline** combining retrieval-augmented generation (RAG), dynamic planning, specialized agent collaboration, and iterative refinement. Key architectural elements include: - **Multi-agent orchestration**: Specialized agents (Planner, Writer, Reflector, Verifier) with defined roles and communication protocols. - **Dynamic planning-evidence loops**: Iterative cycles where outline generation and evidence acquisition inform each other. - **Memory-augmented generation**: Persistent memory banks (e.g., paper cards, evidence memory) for targeted retrieval and context management. - **Structured intermediate representations**: Hierarchical outlines, citation graphs, and standardized operating procedures (SOPs) that guide generation. **Major gaps** persist in deep understanding, evaluation alignment, long-context handling, and domain generalization. The most promising future directions involve **neuro-symbolic integration**, **adaptive context management**, **evaluation-aware generation**, and **collaborative human-AI systems** that address these limitations. ## 2. Problem Modeling and Data Structure Classification A unified view reveals that all systems model survey generation as a **hierarchical, evidence-grounded synthesis problem**. The core challenge is decomposing a broad topic into a coherent structure 
+
+34 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+while integrating and synthesizing information from numerous sources. ### Data Structure Categories and Trade-offs | Category | Specific Examples | Why Chosen | Key Trade-offs | |--|--|--|--| | **Hierarchical Outline Structures** | `DynamicOutline ` (WebWeaver), `HierarchicalDraft ` (SciSage), Tree-structured outlines (AutoSurvey, AutoSurvey2) | Mirrors human survey organization; enables modular, parallel generation and targeted retrieval. | **Advantage**: Parallel section generation possible; clear quality control per section. **Disadvantage**: Rigid structure may not fit all topics; requires accurate initial outline; may lose global coherence. | | **Memory-Augmented Representations** | Natural language "Long Short-Term Memory" buffers (RecurrentGPT), "Paper cards" distilling contributions (IterSurvey), `EvidenceMemoryBank `
+
+(WebWeaver) | Enables long-context generation; provides faithful paper-level grounding; reduces redundant processing. | **Advantage**: Interpretable, editable memory; targeted retrieval. **Disadvantage**: Memory management overhead; potential information loss in distillation; retrieval latency. | | **Agent Communication Structures** | `SOPPrompts ` (MetaGPT), `AgentMessageQueue ` (implied), Role-based prompt engineering | Enables structured collaboration between specialized agents; reduces hallucination through validation. | **Advantage**: Mimics human workflows; clear responsibility boundaries. **Disadvantage**: Increased complexity; potential communication bottlenecks; may be too rigid for creative tasks. | | **Retrieval-Augmented & Citation Structures** | Retrieved paper corpora with metadata, 
+
+`CitationGraph ` (ReportBench), citation-indexed evidence storage | Addresses parametric knowledge limitations of LLMs; enables real-time updates and citation verification. | **Advantage**: Real-time updates; reduces redundancy; improves citation accuracy. **Disadvantage**: Retrieval noise; computational cost; memory overhead. | | **Evaluation Structures** | `EvaluationCorpus ` (ReportBench), `QuestionAnswerPairs ` (LooGLE) | Enables systematic benchmarking and quality assessment. | **Advantage**: Standardized evaluation; reproducible results. **Disadvantage**: May not capture all quality dimensions; static benchmarks. | ... 
+
+## G.2 Environment Report Example 
+
+We use “AutoSurvey” as the input topic to generate an environment report example, which analyzes base frameworks, environment requirements, and commonly used libraries. Due to space constraints, only excerpts from the framework analysis are shown. Environment Report Case 
+
+# Comprehensive Framework Selection and Environment Configuration Guide for AI Research Systems ## Executive Summary This guide synthesizes findings from 15 repositories across three research domains: automated survey generation, deep research agents, and specialized AI tools. The analysis reveals a clear convergence on **PyTorch** as the dominant deep learning framework, complemented by **Hugging Face Transformers** for NLP tasks and **LangChain** for LLM orchestration. Environment requirements vary significantly based on use cases, ranging from lightweight API-based setups to GPU-intensive training configurations. **Key Findings:** - **Framework Standardization**: PyTorch (v2.0.0+) with Transformers (v4.30.0+) forms the standard stack - **Orchestration Layer**: LangChain (v0.2.5+) and LlamaIndex (v0.8.29+) are preferred for complex workflows - **Hardware Spectrum**: Requirements span from CPU-only (tiktoken) to multi-GPU setups (OpenScholar) - **Deployment Patterns**: Docker containerization is emerging for reproducible deployments 
+
+35 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+- **API Dependencies**: Most systems require multiple external API keys (OpenAI, Semantic Scholar, etc.) **Recommendation:** Start with **AutoSurvey** for survey generation or **MetaGPT** for multi-agent systems, then scale based on specific requirements. Use **conda** for environment isolation and consider **Docker** for production deployments. ---## 1. Framework Selection Analysis ### 1.1 Core Framework Landscape **PyTorch Dominance**: All analyzed repositories use PyTorch as their primary deep learning framework, with version requirements ranging from 2.0.1 to 2.8.0. This consistency enables easier integration and knowledge transfer between projects. **NLP-Specific Frameworks**: - **Hugging Face Transformers**: Critical across all NLP tasks (v4.30.0 to v4.56.1) - **Sentence-Transformers**: Used for embedding generation (v2.7.0 to v5.1.0) - **vLLM**: Emerging for efficient LLM inference (v0.10.1 in DeepResearch) **Orchestration Frameworks**: - **LangChain**: Preferred for LLM workflow orchestration (v0.0.300 to v0.2.5) - **LlamaIndex**: Used for retrieval-augmented generation (v0.8.29 in LooGLE) - **CrewAI**: Specialized for multi-agent systems (ARISE) ### 1.2 Framework Suitability Matrix | Use Case | Recommended Framework | Key Dependencies | Complexity | |--|--|--|--| | **Survey Generation** | PyTorch + Transformers + LangChain | OpenAI API, FAISS/ChromaDB | Medium | | **Deep Research Agents** | PyTorch + vLLM + Qwen-Agent | Multiple APIs, GPU required | High | | **Multi-Agent Systems** | MetaGPT/CrewAI | OpenAI API, Role-based architecture | Medium-High | | **Tokenization** | tiktoken (Rust/Python) | Minimal | Low | | **Scientific Literature** | PyTorch + FlagEmbedding | Semantic Scholar API, Large indices | High | | **Document Processing** | LaTeX Toolchain + PDF libraries | texlive-full, PDF processors | Medium | ### 1.3 Integration Patterns **Common Integration Stack**: 
+
+``` 
+
+PyTorch (2.0.0+) -> Transformers (4.30.0+) -> Sentence-Transformers (2.7.0+) -> LangChain/LlamaIndex (orchestration) -> Vector Databases (FAISS/ChromaDB) 
+
+``` 
+
+**Emerging Patterns**: 1. **Modular Agent Architectures**: Separation of planning, retrieval, and generation components 2. **Hybrid Local/Cloud**: Local models for privacy with cloud APIs for capability 3. **Evaluation-First Design**: Built-in benchmarking and metrics collection ... 
+
+36 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+# H Case Study 
+
+## H.1 Comparison between DeepSurvey and the baseline 
+
+To further evaluate the quality and depth of the generated surveys, we compare DeepSurvey with the strongest performing baseline, AutoSurvey, on the topic “AutoSurvey” (specific examples in Appendix H.3.1 and Figue 11). 
+
+Topic focus. DeepSurvey’s eight sections remain tightly focused on automated survey generation, with every subsection directly addressing the target topic. In contrast, AutoSurvey’s outline includes substantial irrelevant content—Mobile and Sensor-Based Data Collection, Crowdsourcing Platforms, Conversational Survey Design, and domain applications such as Environmental Monitoring and Healthcare—none of which bear meaningful relevance to the topic. 
+
+Analytical depth and synthesis. DeepSurvey establishes a four-paradigm taxonomy (one-shot, iterative, multi-agent, structure-first) and identifies a central challenge—the skeleton-versus-flesh trade-off —with paper-level references enabling cross-paper comparison along concrete dimensions (e.g., retrieval strategies, refinement loops). AutoSurvey produces a flat enumeration without any taxonomy, unifying framework, or comparative synthesis. 
+
+Critical analysis and future directions. DeepSurvey explicitly identifies limitations of existing systems—shallow summaries, citation hallucination, limited domain generalization—and proposes concrete future directions such as hybrid human-AI collaboration and multimodal synthesis. Au-toSurvey offers no critical evaluation, no identification of open problems, and no forward-looking analysis. 
+
+Structural quality. DeepSurvey provides informative descriptions for each subsection specifying the content scope and analytical angle (e.g., “Reviews foundational approaches that used predefined templates, sentence extraction, and optimization frameworks”). AutoSurvey’s subsection titles are often generic (e.g., “Scalability and Efficiency”) and lack scoped descriptions, resembling a textbook table of contents rather than an analytical survey. 
+
+## H.2 Effect of code analysis integration 
+
+Beyond the quantitative improvements in content depth (8.33 →8.45 in all domains and 8.38 →8.71 in CS)(Section 3.4), the code-analysis subsystem recovers implementation-level details that are absent from paper text. Using the topic “Hallucination in LLM” as an example (Case H.3.2), the generated sur-vey integrates code-level findings in three ways: (1) it extracts concrete implementation patterns from repositories—such as spectral-collapse detection via Laplacian eigenvalue monitoring and attention-locking thresholds ( 0.69 JS-Drift saturation)—that are described only abstractly or omitted entirely in the corresponding papers; (2) it embeds implementation sketches (e.g., incremental partial-similarity scoring at each decoding step) that operationalize conceptual mitigation strategies into actionable code; and (3) it synthesizes a unified pipeline class that orchestrates detection, alignment, and evaluation components drawn from multiple papers, bridging the gap between fragmented conceptual discus-sions and a coherent implementation framework. These code-grounded additions complement the text-based analysis by providing the technological granularity that paper prose alone cannot convey. 37 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+## H.3 Specific Case 
+
+H.3.1 DeepSurvey Survey Case 
+
+DeepSurvey’s output survey(due to space limit, we presents abstract and outline rather than full-text) under ”AutoSurvey” are as follow: Generated Survey Case 
+
+# Automated Literature Survey and Review Generation: A Comprehensive Survey **Abstract** The exponential growth of scientific literature has created an urgent need for automated tools to synthesize knowledge. This survey provides a comprehensive analysis of automated survey generation systems, tracing their evolution from early template-based methods to sophisticated agentic frameworks. We identify a central challenge: the 'skeleton-versus-flesh ' trade-off, where systems excel at organizing outlines and citations (the skeleton) but struggle with deep synthesis and critical analysis (the flesh). Our survey is structured around three pillars: (1) a detailed taxonomy of system architectures, including one-shot, iterative, multi-agent, and structure-first paradigms; (2) a critical examination of evaluation frameworks, highlighting the persistent gap between automated metrics and human judgment; and (3) a forward-looking analysis of future directions, such as hybrid human-AI collaboration and autonomous research pipelines. By synthesizing over fifteen key systems and benchmarks, we aim to provide a comparative analysis of design philosophies, implementation trade-offs, and unresolved challenges, offering a roadmap for advancing automated scholarly synthesis. ... Outline: ## 1. Introduction Establishes the motivation for automated survey generation by highlighting the exponential growth of scientific literature and the limitations of manual synthesis. Introduces the core challenges: information overload, context window constraints, and the need for structural organization. Positions the survey 's scope to cover system architectures, evaluation paradigms, and future directions, agentic, structure-aware generation. - papers: 74fdf8053638eb12e5cce073ab4fb476fdb9f9cb ### 1.1 The Information Overload Crisis in Scientific Research Discusses the exponential growth of publications across disciplines, making manual literature reviews impractical and outdated quickly. Cites the challenge of synthesizing knowledge from hundreds or thousands of papers, leading to redundancy and fragmentation in the literature. ### 1.2 From Manual to Automated: The Promise of LLMs - Introduces Large Language Models (LLMs) as a transformative technology for automating survey generation. Highlights their ability to process and synthesize text at scale, but notes key limitations: context window constraints, parametric knowledge cutoffs, and lack of structural reasoning. - papers: 74fdf8053638eb12e5cce073ab4fb476fdb9f9cb ### 1.3 Core Challenges in Automated Survey Generation - Outlines the fundamental challenges: (1) Retrieving relevant and high-quality papers, (2) Organizing them into a coherent hierarchical structure, (3) Synthesizing content with critical analysis and proper citations, and (4) Evaluating the quality of generated surveys against human standards. ### 1.4 Scope and Organization of This Survey - Defines the survey 's scope: covering system architectures, evaluation frameworks, and future directions. Provides a roadmap of the subsequent sections, emphasizing the logical flow from historical evolution to current systems, evaluation, and open problems. ## 2. Historical Evolution and Paradigm Shifts - Traces the development of automated survey generation from early template-based and extractive methods to modern LLM-driven systems. Highlights key paradigm shifts: from one-shot generation to 
+
+38 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+iterative refinement, from linear pipelines to multi-agent architectures, and from text-only outputs to multi-view structured representations. - papers: 2305.13304, 2601.09504, 2510.17263, 2509.18661, 2602.04071, 2503.04629, 2304.03512, 2510.21900, 2510.26012, 2502.14776, 2406.10252, 2601.09858, 2508.14317, 2511.17689, 2506.12689, 99e5d27e6af6f6a53d23ceb0c53e09503c4b6403, 2510.07733, 213d6264456e3c6410bb9b2e8d7711742bb8eceb ### 2.1 Early Template-Based and Extractive Methods - Reviews foundational approaches that used predefined templates, sentence extraction, and optimization frameworks. Discusses their limitations in handling semantic understanding and generating novel syntheses, setting the stage for LLM-based methods. - papers: 2304.03512, 99e5d27e6af6f6a53d23ceb0c53e09503c4b6403, 213d6264456e3c6410bb9b2e8d7711742bb8eceb ### 2.2 The Rise of LLM-Based One-Shot Generation - Covers the first wave of LLM applications, exemplified by systems like AutoSurvey, which used retrieval-augmented generation (RAG) and parallel subsection drafting. Highlights their efficiency but notes issues with structural coherence and citation accuracy. - papers: 2503.04629, 2510.26012, 2502.14776, 2406.10252 ### 2.3 The Iterative and Agentic Revolution - Describes the shift towards iterative workflows (e.g., IterSurvey, SurveyGen-I) and multi-agent frameworks (e.g., Agentic AutoSurvey, LiRA). Emphasizes how these systems mimic human research processes through incremental retrieval, outline refinement, and specialized agent roles. - papers: 2305.13304, 2509.18661, 2602.04071, 2510.21900, 2601.09858, 2508.14317, 2511.17689, 2506.12689 ### 2.4 Structure-First and Multi-View Paradigms - Introduces the latest paradigm focusing on explicit structural planning before content generation. Highlights systems like MVSS (hierarchical knowledge trees), TAXOALIGN (taxonomy generation), and SurveyG (citation graphs) that prioritize conceptual organization and cross-view consistency. - papers: 2601.09504, 2510.17263, 2510.07733 ## 3. System Architectures and Methodological Frameworks - Provides a detailed taxonomy of automated survey generation systems based on their architectural design. Categorizes systems into one-shot, iterative, multi-agent, and structure-first paradigms, analyzing their core workflows, planning mechanisms, and integration of retrieval and generation. - papers: 2510.05138, 2305.13304, 2601.09504, 2510.17263, 2509.18661, 2602.04071, 2503.04629, 2511.18743, 2304.03512, 2510.21900, 2510.26012, 2502.14776, 2406.10252, 2509.13312, 2601.09858, 2308.00352, 2604.06170, 2508.14317, 2511.17689, 2506.12689, 99e5d27e6af6f6a53d23ceb0c53e09503c4b6403, 2510.07733 ### 3.1 One-Shot Generation Pipelines - Analyzes systems that generate surveys in a single pass after initial retrieval and outline creation. Discusses their typical stages: retrieval, outline generation, parallel subsection drafting, and integration. Highlights their speed but notes limitations in handling long-range dependencies and iterative refinement. - papers: 2503.04629, 2304.03512, 2510.26012, 2502.14776, 2406.10252, 99e5d27e6af6f6a53d23ceb0c53e09503c4b6403 ### 3.2 Iterative and Recurrent Planning Frameworks - Examines systems that use iterative loops to refine outlines and content. Covers mechanisms like recurrent outline generation (IterSurvey), dynamic planning with memory (SurveyGen-I), and reinforcement learning over outlines (OutlineForge). Emphasizes their ability to adapt to discovered knowledge and improve coherence over multiple passes. - papers: 2305.13304, 2511.18743, 2510.21900, 2509.13312, 2601.09858, 2508.14317 ### 3.3 Multi-Agent Collaborative Architectures - Explores frameworks that decompose the survey task among specialized agents (e.g., search, writing, evaluation). Discusses coordination mechanisms like publish-subscribe (MetaGPT), iterative reflection (SciSage), and rubric-guided refinement (ARISE). Highlights their modularity and potential for error correction through agent collaboration. - papers: 2510.05138, 2509.18661, 2602.04071, 2308.00352, 2604.06170, 2511.17689, 2506.12689 
+
+39 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+### 3.4 Structure-First and Multi-View Synthesis - Focuses on systems that explicitly model hierarchical structures before generating text. Covers hierarchical knowledge trees (MVSS), taxonomies (TAXOALIGN), citation graphs (SurveyG), and attribute trees (SurveyX). Discusses how these structures guide outline construction, ensure logical flow, and enable cross-view alignment. - papers: 2601.09504, 2510.17263, 2510.07733 ## 4. Core Components and Techniques - Dissects the key technical components that enable automated survey generation: literature retrieval, outline planning, content synthesis, and post-processing. Analyzes how different systems implement these components, highlighting innovations in retrieval strategies, memory mechanisms, and refinement loops. - papers: 2510.05138, 2305.13304, 2601.09504, 2510.17263, 2509.18661, 2602.04071, 2503.04629, 2511.18743, 2304.03512, 2510.21900, 2510.26012, 2502.14776, 2406.10252, 2509.13312, 2601.09858, 2308.00352, 2508.17647, 2604.06170, 2508.14317, 2511.17689, 2506.12689, 74fdf8053638eb12e5cce073ab4fb476fdb9f9cb, 2510.07733 ### 4.1 Literature Retrieval and Knowledge Integration - Covers retrieval strategies from simple keyword search to advanced multi-source, multi-granularity approaches. Discusses techniques like keyword expansion (SurveyX), co-citation analysis (QUAL-SG), and temporal-aware reranking (SurveyForge). Highlights the shift from static retrieval to active, iterative retrieval based on generation confidence (FLARE). - papers: 2509.18661, 2503.04629, 2511.18743, 2510.21900, 2510.26012, 2502.14776, 2406.10252, 2509.13312, 2508.17647, 2604.06170, 2508.14317, 74fdf8053638eb12e5cce073ab4fb476fdb9f9cb ### 4.2 Outline Planning and Hierarchical Organization - Analyzes methods for generating survey outlines, from heuristic learning from human examples (SurveyForge) to explicit hierarchical modeling (MVSS). Discusses the role of knowledge trees, taxonomies, and citation graphs in capturing research evolution and ensuring logical flow. Compares static vs. dynamic outline generation. - papers: 2305.13304, 2601.09504, 2510.17263, 2503.04629, 2304.03512, 2510.21900, 2510.26012, 2502.14776, 2509.13312, 2601.09858, 2508.14317, 2510.07733 ### 4.3 Content Synthesis and Citation Grounding - Examines techniques for generating section content, including parallel drafting, memory-driven generation, and hint-based synthesis. Focuses on ensuring factual accuracy and proper citation through mechanisms like paper cards (IterSurvey), evidence audit (RhinoInsight), and RAG-based rewriting (SurveyX). - papers: 2510.05138, 2509.18661, 2503.04629, 2510.21900, 2510.26012, 2502.14776, 2406.10252, 2509.13312, 2508.14317 ### 4.4 Refinement, Alignment, and Post-Processing - Covers iterative refinement loops that polish surveys for coherence, style, and factual consistency. Discusses cross-view alignment (MVSS), reviewer-refiner loops (IterSurvey), and rubric-guided revision (ARISE). Also addresses post-processing steps like figure/table generation and citation verification. - papers: 2510.05138, 2601.09504, 2602.04071, 2511.18743, 2510.21900, 2502.14776, 2308.00352, 2511.17689, 2506.12689 ## 5. Evaluation and Benchmarking - Reviews the diverse evaluation methodologies and benchmarks developed to assess automated survey generation systems. Contrasts absolute scoring with pairwise ranking, discusses the role of LLM-as-a-judge, and highlights the persistent gap between automated metrics and human expert judgment. Emphasizes the need for discipline-aware and reader-centric evaluation. - papers: 2510.05138, 2601.09504, 2510.17263, 2509.18661, 2503.04629, 2602.11238, 2304.03512, 2510.21900, 2510.26012, 2502.14776, 2406.10252, 2509.13312, 2508.17647, 2508.15804, 2508.15658, 2511.17689, 2512.02763, 2506.12689, 2510.03120, 213d6264456e3c6410bb9b2e8d7711742bb8eceb ### 5.1 Automatic Metrics and LLM-as-a-Judge - Surveys common automatic metrics: ROUGE, BLEU, BERTScore for text similarity; citation precision/recall for reference quality; and structural metrics like heading recall. Discusses the use of LLM-as-a-judge for multi-dimensional assessment (coverage, structure, relevance) and its limitations in capturing deep synthesis. 
+
+40 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+- papers: 2601.09504, 2510.17263, 2304.03512, 2510.26012, 2502.14776, 2406.10252, 2508.17647, 2508.15658, 2511.17689, 2512.02763, 213d6264456e3c6410bb9b2e8d7711742bb8eceb ### 5.2 Benchmarks for Survey Generation - Introduces key benchmarks: SciReviewGen (literature reviews), SurveyBench (reader-aligned evaluation), SurGE (comprehensive CS surveys), and SurveyLens (discipline-aware evaluation). Compares their scope, evaluation dimensions, and insights into system strengths and weaknesses. - papers: 2510.05138, 2509.18661, 2503.04629, 2602.11238, 2510.21900, 2406.10252, 2509.13312, 2508.17647, 2508.15804, 2508.15658, 2512.02763, 2506.12689, 2510.03120 ### 5.3 Human Evaluation and Pairwise Ranking - Highlights the importance of human evaluation through expert ratings, pairwise comparisons (Survey-Arena), and real-user studies (MyScholarQA). Discusses how human judgment captures nuanced qualities like critical analysis and narrative coherence that automated metrics miss. - papers: 2601.09504, 2602.11238, 2510.21900, 2510.03120 ### 5.4 The Evaluation Gap and Future Directions - Analyzes the persistent gap between automated metrics and human judgment, particularly in assessing synthesis depth and academic value. Proposes future directions: hybrid evaluation paradigms, discipline-specific rubrics, and quiz-based answerability tests to better align with reader needs. - papers: 2602.11238, 2508.15804, 2512.02763, 2510.03120 ## 6. Challenges and Limitations - Identifies the major unresolved challenges in automated survey generation, including the 
+
+'skeleton-versus-flesh ' trade-off, citation hallucination, domain generalization, and the lack of deep synthesis. Discusses how current systems fall short of human experts in critical analysis, novelty, and scholarly communication. - papers: 2511.18743, 2602.11238, 2508.17647, 2508.15804, 2508.15658 ### 6.1 The Skeleton-Versus-Flesh Trade-off - Explores the fundamental tension between structural proficiency and content depth. Notes that while systems excel at organizing outlines and citations, they often produce shallow summaries lacking critical analysis, novel insights, and nuanced argumentation. Highlights the gap in 'academic value ' metrics. ### 6.2 Citation Accuracy and Hallucination - Discusses persistent issues with citation quality: hallucinated references, over-citation, and misalignment between claims and sources. Analyzes architectural constraints (evidence locking, frozen structures) and verification mechanisms that mitigate but do not fully solve the problem. - papers: 2511.18743, 2508.15804 ### 6.3 Domain Generalization and Adaptability - Examines the limited generalizability of current systems, which are often trained and evaluated on computer science topics. Highlights challenges in adapting to other disciplines with different writing norms, citation practices, and structural conventions. Notes the STEM bias in existing benchmarks. - papers: 2602.11238 ### 6.4 Lack of Deep Synthesis and Critical Analysis - Identifies the core limitation: LLMs struggle to perform genuine scholarly synthesis---integrating findings across papers, identifying research gaps, and offering novel perspectives. Discusses how iterative refinement and multi-agent debate improve but do not resolve this limitation. - papers: 2508.17647, 2508.15658 ## 7. Future Directions and Open Problems - Outlines specific, actionable research directions to advance automated survey generation. Emphasizes the need for hybrid human-AI collaboration, improved structural reasoning, multimodal synthesis, and robust evaluation frameworks. Proposes concrete steps for addressing the identified challenges. - papers: 2305.13304, 2602.04071, 2511.18743, 2601.09858, 2604.06170, 2404.06364 ### 7.1 Hybrid Human-AI Collaboration and Interactive Systems 
+
+41 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+- Advocates for integrating human guidance at critical stages: reference selection, outline approval, and iterative refinement. Proposes interactive interfaces that allow researchers to steer generation, correct errors, and inject domain knowledge, moving beyond fully automated pipelines. - papers: 2305.13304, 2602.04071, 2511.18743, 2604.06170, 2404.06364 ### 7.2 Advanced Structural Reasoning and Planning - Calls for research into explicit structural inductive biases, such as reinforcement learning over outlines, symbolic reasoning for taxonomy construction, and dynamic knowledge graphs. Emphasizes the need for models that can infer and represent expert knowledge hierarchies from literature. - papers: 2601.09858 ### 7.3 Multimodal Synthesis and Rich Media Integration - Highlights the gap in generating non-textual elements: figures, tables, equations, and interactive visualizations. Proposes developing systems that can automatically create and integrate these elements to enhance survey readability and information density. ### 7.4 Robust, Discipline-Aware Evaluation Frameworks - Advocates for evaluation paradigms that combine automated metrics with human-aligned benchmarks, discipline-specific rubrics, and reader-centric tests (e.g., quiz-based answerability). Emphasizes the need for metrics that assess academic value, critical analysis, and personalization. ### 7.5 Towards Autonomous Research Pipelines - Envisions the integration of survey generation into broader AI Scientist systems that can conduct end-to-end research: from literature review to idea generation, experimentation, and paper writing. Identifies missing capabilities: experimental execution, uncertainty quantification, and cross-domain transfer. - papers: 2602.04071 ## 8. Conclusion - Summarizes the survey 's key findings: the rapid evolution from simple pipelines to sophisticated agentic systems, the persistent challenges in deep synthesis and evaluation, and the promising future directions. Reiterates the transformative potential of automated survey generation while acknowledging the need for continued human oversight and interdisciplinary collaboration. 
+
+H.3.2 DeepSurvey-Code Case 
+
+DeepSurvey-code’s output survey under ”LLM Hallucination” are as follow: DeepSurvey-code survey case 
+
+... The integration of activation control with diagnostic frameworks enhances its robustness and interpretability. For instance, [43] identifies "spectral collapse" as a thermodynamic state change in attention topology, where Laplacian eigenvalues exhibit a drop in smoothness and rise in entropy, indicating fragmented attention connectivity. This spectral signature aligns with the attention-locking threshold (~0.69 JS-Drift saturation) described in [46], where hallucinations become solidified and resistant to correction. Monitoring spectral entropy could provide an early warning signal before attention-locking occurs, allowing activation control hooks to intervene preemptively. Similarly, [48] uses topological data analysis to detect hallucinations through persistent homology, identifying structural disconnections in attention graphs. These topological features could inform activation control by highlighting layers or heads where interventions are most needed, creating a synergy between detection and real-time mitigation. To deploy this surgically in production, the Code Report (Section 7, Direction 2) suggests an incremental scoring approach that operates at each decoding step. This method computes a partial similarity score between generated tokens and a reference, triggering activation cancellation if confidence drops below a threshold. The real-time hook, as implemented in [8], can be optimized with computational techniques from the Code Report (Section 4), such as caching intermediate hidden states and batch processing multiple candidate tokens, reducing latency while preserving the 
+
+42 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+surgical precision of H-Node suppression. **Implementation Sketch:** # At each decoding step: partial_similarity = compute_partial_similarity( generated_tokens[:current_step], reference_tokens )if partial_similarity < confidence_threshold: suppress_h_node_activations() ... To address the fragmentation noted in the Code Report---where evaluation, detection, and alignment operate in isolation---a unified pipeline integrating [10] for evaluation, [34] for detection, and [26] for alignment could provide a holistic framework. For instance, a class-based implementation could orchestrate these components: during generation, real-time uncertainty from [34] triggers alignment corrections via [26], followed by [10] evaluation of the refined output, as sketched in Direction 1 of the Code Report. This directly counters the 'dimensional poverty '
+
+critique by demonstrating how multi-dimensional scoring can be operationalized in a single, actionable system. Concretely, [9] 's six-stage pipeline (task formulation, decomposition, tool-augmented execution, structured generation, multi-dimensional scoring, trace analysis) could be extended with a concrete class implementation inspired by the Code Report 's Direction 1: class UnifiedHallucinationPipeline: def __init__(self, evaluator=BERTScore(), detector=SpikeScore(), aligner=VaryingShadesOfWrong()): self.evaluator = evaluator self.detector = detector self.aligner = aligner def process(self, query, context): # (1) Task Formulation: Parse user query and context # (2) Decomposition: Break query into sub-tasks using LENS 's tree-based query decomposition # (3) Tool-Augmented Execution: Generate responses while SpikeScore monitors uncertainty fluctuations across turns responses = self.detector.track_uncertainty(query, context) if self.detector.hallucination_flag: # (4) Structured Generation: Trigger alignment corrections via preference optimizatio corrected = self.aligner.correct(responses, query) else: corrected = responses # (5) Multi-Dimensional Scoring: Compute BERTScore F1, faithfulness, coverage ` ` score = self.evaluator.compute(corrected, context) # (6) Trace Analysis: Log causal attribution via OpenTelemetry return score, corrected This pipeline operates as follows: For a medical diagnosis query, decomposition yields symptom extraction, evidence retrieval, and synthesis; [34] detects hallucination spikes during synthesis; [26] corrects using wrong-over-wrong preferences; [10] evaluates final output against retrieved evidence. This integration not only operationalizes [9] 's framework but also addresses Code Report gaps by enabling real-time detection and alignment, as validated in case studies where such pipelines reduced hallucination rates by 30-40% in high-stakes domains. However, real-time detection remains a gap; the Code Report 's Direction 2 sketches incremental [10] for token-by-token scoring during generation, addressing latency issues in streaming applications. This complements [9] by enabling early stopping, though it requires access to intermediate hidden states. ... 
+
+43 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+# I Prompt Engineer 
+
+In this section, we will present the core prompt we use in DeepSurvey agentic system, including clustering, outline and draft. Other prompts can be found when our repository is open-source. 
+
+## I.1 Clustering Prompt 
+
+This part demonstrates the clustering creation/refinement prompt and the cluster-papers assignment prompt. Clustering Creation/Refinement Prompt 
+
+PAPER_CLUSTERING_CREATING = """You are a research assistant specializing in analyzing scientific papers. **Existing clusters and descriptions**: {existing_clusters_json} **New batch of papers** (each with a keynote): {new_batch_json} Task: - You should adjust existing clusters and descriptions based on the new batch of papers. - If **Existing clusters and descriptions** is empty, create new clusters from scratch based on the new batch of papers. - Update the clusters by merging, splitting or adding clusters if needed. Make sure all new papers can be assigned to at least one cluster. - Assign a name and a brief summary to each cluster. - Aim to create clusters that are as detailed as possible, capturing subtle differences, while still making sense. - A single paper may belong to multiple clusters if its research area reasonably intersects with multiple themes (multi-assignment is allowed). - Output the full updated cluster list strictly **in JSON format**! - You only need to output the clusters name and description; do not list or mention any specific papers! Output format requirements: The JSON should be a list of cluster objects. Each cluster object should include the following fields: - cluster_name: string, the name of the cluster - summary: string, a brief description of the cluster Output Example (strictly in JSON format): [{{ "cluster_name": "...", "summary": "...", }}, {{ "cluster_name": "...", "summary": "...", }} ]""" 
+
+44 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+## I.2 Outline Prompt 
+
+This part demonstrates the outline creation/refinement prompt and the citations assignment prompt. Outline Creation Prompt 
+
+SURVEY_OUTLINE_GENERATION_OUTLINE_DRAFT = """You are an expert research survey generator. Your task is to generate and iteratively update an existing survey outline using a batch of new paper keynotes, the current outline, and the analysis results of relevant papers for the topic/subtopic being written. **Guidance:** - The analysis results contain summarized insights, comparisons, trends, and key points extracted from prior work. They should be the **important source of guidance** when updating the outline. - Paper keynotes are also useful: use them to **supplement, validate, or provide additional details** for the sections/subsections. - Balance both sources to create a comprehensive, accurate, and logically organized survey outline. **Requirements:** 1. The outline should contain multiple sections, subsections and their descriptions. 2. The output outline should have excellent organization and meet academic standards. 3. The outline should exhibit excellent rigor: ensuring that the content of each subsection falls within the scope of the current section. 4. The outline should ensure that it covers a wide range of content under the topic while staying within the scope of the topic. 5. Use the current outline as the base structure. Keep existing sections/subsections unless updated or merged. If the current outline is empty, create a new outline from scratch. 6. The outline should contain a **Conclusion** section and a **Future Work** section/subsection. 7. The outline should exhibit good logic to ensure the entire survey flows smoothly 8. Ensure a balanced number of subsections in the main sections (excluding the conclusion and introduction). 9. Make sure most of the corresponding new paper in **new paper keynotes** can be included in at least one subsection or section of the outline. 10. You are provided with other relevant papers which is retrieved from database, you can use them to better understand and generate. 11. Maintain clarity, logical structure, and a survey-style narrative. 12. Ensure logical coherence between the sections, avoiding excessive independence and fragmentation. For instance, do not add a "Conclusion" subsection to every section, which lead to logical fragmentation between different sections. 13. Output strictly in JSON format, as shown below. **Input:** - current outline: {current_outline} - key papers: {paper_keynotes} - key papers analysis: {papers_analysis} - other relevant papers: {other_relevant_papers} **Output JSON format:** {{ "title" : "Survey_Title", "sections": [ {{ "title": "Section_title", "description": "Summary of content to include, emphasizing insights, comparisons, and trends from analysis, supplemented by keynotes", "subsections": [ {{ "title": "Subsection_title", "description": "Content description reflecting key insights, trends, comparisons from analysis, supplemented by keynotes", 
+
+45 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+}} ]}} ]}} **Instruction to LLM:** - Use the insights, trends, and comparisons from relevant paper analysis together with points from new paper keynotes to update the outline. Both sources should inform the content of each section/subsection. - Add, merge, or revise sections/subsections as appropriate, keeping the outline structured and coherent. - Ensure that each section/subsection reflects the combined contributions of the analysis results and the keynotes, capturing important insights, trends, and examples. - Check the whether the input outline satisfies the requirements and update to meet the requiremnets if not. - Only generate the outline in the required JSON format. Do not include specific paper IDs in the outline. """ 
+
+Outline Citation Assignment Prompt 
+
+SURVEY_OUTLINE_GENERATION_PAPER_ASSIGNMENT = """You are an expert research survey writer. Your task is to assign papers to be cited to corresponding sections and subsections. **Guidance:** 1. Assign papers based on their relevance to the section and subsection topics. 2. Make sure citing according to you assignment is reasonable and appropriate and help to provide insights in the survey. **Requirements:** 1. Assign EVERY paper in **key papers** to be assigned to one or more corresponding sections or subsections. 2. The section title and subsection title in your assignment result must EXACTLY match the titles in the current outline. 3. You can also assign suitable papers in other relevant papers to sections or subsections. 4. ONLY assign papers that appear in the provided input. 5. You are provided with key paper analysis. Use them to help better understand and assign papers. **Input:** - outline: {current_outline} - key papers: {paper_keynotes} - other relevant papers: {other_relevant_papers} - key paper analysis: {papers_analysis} **Output format:** [{{ "paper_id": "...", "paper_title": "...", "assignment": {{ "section_title_1": ["subsection_title_1", "subsection_title_2"], ... }} }}, ... ]""" 
+
+46 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+## I.3 Draft Prompt 
+
+In this part we will present the prompt for section draft and subsection draft. Subsection Draft Prompt 
+
+SUBSECTION_DRAFT = """You are an expert in writing top academic conference standards surveys. The ultimate goal is to complete a acadamic survey with depth, insights and can boost further development, rather than simply listing methods. Now you are responsible for writing a subsection of the survey paper. **Subsection Title**: {title} **Guidance**: Write a coherent subsection that explains, analyzes, or discusses the topic indicated in the title and description. You should synthesize relevant information from the papers, analysis results. The content should be academically structured and readable, with emphasis on insights, trends, and comparisons where appropriate. You may include examples from papers to support the discussion, but do not simply list papers. You are encouraged to cite more papers from the relevant papers to strengthen your points. You are provided with the outline of the whole survey. Make sure the subsection content coherent to the survey logic. Utilize the input content in a safe and reasonable manner, and ensure that the readability, structure, and depth of the content of the paragraph meet the requirements of a top-tier conference survey. {code_report_prompt} **Information to use**: - Subsection description: {description} - Closely Relevant papers: {papers} - Other Relevant papers: {other_relevant_papers} - Survey Outline: {survey_outline} - Insights from analysis: {relevant_analysis} **Output:** - A well-written subsection in several coherent paragraphs. - Academic style; focused on synthesis and analysis, not just reporting. - **Only** cite papers that appear in the provided input. - Strictly use format: <paper_title> (like <Attention is All You Need>) to cite wherever appropriate. - Cite at least **{subsection_least_citations} different papers** for a subsection. You are encouraged to cite more papers to give in-depth analysis.. - Do not generate a bibliography or reference list here. - The content of each subsection should be at least {subsection_least_words} words long - Generate the content directly. DO NOT generate any subsection title or section header here. - CRITICAL: '#' is used for section/subsection anchor. Avoid any '#' in the output content. """ 
+
+47 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation Section Draft Prompt 
+
+SECTION_DRAFT = """You are writing the Introductory Paragraphs/Preamble for a specific section of an academic top-tier conference survey paper. **Task**: Write the opening text that appears immediately after the Section Title but before the first subsection. This content should serve as a high-level synthesis and roadmap for the reader. **Requirements**: 1. Synthesize, Don 't Summarize: Do not simply list what each subsection will do. Instead, explain the logic behind why this section is structured this way and the significance of these topics within the broader field. 2. Establish Definition & Scope: Clearly define the core concepts covered in this section. Refer to <paper_title> to establish foundational definitions or taxonomies. 3. Identify Trends: Highlight the overarching trends or challenges that link the following subsections together. 4. Academic Tone: Maintain a formal, authoritative, and objective voice. 5. Citations: * Only cite papers provided in the relevant papers provided below(Closely Relevant papers and Other Relevant papers). Use the format: <paper_title>. 6. Cite at least {section_least_citations} papers to ground the section 's scope. 7. Utilize the input content in a safe and reasonable manner, and ensure that the readability, structure, and depth of the content of the paragraph meet the requirements of a top-tier conference survey. 8. Length: The introductory content must be at least {section_least_words} words long but avoid too-long preamble which will destroy structure and readability. 9. CRITICAL: '#' is used for section/subsection anchor. Avoid any '#' in the output content. **Input**: - Section Title: {title} - Section Description: {description} - Full Survey Outline: {survey_outline} Planned Subsections under this Section: {subsection_drafts} (Use these as a roadmap, do not detail their findings yet). - Closely Relevant papers: {papers} - Other Relevant papers: {other_relevant_papers} **Output**: Generate the introductory content directly. DO NOT generate any subsection title or section header here. """ 
+
+48 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation  
+
+> Model
+
+Setting Metric Std Range CV% Max Abs Dev gpt-exp AutoSurvey Content_Depth 0.064 0.125 0.748 0.069 gpt-exp DeepSurvey Content_Depth 0.042 0.083 0.481 0.042 gpt-no-exp AutoSurvey Content_Depth 0.032 0.062 0.379 0.035 gpt-no-exp DeepSurvey Content_Depth 0.043 0.083 0.511 0.049 mimo-exp AutoSurvey Content_Depth 0.012 0.021 0.152 0.014 mimo-exp DeepSurvey Content_Depth 0.000 0.000 0.000 0.000 mimo-no-exp AutoSurvey Content_Depth 0.043 0.083 0.537 0.049 mimo-no-exp DeepSurvey Content_Depth 0.075 0.146 0.927 0.083 gpt-exp AutoSurvey Core_Quality 0.087 0.167 1.014 0.097 gpt-exp DeepSurvey Core_Quality 0.064 0.125 0.765 0.069 gpt-no-exp AutoSurvey Core_Quality 0.024 0.042 0.289 0.028 gpt-no-exp DeepSurvey Core_Quality 0.064 0.125 0.781 0.069 mimo-exp AutoSurvey Core_Quality 0.024 0.042 0.285 0.028 mimo-exp DeepSurvey Core_Quality 0.208 0.417 2.994 0.208 mimo-no-exp AutoSurvey Core_Quality 0.072 0.125 0.875 0.083 mimo-no-exp DeepSurvey Core_Quality 0.024 0.042 0.306 0.028 gpt-exp AutoSurvey Total_Score 0.045 0.087 0.527 0.049 gpt-exp DeepSurvey Total_Score 0.038 0.075 0.452 0.039 gpt-no-exp AutoSurvey Total_Score 0.015 0.029 0.176 0.015 gpt-no-exp DeepSurvey Total_Score 0.031 0.062 0.382 0.033 mimo-exp AutoSurvey Total_Score 0.020 0.038 0.239 0.022 mimo-exp DeepSurvey Total_Score 0.133 0.267 1.822 0.135 mimo-no-exp AutoSurvey Total_Score 0.029 0.050 0.355 0.033 mimo-no-exp DeepSurvey Total_Score 0.010 0.021 0.133 0.011 gpt-exp AutoSurvey Writing_Quality 0.032 0.062 0.394 0.035 gpt-exp DeepSurvey Writing_Quality 0.024 0.042 0.302 0.028 gpt-no-exp AutoSurvey Writing_Quality 0.021 0.042 0.255 0.021 gpt-no-exp DeepSurvey Writing_Quality 0.012 0.021 0.147 0.014 mimo-exp AutoSurvey Writing_Quality 0.042 0.083 0.515 0.042 mimo-exp DeepSurvey Writing_Quality 0.043 0.083 0.573 0.049 mimo-no-exp AutoSurvey Writing_Quality 0.032 0.062 0.404 0.035 mimo-no-exp DeepSurvey Writing_Quality 0.043 0.083 0.565 0.049 Table 9: Per-metric stability statistics across models, methods, and evaluation dimensions. 49 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Dimension Group Sub-dimension Description Core Quality 
+
+Synthesis How well the survey integrates findings across papers into a coherent whole. Organization How logically the survey is structured, with clear sectioning and flow. Comprehensiveness How fully the survey covers the main papers, methods, and themes in the topic. Relevance How well the content stays focused on the target topic without including off-topic material. 
+
+Writing Quality 
+
+Readability How easy the survey is to read, follow, and understand. Academic Rigor How precise, careful, and scientifically grounded the wording and claims are. Clarity How clearly each idea, comparison, and conclusion is expressed. Coherence How smoothly sentences, paragraphs, and sections connect with each other. 
+
+Content Depth 
+
+Critical Analysis How well the survey evaluates strengths, weaknesses, trade-offs, and limitations. Novelty and Insights How much original interpretation, synthesis, or insight the survey provides beyond summary. Specificity How concrete and detailed the discussion is, rather than staying at a high level. Future Directions How well the survey identifies meaningful open problems and research opportunities. 
+
+Table 10: Dimention description for rubric evaluating content quality in Evaluation. 
+
+Metric w/o analy. w/o coll. w/o keyn. w/o writ. w/o ref. DS 
+
+(1)
+
+DS-code 
+
+(1)
+
+DS 
+
+(2)
+
+DS-code 
+
+(2)
+
+Core Quality 
+
+Synthesis Quality 9.000 7.429 8.857 7.429 9.000 8.867 8.933 9.000 9.067 Organization 9.000 5.143 9.000 6.429 9.000 8.933 8.867 9.000 8.867 Comprehensiveness 9.000 1.000 8.857 7.571 9.000 8.933 8.933 9.000 9.000 Relevance 8.429 1.000 9.143 8.000 9.429 9.133 9.467 9.400 9.400 
+
+Writing Quality 
+
+Readability 8.000 5.000 8.000 8.000 8.000 8.000 8.000 8.067 8.000 Academic Rigor 9.000 2.429 8.714 6.000 8.286 8.800 8.267 8.933 8.933 Clarity & Coherence 8.000 3.857 8.143 6.429 8.000 8.067 8.000 8.067 8.000 
+
+Content Depth 
+
+Critical Analysis 8.857 8.429 8.571 6.429 8.286 8.800 8.733 8.867 8.933 Novelty and Insights 7.429 4.571 8.143 6.000 8.143 8.200 8.267 8.200 8.400 Specificity 7.000 2.429 7.286 6.429 7.000 7.667 7.867 8.000 7.933 Future Directions 8.286 7.000 8.571 7.000 8.000 8.333 8.467 8.267 8.533 
+
+Table 11: Fine-grained ablation scores across Core Quality, Writing Quality, and Content Depth. “w/o X” denotes removal of module X; superscripts (1) and (2) denote DeepSurvey without and with agentic refinement, respectively. 50 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Figure 11: Case Study: DeepSurvey vs. AutoSurvey – DeepSurvey Surpasses AutoSurvey with Closely Topic-Focused Content, Clear Structure, In-Depth Analysis, and Meaningful Future Directions 51 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Module / Stage Parameter Value Description 
+
+General Max context length 512k tokens Per-call input context limit General Generation Model MiMo-V2-Flash(309B) Model for generation survey General Judge Model MiMo-V2-Flash(309B), GPT-5-mini Model for evaluation survey General Embedding Model MiniLMv2 Pretrained embedding model 
+
+Retrieval Max seed papers 15 Seed papers retained from ini-tial search 
+
+Retrieval Graph expansion depth 1 Max citation graph traversal layers 
+
+Retrieval Papers per seed 20 Max expanded papers re-tained per seed 
+
+Outline generation Temperature 0.5 Controls outline diversity 
+
+Subsection drafting Temperature 0.7 Controls subsection writing di-versity 
+
+Section drafting Temperature 0.3 Controls section integration stability 
+
+Pseudocode gen. Planner temperature 0 Deterministic planning 
+
+Pseudocode gen. Reviewer tempera-ture 0 Deterministic review 
+
+Pseudocode gen. Reviser temperature 0 Deterministic revision 
+
+Pseudocode gen. Creator temperature 0.3 Moderate generation flexibil-ity 
+
+Pseudocode gen. Max rounds 10 Iteration limit for pseudocode generation 
+
+Section refinement Planner temperature 0.7 Section-level revision plan-ning 
+
+Section refinement Reviewer tempera-ture 1.0 Broad coverage in review 
+
+Section refinement Reviser temperature 0.5 Balanced revision diversity 
+
+Subsection refinement Temperature 0.1 Local stable revision 
+
+Survey refinement Planner temperature 0.7 Survey-level revision planning 
+
+Survey refinement Reviewer tempera-ture 1.0 Global issue identification 
+
+Survey refinement Reviser temperature 0.5 Controllable global revision 
+
+Survey refinement Max rounds 5 Iteration limit for survey re-finement 
+
+Table 12: DeepSurvey system parameters. 52 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+Cluster ID # Papers Primary Focus (First 30 words) 
+
+1 25 Several papers propose explicit hierarchical structures (e.g., knowledge trees, citation graphs) to organize surveys, while others rely on iterative outline refinement without such explicit models. How do these funda-mentally different... 
+
+2 27 Several papers treat automated survey generation as a one-shot task (generating a complete survey from scratch), while one paper reframes it as a continuous maintenance problem where surveys are incrementally... 
+
+3 33 Multiple papers identify a fundamental trade-off between structural organization and content depth in automatic survey generation. Sur-veyLens finds ASG systems excel at structural outlines while Deep Research agents dominate content... 
+
+4 23 Several papers propose explicit hierarchical structures (e.g., knowledge trees, taxonomies, catalogues) as a foundation for survey generation, while others rely on iterative outline refinement or graph-based planning. What are the... 
+
+5 18 Several papers propose hierarchical or structured approaches to organiz-ing survey content (e.g., knowledge trees, outlines, attribute trees). How do the design philosophies of these structures differ... 
+
+6 14 Both <RhinoInsight> and <WebWeaver> propose frameworks to im-prove deep research agents by introducing explicit control mechanisms over the research process. However, their architectural philosophies dif-fer: RhinoInsight injects control modules... 
+
+7 17 How do the iterative and recurrent planning mechanisms in <Recur-rentGPT>, <IterSurvey>, <SurveyGen-I>, and <AgentCPM-Report> differ in their handling of memory, state updates, and ... 
+
+8 13 How do the different approaches to structuring and retrieving literature— such as SciPIP’s quintuple-based summarization and multi-granularity retrieval versus PaperRobot’s knowledge graph construction and link prediction—reflect... 
+
+9 11 How does the positional bias identified in <Lost in the Middle: How Language Models Use Long Contexts> impact the effectiveness of the natural language memory states used in <RecurrentGPT: Interactive... 
+
+10 15 How do the retrieval mechanisms in <Paper Circle>, <Language Models Don’t Know What You Want: Evaluating Personalization in Deep Research Needs Real Users>, and <SURVEYAGENT> differ in their integration of... 
+
+11 5 The framework relies heavily on GPT-4 for both instance creation and verification. How might this create a closed-loop system where the evalu-ation benchmarks are inherently limited by GPT-4’s own capabilities... 
+
+12 29 How do the evaluation philosophies of <SurveyLens>, <SGSimEval>, <SurGE>, <SurveyBench>, and <DeepSurvey-Bench> differ in their definition of a ‘high-quality’ survey... 
+
+Table 13: Cluster overview for the “AutoSurvey” topic. 53 DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation 
+
+ID Title Evaluation Focus Evaluation Methodol-ogy Scope of Bench-mark Key Innovation 
+
+2510.17263 TAXOALIGN: Instruction-Tuned Scholarly T Structural align-ment and semantic cohere Novel metrics (average degree score, lev Computer science (ACM Computing Surveys First benchmark for scholarly tax-onomy g 
+
+2509.18661 Agentic AutoSur-vey: Multi-Agent Framewor Survey quality (core, writing, depth) an 12-dimensional evalua-tion framework with Computer science (AI topics) Multi-agent frame-work and compre-hensive 
+
+2602.11238 SurveyLens: ADiscipline-Aware Benchmark Discipline-aware evaluation (out-line, co Discipline-aware rubric evaluation with Multi-disciplinary (10 fields) First discipline-aware benchmark for ASG 
+
+2304.03512 Hierarchical Cata-logue Generation for Li Hierarchical cata-logue generation (infor Novel metrics (CQE, CEDS) and human corr Computer science (arXiv) First benchmark for hierarchical catalog 
+
+2510.21900 Deep Literature Survey Automation with a Survey quality (coverage, struc-ture, rel LLM-as-a-judge and pairwise benchmark (S Computer science (arXiv) Iterative workflow and Survey-Arena pair 
+
+2406.10252 AutoSurvey: Large Language Models Can Au Content quality and citation qual-ity Multi-LLM-as-judge evaluation Computer science (AI topics) Logical parallel generation and real-tim 
+
+2508.17647 SurveyGen and QUAL-SG Citation quality and content con-sistency Automatic metrics and human evaluation Multi-domain (4,200 surveys) Large-scale dataset (Sur-veyGen) and qual 
+
+2508.15804 ReportBench Citation quality and factual accu-racy of Agent-based auto-mated verification (cite Multi-disciplinary (10+ categories) Benchmark for Deep Research agents with 
+
+2601.12369 TaxoBench: Assess-ing Deep Research Agent Retrieval and tax-onomy organiza-tion Hierarchy-aware met-rics (US-TED, Sem-Pat LLM-related sur-veys (72 surveys) Benchmark for deep research agents on re 
+
+2508.11310 SGSimEval: ABenchmark for Automatic Sur Outline, content, and reference qual-ity Similarity-enhanced framework with hu-man Multi-domain (80 surveys) Similarity-enhanced evalua-tion with two 
+
+2603.16120 MyScholarQA: Per-sonalized Deep Re-search Personalization in deep research (pro-fil Offline synthetic users and online real-Computer science (291 queries, 21 real uPersonalized deep research system and re 
+
+2305.14627 ALCE: Enabling Large Language Models to Fluency, correct-ness, and citation quali Automatic metrics (MAUVE, NLI-based cita Multi-domain (ASQA, QAMPARI, ELI5) First reproducible benchmark for LLM-cit 
+
+2508.15658 SurGE: A Bench-mark and Evalua-tion Framew Comprehensive, citation accuracy, st Multi-dimensional evaluation with human Computer science (205 surveys) Method-agnostic benchmark with large ret 
+
+2506.12689 SCISAGE: A Multi-Agent Framework for Hig Content quality, structural coher-ence, r LLM-as-a-judge and human evaluation Computer science (46 papers) Multi-agent frame-work with reflec-tive me 
+
+2512.02763 SurveyEval: AComprehensive Benchmark fo Overall quality, outline coherence, refe LLM-as-a-judge with human references Multi-subject (7 sub-jects) Comprehensive benchmark across multiple 
+
+Table 14: Benchmarks and evaluation frameworks for survey generation and deep research. 54
