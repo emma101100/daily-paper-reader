@@ -1,0 +1,510 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-05-30T20:58:41.919495+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 6,
+    "deep_cap": 7,
+    "deep_selected": 6,
+    "quick_candidates": 6,
+    "quick_skim_target": 12,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2605.25092v1",
+      "source": "arxiv",
+      "title": "AgentIR: A Workload-Adaptive Cascade Retrieval Substrate for Long-Term Conversational Memory",
+      "abstract": "Long-term conversational memory is a retrieval workload classical IR was not built for: the index grows during the query stream, query types shift intra-session, and the latency budget per retrieval is sub-10 ms. Lucene-class engines treat the index as static and the query as stateless, leaving the workload's structure unexploited.   AgentIR treats fusion as a per-query decision along two axes: which fusion to apply (BM25, Dense, RRF, or agent-aware RRF), and whether the ~52 ms dense channel is worth running at all. The second axis is a confidence-triggered cascade router that decides from the BM25 top-k margin alone and re-tunes across workloads without retraining. On LongMemEval (n=500), where the dense channel does add information, the cascade skips 63% of queries at parity LLM-judged accuracy (2.67x faster under two judges, paired bootstrap p>=0.88); per-qtype thresholds extend this to 5.76x under 5-fold cross-validation. On LoCoMo (n=1,982), where BM25 alone is already the strongest single system, the same trigger auto-tunes to a 100% skip rate (132x faster, +0.089 Hit@5). Capacity on a shared 8-core VM rises from ~154 to ~1,400 concurrent agents (9x).   Underneath the cascade, a time-partitioned index does O(log 1/epsilon) work independent of corpus size: 1234x corpus growth costs only 3.6x latency, ending in 1769x over sequential at sub-100 us p50 on 5M records. At parity quality with Lucene on 9 BEIR datasets up to 8.8M docs, the substrate runs 10x geo-mean over Pyserini 8T and 11x over PISA-1T BlockMax-WAND; an A100 reaches 1.8-39x over Pyserini 8T; chunked index build sustains 56.8K docs/sec on MS MARCO. Three subtle BM25/GPU correctness pitfalls that silently regress nDCG@10 by 6-8x are documented and fixed; post-fix CPU and GPU agree within 0.0002 nDCG@10 on all eight datasets that fit a single A100.",
+      "authors": [
+        "Aojie Yuan",
+        "Haiyue Zhang",
+        "Shahin Nazarian"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.CL",
+        "cs.DB"
+      ],
+      "published": "2026-05-24T14:14:13+00:00",
+      "link": "https://arxiv.org/pdf/2605.25092v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "adaptive cascade retrieval for long-term conversational memory",
+      "llm_evidence_cn": "自适应级联检索用于长时对话记忆",
+      "llm_evidence": "自适应级联检索用于长时对话记忆",
+      "canonical_evidence": "自适应级联检索用于长时对话记忆",
+      "llm_tldr_en": "AgentIR proposes a per-query adaptive fusion strategy with a confidence-triggered cascade router to optimize retrieval latency and accuracy for growing conversational agent memory.",
+      "llm_tldr_cn": "针对对话式智能体记忆索引增长和查询类型多变的问题，AgentIR提出了一种按查询决策的自适应融合方法，通过置信度触发的级联路由器优化检索延迟与精度，并在LongMemEval数据集上验证了其有效性。",
+      "llm_tldr": "针对对话式智能体记忆索引增长和查询类型多变的问题，AgentIR提出了一种按查询决策的自适应融合方法，通过置信度触发的级联路由器优化检索延迟与精度，并在LongMemEval数据集上验证了其有效性。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.24218v1",
+      "source": "arxiv",
+      "title": "QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks",
+      "abstract": "Deep research agents extend the role of search engines from retrieving keyword-matched pages to synthesizing knowledge, fundamentally changing how humans interact with information. However, frontier systems remain proprietary, while existing open agents often generalize poorly across different task types, leaving unclear how to train a broadly capable deep research agent. We release QUEST, a family of open models (ranging from 2B to 35B) that serve as general-purpose deep research agents designed to handle a wide range of long-horizon search tasks, with strong capabilities in fact seeking, citation grounding, and report synthesis. To build QUEST, we propose an effective training recipe combining mid-training, supervised fine-tuning, and reinforcement learning. Central to this recipe is a curated data synthesis pipeline based on unified rubric trees, which applies to different task types and enables synthesizing training data with verifiable rewards without human annotation. In addition, QUEST incorporates a built-in context management mechanism that enables effective long-horizon reasoning and knowledge synthesis. Using only 8K synthesized tasks, QUEST approaches or even surpasses frontier closed-source agents across eight deep research benchmarks spanning diverse task types, and achieves the best overall performance among recent open-weight agents. We released everything: models, data, and training scripts.",
+      "authors": [
+        "Jian Xie",
+        "Tianhe Lin",
+        "Zilu Wang",
+        "Yuting Ning",
+        "Yuekun Yao",
+        "Tianci Xue",
+        "Zhehao Zhang",
+        "Zhongyang Li",
+        "Kai Zhang",
+        "Yufan Wu",
+        "Shijie Chen",
+        "Boyu Gou",
+        "Mingzhe Han",
+        "Yifei Wang",
+        "Vint Lee",
+        "Xinpeng Wei",
+        "Xiangjun Wang",
+        "Yu Su",
+        "Huan Sun"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-22T20:59:20+00:00",
+      "link": "https://arxiv.org/pdf/2605.24218v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Deep research agents trained for fact seeking, citation grounding, and report synthesis, directly applicable to literature review tasks.",
+      "llm_evidence_cn": "深度研究智能体经过事实查找、引文扎根和报告合成训练，直接用于文献综述",
+      "llm_evidence": "深度研究智能体经过事实查找、引文扎根和报告合成训练，直接用于文献综述",
+      "canonical_evidence": "深度研究智能体经过事实查找、引文扎根和报告合成训练，直接用于文献综述",
+      "llm_tldr_en": "QUEST releases open-source deep research agents trained with mid-training, SFT, and RL on synthetic tasks, achieving strong fact-seeking, citation grounding, and report synthesis for long-horizon search.",
+      "llm_tldr_cn": "QUEST针对开源深度研究智能体跨任务泛化能力不足的局限，设计结合中期训练、监督微调与强化学习的多阶段训练方法，在合成任务数据上训练多尺寸模型，使智能体能够胜任各种长程搜索任务，并在事实查找、引文扎根和报告合成方面表现出色，为文献综述和知识合成提供了通用开放的智能体方案。",
+      "llm_tldr": "QUEST针对开源深度研究智能体跨任务泛化能力不足的局限，设计结合中期训练、监督微调与强化学习的多阶段训练方法，在合成任务数据上训练多尺寸模型，使智能体能够胜任各种长程搜索任务，并在事实查找、引文扎根和报告合成方面表现出色，为文献综述和知识合成提供了通用开放的智能体方案。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "research agent for literature review hypothesis generation and experiment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.25746v1",
+      "source": "arxiv",
+      "title": "Multi-Agent Coordination Adaptation via Structure-Guided Orchestration",
+      "abstract": "As large language model (LLM)-based multi-agent systems scale to handle increasingly complex tasks, balancing structural stability and dynamic adaptability becomes increasingly challenging. Existing systems typically adopt either structure-centric methods, committing to structures determined upfront that limit fine-grained control, or orchestration-centric methods, adapting decisions dynamically while leaving coordination structure implicit and unstable. To address this challenge, we revisit multi-agent coordination from a probabilistic perspective, casting it as posterior inference over the joint distribution of structure and orchestration. We introduce MACA, an automated coordination framework that learns a task- and budget-conditioned structural prior over agent participation and interactions. This prior guides a policy-based orchestration as an approximation to posterior inference, enabling efficient solutions with fine-grained control. Across benchmarks, MACA outperforms adaptive multi-agent baselines by an average of 8.42% while using 43.19% fewer tokens. Further investigation reveals that joint adaptation of structure and orchestration suppresses redundant interactions, converging coordination toward task-effective execution.",
+      "authors": [
+        "Haoran Li",
+        "Shulun Chen",
+        "Shaoyuan Sun",
+        "Hanchen Wang"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-05-25T11:59:58+00:00",
+      "link": "https://arxiv.org/pdf/2605.25746v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "framework for multi-agent coordination balancing structure and adaptability via probabilistic inference",
+      "llm_evidence_cn": "基于概率推断的多智能体协调框架，平衡结构与适应性",
+      "llm_evidence": "基于概率推断的多智能体协调框架，平衡结构与适应性",
+      "canonical_evidence": "基于概率推断的多智能体协调框架，平衡结构与适应性",
+      "llm_tldr_en": "Introduces MACA, a coordination framework that learns task-conditioned structural priors for multi-agent systems, enabling both stability and adaptability.",
+      "llm_tldr_cn": "针对LLM多智能体系统在复杂任务中难以平衡结构稳定和动态适应的问题，提出MACA框架，从概率视角将协调建模为结构和编排的联合后验推断，并学习任务和预算条件的结构先验。实验表明MACA能自动适应协调结构，在多个复杂任务上提升任务完成效率，为可扩展多智能体系统提供了协调适应新范式。",
+      "llm_tldr": "针对LLM多智能体系统在复杂任务中难以平衡结构稳定和动态适应的问题，提出MACA框架，从概率视角将协调建模为结构和编排的联合后验推断，并学习任务和预算条件的结构先验。实验表明MACA能自动适应协调结构，在多个复杂任务上提升任务完成效率，为可扩展多智能体系统提供了协调适应新范式。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "multi-agent systems coordination and memory sharing",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.27873v1",
+      "source": "arxiv",
+      "title": "AIBuildAI-2: A Knowledge-Enhanced Agent for Automatically Building AI Models",
+      "abstract": "AI models underpin data-centric applications from image and text processing to scientific discovery in biology, physics, and chemistry. Yet developing them remains heavily manual, requiring practitioners to design architectures, build training pipelines, and iteratively refine solutions, making it challenging for natural scientists without specialized AI engineering expertise to build the high-performing models their research demands. To reduce this burden and broaden access to AI for scientific discovery, agents that automatically build AI models have been proposed. However, the performance of these agents is largely limited by the parametric knowledge of their underlying large language models, which is static, often outdated, and sparse on practical AI model engineering know-how. To address this limitation, we introduce AIBuildAI-2, a knowledge-enhanced agent with an external, evolving knowledge system for automatically building AI models. The knowledge system of AIBuildAI-2 is hierarchical, organizing curated AI development knowledge into high-level knowledge instructions over topical categories and low-level knowledge documents under each category, from which the agent dynamically loads only the context relevant to its current state and the AI task being solved, grounding each design and implementation decision in concrete, externally verifiable expertise. The system is initialized by collecting and cleaning AI-development-related documents from the web and organizing them into the corresponding categories, and continually evolves from the agent's own experience by distilling each completed run on an AI task into structured takeaways that are written back into the knowledge system. AIBuildAI-2 achieves state-of-the-art results, ranking first on MLE-Bench with a 70.7% medal rate and placing in the top 6.6% among 4,370 human-expert teams in a heart disease prediction competition.",
+      "authors": [
+        "Ruiyi Zhang",
+        "Peijia Qin",
+        "Qi Cao",
+        "Li Zhang",
+        "Pengtao Xie"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-27T02:44:13+00:00",
+      "link": "https://arxiv.org/pdf/2605.27873v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "knowledge-enhanced agent for automatically building AI models to assist scientific discovery in biology, physics, chemistry",
+      "llm_evidence_cn": "知识增强的智能体，自动构建AI模型，辅助生物、物理、化学领域的科学发现",
+      "llm_evidence": "知识增强的智能体，自动构建AI模型，辅助生物、物理、化学领域的科学发现",
+      "canonical_evidence": "知识增强的智能体，自动构建AI模型，辅助生物、物理、化学领域的科学发现",
+      "llm_tldr_en": "AIBuildAI-2 is a knowledge-enhanced agent that automatically builds AI models for data-centric applications, aiming to broaden access to AI for scientific discovery by incorporating external knowledge to overcome the limitations of static parametric knowledge in LLMs.",
+      "llm_tldr_cn": "尽管AI模型在图像文本处理乃至生物、物理、化学等科学发现中作用关键，但开发流程仍高度手工，限制了非AI专家科学家利用AI。已提出的自动构建模型智能体因底层LLM知识静态且稀疏而性能受限。AIBuildAI-2提出知识增强的智能体，通过整合外部知识库，能够自动设计架构、构建训练流水线并迭代优化，从而为科学家提供高性能模型。该工作降低了AI for Science的技术门槛，使领域科学家能更便捷地获得定制化AI模型以加速科学发现。",
+      "llm_tldr": "尽管AI模型在图像文本处理乃至生物、物理、化学等科学发现中作用关键，但开发流程仍高度手工，限制了非AI专家科学家利用AI。已提出的自动构建模型智能体因底层LLM知识静态且稀疏而性能受限。AIBuildAI-2提出知识增强的智能体，通过整合外部知识库，能够自动设计架构、构建训练流水线并迭代优化，从而为科学家提供高性能模型。该工作降低了AI for Science的技术门槛，使领域科学家能更便捷地获得定制化AI模型以加速科学发现。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.30136v1",
+      "source": "arxiv",
+      "title": "Enhancing Multi-Agent Communication through Attention Steering with Context Relevance",
+      "abstract": "LLM-based multi-agent systems have demonstrated remarkable performance on complex tasks through collaborative reasoning. However, these systems tend to rapidly accumulate extremely long conversation histories during interaction. As conversations lengthen, relevant information is increasingly diluted by irrelevant context, leading to degraded performance. In this work, we present Agent-Radar, a training-free context management method that dynamically steers each agent's attention toward relevant context with a novel temporal and spatial decay mechanism. Our experiments demonstrate that Agent-Radar outperforms state-of-the-art methods across five different benchmarks, yielding gains of up to 7.64 absolute points. Furthermore, our analysis shows that Agent-Radar remains effective and robust as the number of agents and interaction rounds increases. Finally, the ablation study shows that core components in Agent-Radar are crucial to performance and generalizable in different settings.",
+      "authors": [
+        "Hongxiang Zhang",
+        "Yuan Tian",
+        "Tianyi Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-28T16:02:52+00:00",
+      "link": "https://arxiv.org/pdf/2605.30136v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Improves multi-agent system communication by dynamically steering attention to relevant context, addressing coordination and context management.",
+      "llm_evidence_cn": "通过动态引导注意力到相关上下文，改进多智能体系统通信，解决协调和上下文管理问题。",
+      "llm_evidence": "通过动态引导注意力到相关上下文，改进多智能体系统通信，解决协调和上下文管理问题。",
+      "canonical_evidence": "通过动态引导注意力到相关上下文，改进多智能体系统通信，解决协调和上下文管理问题。",
+      "llm_tldr_en": "Agent-Radar uses temporal and spatial decay to steer attention, reducing dilution from long conversations and boosting multi-agent performance by up to 7.64 points.",
+      "llm_tldr_cn": "针对多智能体系统中对话历史过长导致信息稀释的问题，Agent-Radar 提出基于时间与空间衰减的注意力引导方法，动态过滤无关上下文。在五个基准上最多提升7.64个绝对百分点，并展现了良好的可解释性。",
+      "llm_tldr": "针对多智能体系统中对话历史过长导致信息稀释的问题，Agent-Radar 提出基于时间与空间衰减的注意力引导方法，动态过滤无关上下文。在五个基准上最多提升7.64个绝对百分点，并展现了良好的可解释性。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "multi-agent systems coordination and memory sharing",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-26-727050-v1",
+      "source": "biorxiv",
+      "title": "A Multi-Agent RAG Framework for Biomedical Literature Analysis",
+      "abstract": "Background: The biomedical literature is expanding at an unprecedented rate, with over 4,000 new articles indexed on PubMed each day. Clinicians and researchers frequently lack the time to review this volume before making decisions. Retrieval-Augmented Generation (RAG) systems attempt to bridge this gap by grounding language model responses in relevant documents, but standard implementations rank all retrieved passages solely by semantic similarity, treating a case report and a meta-analysis as equally authoritative. Objective: We aimed to develop and pilot-evaluate a RAG variant that incorporates evidence quality and publication recency into the retrieval scoring function, and to determine whether these signals improve answer quality on biomedical questions compared with standard cosine similarity RAG and a full-context baseline. Methods: We developed ET-RAG (Evidence-Temporal RAG), which scores each retrieved chunk using a weighted combination of cosine similarity (50%), evidence quality based on the GRADE hierarchy (30%), and temporal recency (20%). We evaluated ET-RAG alongside two baselines: a full context agent powered by Gemini 2.0 Flash and a standard cosine RAG agent using GPT-4o-mini. All agents were tested on 40 benchmark questions (10 single-choice, 10 multiple-choice, 10 short answer, and 10 long answer) drawn from 10 peer-reviewed Alzheimer's disease papers published between 2021 and 2025. Results: ET-RAG achieved the highest scores across all four question categories: single choice (0.90), multiple choice (0.74), short answer (0.92), and long answer (0.89), with a combined average of 0.86. Cosine RAG scored 80%, 0.48, 0.82, and 0.69, respectively (average 0.70), while the full context agent scored 0.60, 0.59, 0.71, and 0.53 (average 0.61). The full context agent, despite having access to the entire corpus through Gemini's large context window, struggled with consistent answer extraction and was prone to rate limiting under heavy query loads. A control question on forestry was correctly rejected by all three agents, suggesting no hallucination on this control item. Conclusions: In this pilot Alzheimer's disease benchmark, incorporating evidence quality and recency into RAG retrieval improved answer quality relative to pure cosine similarity retrieval and full-corpus prompting. The evidence-temporal scoring function is lightweight to implement and adds minimal computational overhead to existing vector search pipelines, but broader validation across domains, evidence levels, and stronger retrieval baselines are required before claims of generalizable biomedical reliability can be made.",
+      "authors": [
+        "Palem, R. R.",
+        "Chen, H.",
+        "Yue, Z."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-05-29T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.26.727050v1.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "develops a multi-agent RAG variant incorporating evidence quality and recency for improved biomedical literature analysis",
+      "llm_evidence_cn": "开发多智能体 RAG 变体，结合证据质量和时效性改进生物医学文献分析",
+      "llm_evidence": "开发多智能体 RAG 变体，结合证据质量和时效性改进生物医学文献分析",
+      "canonical_evidence": "开发多智能体 RAG 变体，结合证据质量和时效性改进生物医学文献分析",
+      "llm_tldr_en": "This multi-agent RAG framework improves biomedical literature analysis by incorporating evidence quality and recency signals into retrieval scoring, outperforming standard RAG on question answering.",
+      "llm_tldr_cn": "针对生物医学文献爆炸性增长，标准 RAG 仅靠语义相似度排序导致权威性混淆。本文提出多智能体 RAG 框架，将证据质量与发表时效纳入检索评分，通过 Pilot 评估表明该信号能显著提升答案质量，为文献审查辅助工具提供了有效方案。",
+      "llm_tldr": "针对生物医学文献爆炸性增长，标准 RAG 仅靠语义相似度排序导致权威性混淆。本文提出多智能体 RAG 框架，将证据质量与发表时效纳入检索评分，通过 Pilot 评估表明该信号能显著提升答案质量，为文献审查辅助工具提供了有效方案。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "research agent for literature review hypothesis generation and experiment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.26178v1",
+      "source": "arxiv",
+      "title": "ATOM: Instantiating Budget-Controllable Multi-Agent Collaboration via Nucleus-Electron Hierarchy",
+      "abstract": "Large Language Model (LLM)-based multi-agent systems rely on optimized collaboration topologies to balance performance and communication costs. However, current methods struggle with the inherent stability-extensibility trade-off and often misalign computational budgets with query difficulty. We propose \\textsc{ATOM}, an adaptive framework that generates budget-controllable collaboration graphs via a novel task-driven reinforcement learning paradigm. Inspired by atomic structures, \\textsc{ATOM} employs a nucleus-electron hierarchy: it maintains a stable, offline-learned collaboration backbone (the nucleus) while dynamically activating query-conditioned agents (electrons) during inference. Crucially, a complexity-aware budgeting strategy aligns resource consumption with task demands by estimating query difficulty to strictly regulate electron instantiation. Extensive experiments across six diverse benchmarks demonstrate that \\textsc{ATOM} achieves state-of-the-art performance while improving token efficiency by up to $30\\%$ compared to strong baselines.",
+      "authors": [
+        "Xinkui Zhao",
+        "Sai Liu",
+        "Yifan Zhang",
+        "Qingyu Ma",
+        "Zewen Lin",
+        "Naibo Wang",
+        "Guanjie Cheng",
+        "Chang Liu",
+        "Yueshen Xu"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-05-25T06:41:11+00:00",
+      "link": "https://arxiv.org/pdf/2605.26178v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "budget-controllable multi-agent collaboration topology via reinforcement learning",
+      "llm_evidence_cn": "基于强化学习的预算可控多智能体协作拓扑",
+      "llm_evidence": "基于强化学习的预算可控多智能体协作拓扑",
+      "canonical_evidence": "基于强化学习的预算可控多智能体协作拓扑",
+      "llm_tldr_en": "ATOM uses a nucleus-electron hierarchy and reinforcement learning to generate adaptive collaboration graphs for multi-agent systems, balancing performance and cost according to query complexity.",
+      "llm_tldr_cn": "ATOM提出了一种基于原子结构的核-电子层级多智能体协作框架，通过离线学习稳定骨干和在线动态激活智能体，并结合强化学习生成预算可控的协作图，在保持性能的同时有效降低通信成本。",
+      "llm_tldr": "ATOM提出了一种基于原子结构的核-电子层级多智能体协作框架，通过离线学习稳定骨干和在线动态激活智能体，并结合强化学习生成预算可控的协作图，在保持性能的同时有效降低通信成本。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "multi-agent systems coordination and memory sharing",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.24941v1",
+      "source": "arxiv",
+      "title": "Memory-Induced Tool-Drift in LLM Agents",
+      "abstract": "Modern LLM agents combine long-term memory for personalization with tool-calling interfaces for taking actions in the world -- a combination underpinning contemporary production systems. We study a previously unexamined failure of this combination: when personality-driven biases stored in memory (cost-consciousness, impatience, risk tolerance, etc.) silently affect tool calls in contexts where they are not applicable. We call this memory-induced tool-drift and operationalize it through MEMDRIFT, a benchmark of 105 scenarios spanning five bias dimensions and seven professional domains, generated through an automated adversarial pipeline. Across seven frontier models -- including those with extended reasoning -- biased memories raise deflection scores (a judge-scored measure of parameter deviation from unbiased baselines) by up to $+3.6$ points on a 1--5 scale. Tool-drift persists when memory management is handled by three production memory architectures. The phenomenon affects real-world tools: scanning 6{,}062 tools across 288 verified MCP servers, we flag 608 with susceptible parameters and confirm tool-drift on a validated subset. Mechanistically, biased memories act as implicit steering vectors, pushing activations along the same latent directions as explicit behavioral instructions. They also redistribute attention from task-relevant context toward memory entries with surface-level keyword overlap to the target parameter. Standard defenses -- prompt-based relevance instructions and memory filters -- reduce drift but do not eliminate it. As agents take increasingly consequential actions on a user's behalf, memory-induced tool-drift represents a systematic vulnerability that current safeguards do not address, motivating dedicated defenses at the intersection of memory management and tool-call generation.",
+      "authors": [
+        "Mahavir Dabas",
+        "Jihyun Jeong",
+        "Ming Jin",
+        "Ruoxi Jia"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-05-24T08:41:39+00:00",
+      "link": "https://arxiv.org/pdf/2605.24941v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "studies personality-driven biases in long-term memory causing tool-drift in LLM agents",
+      "llm_evidence_cn": "研究长期记忆中性格偏见导致LLM智能体工具漂移",
+      "llm_evidence": "研究长期记忆中性格偏见导致LLM智能体工具漂移",
+      "canonical_evidence": "研究长期记忆中性格偏见导致LLM智能体工具漂移",
+      "llm_tldr_en": "Identifies memory-induced tool-drift: when agent memory biases affect tool calls inappropriately, and provides a benchmark MEMDRIFT to measure this failure across models.",
+      "llm_tldr_cn": "针对LLM智能体结合长期记忆与工具调用时可能出现记忆偏见影响决策的问题，提出MEMDRIFT基准，通过自动化对抗管道生成105个跨领域场景，覆盖五种偏见维度。对七种前沿模型测试发现，偏见记忆显著提高偏向分数，即参数选择偏离理性。该工作揭示了记忆-工具交互的新失败模式，为智能体记忆的可靠部署提供了评估基准。",
+      "llm_tldr": "针对LLM智能体结合长期记忆与工具调用时可能出现记忆偏见影响决策的问题，提出MEMDRIFT基准，通过自动化对抗管道生成105个跨领域场景，覆盖五种偏见维度。对七种前沿模型测试发现，偏见记忆显著提高偏向分数，即参数选择偏离理性。该工作揭示了记忆-工具交互的新失败模式，为智能体记忆的可靠部署提供了评估基准。",
+      "llm_tags": [
+        "query:agent-memory:composite"
+      ],
+      "matched_query_tag": "query:agent-memory:composite",
+      "matched_query_text": "Papers central to 查找关于LLM Agent和Agent Memory的论文，重点关注长程任务、工具使用、多智能体、规划、工作流、状态跟踪、反馈、反思、错误恢复、记忆模块（长时记忆、情节记忆、语义记忆、检索、整合、更新、遗忘、冲突解决、图记忆、状态表示、轨迹到技能、技能库、自演化）等，要求有消融实验或评估。, especially work that connects or combines: graph memory; long-horizon agents in long-term tasks with state maintenance; multi-agent systems coordination and memory sharing; state tracking in agent reasoning and execution; long-term memory for agents with retrieval and consolidation; skill library from trajectories for agent improvement; papers on long horizon LLM agents using memory and skill reuse; how agents maintain state in long term tasks with episodic memory; methods for extracting reusable skills from agent trajectories and failures; agent memory consolidation and forgetting mechanisms for continual learning.",
+      "matched_requirement_id": "req-composite-agent-memory",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.27073v1",
+      "source": "arxiv",
+      "title": "Learning to Orchestrate Agents under Uncertainty",
+      "abstract": "Adaptive orchestration of heterogeneous agents requires making sequential delegation decisions under uncertain and evolving agent behaviour, e.g., coordinating specialised AI models with varying reliability, cost, and response quality. While prior work on agent orchestration focuses on performance or cost, uncertainty in agent reliability and output distributions is typically not modelled explicitly at the orchestration level. In this work, we study the problem of adaptive orchestration of heterogeneous agents under uncertainty, where a meta-controller must decide when to delegate to an agent, accounting for reliability, cost, and uncertainty. We propose BOT-Orch, a lightweight framework that recasts orchestration as a bandit problem over agents, regularized by OT distances between agent output distributions and task-specific reference distributions. We show that the regularised orchestration enjoys $\\mathcal{O}(\\sqrt{T})$ regret under standard assumptions, and provably induces preference ordering among agents with identical mean rewards but differing distributional alignment. Empirically, we demonstrate that BOT-Orch outperforms standard bandit and heuristic baselines in synthetic but adversarial task allocation settings with heterogeneous, non-i.i.d. agent behaviour.",
+      "authors": [
+        "Mary Chriselda Antony Oliver",
+        "Lan Jiang",
+        "Aaron Bundi Anampiu",
+        "Elaf Almahmoud",
+        "Francesco Quinzan",
+        "Umang Bhatt"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-26T14:23:22+00:00",
+      "link": "https://arxiv.org/pdf/2605.27073v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Addresses adaptive orchestration of heterogeneous agents under uncertainty, a multi-agent coordination problem.",
+      "llm_evidence_cn": "解决不确定下异构智能体的自适应编排，属于多智能体协调问题。",
+      "llm_evidence": "解决不确定下异构智能体的自适应编排，属于多智能体协调问题。",
+      "canonical_evidence": "解决不确定下异构智能体的自适应编排，属于多智能体协调问题。",
+      "llm_tldr_en": "Proposes BOT-Orch, a bandit-based framework for delegating tasks to heterogeneous agents while modeling uncertainty, cost, and reliability.",
+      "llm_tldr_cn": "提出BOT-Orch框架，将智能体编排转化为对抗性多臂老虎机问题，通过最优传输距离正则化来平衡可靠性、成本和不确定性，实现鲁棒的异构智能体任务指派。",
+      "llm_tldr": "提出BOT-Orch框架，将智能体编排转化为对抗性多臂老虎机问题，通过最优传输距离正则化来平衡可靠性、成本和不确定性，实现鲁棒的异构智能体任务指派。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "multi-agent systems coordination and memory sharing",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-1101-2024-12-08-627408-v2",
+      "source": "biorxiv",
+      "title": "Mechanistic Identifiability Preservation for Hybrid Neural Differential Equations",
+      "abstract": "Hybrid neural differential equations (HNDEs) embed neural network components within mechanistic scaffolds, combining the structural interpretability of domain-derived models with the approximation power of neural dynamics. Despite their growing adoption in biology and engineering, neural augmentation can introduce observational degeneracies that compromise mechanistic identifiability and scientific interpretability.\n\nIn this paper, we develop a theoretical framework for practical preservation of mechanistic identifiability in HNDEs. We formalize bounded neural correction classes and derive Gronwall-type trajectory and observational discrepancy bounds linking neural perturbations to mechanistic parameter ambiguity. We further establish sufficient conditions under which hybrid neural corrections preserve approximate mechanistic parameter recoverability up to explicitly quantifiable tolerances.\n\nEmpirical likelihood profile analyses on benchmark systems confirm that neural augmentation systematically weakens--but does not eliminate--mechanistic identifiability, revealing a fundamental expressiveness-identifiability trade-off. These results provide theoretical foundations and actionable guidance for deploying HNDEs in scientific intelligent computing.",
+      "authors": [
+        "Whipple, B.",
+        "Hernandez-Vargas, E. A."
+      ],
+      "primary_category": "systems biology",
+      "categories": [
+        "systems biology"
+      ],
+      "published": "2026-05-23T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2024.12.08.627408v2.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Provides theoretical guarantees for identifiability in hybrid neural ODEs used in scientific modeling, supporting rigorous AI for Science.",
+      "llm_evidence_cn": "为科学建模中使用的混合神经常微分方程提供可识别性的理论保证，支持严格的 AI for Science。",
+      "llm_evidence": "为科学建模中使用的混合神经常微分方程提供可识别性的理论保证，支持严格的 AI for Science。",
+      "canonical_evidence": "为科学建模中使用的混合神经常微分方程提供可识别性的理论保证，支持严格的 AI for Science。",
+      "llm_tldr_en": "This paper develops a theoretical framework to preserve mechanistic identifiability in hybrid neural ODEs, establishing bounds that prevent neural components from obscuring scientific parameters, thus enabling more interpretable scientific ML.",
+      "llm_tldr_cn": "该论文针对混合神经常微分方程中神经增强可能损害模型可识别性的问题，构建了一个理论框架，通过有界神经校正类和Gronwall型界，在保持科学可解释性的前提下约束神经扰动。这项工作为将神经网络与机理模型相结合进行科学发现提供了可靠的数学保障。",
+      "llm_tldr": "该论文针对混合神经常微分方程中神经增强可能损害模型可识别性的问题，构建了一个理论框架，通过有界神经校正类和Gronwall型界，在保持科学可解释性的前提下约束神经扰动。这项工作为将神经网络与机理模型相结合进行科学发现提供了可靠的数学保障。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.27328v1",
+      "source": "arxiv",
+      "title": "Governed Evolution of Agent Runtimes through Executable Operational Cognition",
+      "abstract": "Recent advances in agentic systems increasingly treat code as an executable operational substrate rather than as a disposable output artifact. Prior work such as \\emph{Code as Agent Harness} frames validated agent-generated artifacts as runtime entities that can be created, executed, revised, persisted, and reused within long-running cognitive loops. However, the governance, lifecycle management, and operational evolution of such artifacts remain under-specified.   This paper proposes a framework for governed runtime evolution in multi-agent systems through executable operational cognition. We formalize agent-generated artifacts as persistent runtime capabilities that progressively become part of the operational substrate rather than transient intermediate outputs. Building on this perspective, we introduce \\emph{HarnessMutation} as a governed mechanism for lifecycle-aware runtime adaptation operating under explicit validation, traceability, evaluation, and rollback constraints.   Rather than treating runtime adaptation as unrestricted self-modification, the proposed framework models evolution as a bounded and observable process over persistent operational memory. It further shows how these ideas can be operationalized over modern agent runtimes and governance-oriented orchestration systems, providing a conceptual foundation for adaptive infrastructures whose evolution remains explicit, auditable, and constrained.",
+      "authors": [
+        "Mariano Garralda-Barrio"
+      ],
+      "primary_category": "cs.SE",
+      "categories": [
+        "cs.SE",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-05-26T17:36:48+00:00",
+      "link": "https://arxiv.org/pdf/2605.27328v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "formalizes agent-generated artifacts as persistent runtime capabilities with governed lifecycle management and operational evolution",
+      "llm_evidence_cn": "将智能体生成工件形式化为持久运行时能力，进行受控生命周期管理和操作进化",
+      "llm_evidence": "将智能体生成工件形式化为持久运行时能力，进行受控生命周期管理和操作进化",
+      "canonical_evidence": "将智能体生成工件形式化为持久运行时能力，进行受控生命周期管理和操作进化",
+      "llm_tldr_en": "This work proposes a framework for governed runtime evolution of agent-generated code artifacts, turning them from disposable outputs into persistent, reusable runtime capabilities.",
+      "llm_tldr_cn": "该工作提出一种受控运行时进化框架，将智能体生成的代码工件从一次性输出转变为可持久化、可重用的运行时能力，通过生命周期管理和元认知治理实现多智能体系统中工件的持续进化，为可执行操作认知奠定了基础。",
+      "llm_tldr": "该工作提出一种受控运行时进化框架，将智能体生成的代码工件从一次性输出转变为可持久化、可重用的运行时能力，通过生命周期管理和元认知治理实现多智能体系统中工件的持续进化，为可执行操作认知奠定了基础。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "structured research artifacts and provenance in automated science",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.27935v1",
+      "source": "arxiv",
+      "title": "Do Agents Think Deeper? A Mechanistic Investigation of Layer-Wise Dynamics in Sequential Planning",
+      "abstract": "Recent mechanistic studies suggest that large language models (LLMs) may utilize their depth inefficiently in standard single-turn tasks. Whether this still holds in autonomous agent settings, where models must perform multi-turn planning, tool use, and iterative state updates, remains unclear. We study this question through a systematic layer-wise analysis of complete user-agent trajectories spanning three domains: Deep Research, Code Generation, and Tabular Processing. Using residual stream probes, causal layer-skipping interventions, and effective-depth measurements, we show that agentic reasoning exhibits a distinct depth profile from static tasks. As trajectories unfold, models progressively recruit more and deeper layers, with stronger long-range inter-layer dependencies emerging in later turns. At the same time, residual updates become increasingly correction-dominant, indicating a shift from stable feature accumulation toward repeated recalibration. Effective-depth analysis further reveals a substantial construction-refinement gap: semantic direction often forms relatively early, while deep layers remain necessary for stabilizing final outputs. Across model families, this gap is pronounced in Qwen and Minimax, whereas GLM shows a more domain-dependent depth allocation pattern. These results provide mechanistic evidence that autonomous LLM agents allocate depth adaptively as reasoning complexity grows.",
+      "authors": [
+        "Zhenyu Cui",
+        "Xiangzhong Luo"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-27T04:08:08+00:00",
+      "link": "https://arxiv.org/pdf/2605.27935v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Analyzes layer-wise dynamics in agentic sequential planning tasks, revealing deeper layer recruitment and progressive depth usage for state maintenance.",
+      "llm_evidence_cn": "分析代理序列规划任务的层动态，揭示深层逐步调用用于状态维护。",
+      "llm_evidence": "分析代理序列规划任务的层动态，揭示深层逐步调用用于状态维护。",
+      "canonical_evidence": "分析代理序列规划任务的层动态，揭示深层逐步调用用于状态维护。",
+      "llm_tldr_en": "This paper shows that LLM agents recruit deeper layers progressively during multi-turn tasks, revealing a distinct depth profile for agentic reasoning and state maintenance.",
+      "llm_tldr_cn": "已有研究认为LLM在单轮任务中深度利用效率低，但代理设置下情况不明。本文在多领域代理轨迹上使用残差流探针、因果跳层干涉和有效深度测量，发现代理推理展现出与静态任务不同的深度模式。随着交互进行，模型逐步调用更深层，表明深层参与序列状态维护。这为理解代理状态跟踪机制提供了机理见解。",
+      "llm_tldr": "已有研究认为LLM在单轮任务中深度利用效率低，但代理设置下情况不明。本文在多领域代理轨迹上使用残差流探针、因果跳层干涉和有效深度测量，发现代理推理展现出与静态任务不同的深度模式。随着交互进行，模型逐步调用更深层，表明深层参与序列状态维护。这为理解代理状态跟踪机制提供了机理见解。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

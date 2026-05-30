@@ -1,0 +1,640 @@
+Title: Do Agents Think Deeper? A Mechanistic Investigation of Layer-Wise Dynamics in Sequential Planning
+
+URL Source: https://arxiv.org/pdf/2605.27935v1
+
+Published Time: Thu, 28 May 2026 00:37:59 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+## Do Agents Think Deeper? A Mechanistic Investigation of Layer-Wise Dynamics in Sequential Planning 
+
+Zhenyu Cui and Xiangzhong Luo †
+
+Abstract. Recent mechanistic studies suggest that large language mod-els (LLMs) may utilize their depth inefficiently in standard single-turn tasks. Whether this still holds in autonomous agent settings, where mod-els must perform multi-turn planning, tool use, and iterative state up-dates, remains unclear. We study this question through a systematic layer-wise analysis of complete user-agent trajectories spanning three do-mains: Deep Research, Code Generation, and Tabular Processing. Using residual stream probes, causal layer-skipping interventions, and effective-depth measurements, we show that agentic reasoning exhibits a distinct depth profile from static tasks. As trajectories unfold, models progres-sively recruit more and deeper layers, with stronger long-range inter-layer dependencies emerging in later turns. At the same time, residual updates become increasingly correction-dominant, indicating a shift from sta-ble feature accumulation toward repeated recalibration. Effective-depth analysis further reveals a substantial construction-refinement gap: se-mantic direction often forms relatively early, while deep layers remain necessary for stabilizing final outputs. Across model families, this gap is pronounced in Qwen and Minimax, whereas GLM shows a more domain-dependent depth allocation pattern. These results provide mechanistic evidence that autonomous LLM agents allocate depth adaptively as rea-soning complexity grows. 
+
+Keywords: Autonomous LLM Agents, Mechanistic Interpretability, Dy-namic Depth Allocation 
+
+1 Introduction 
+
+The rapid evolution of Large Language Models (LLMs) [23, 1, 32, 10, 5] has been fundamentally driven by the scaling of parameters, data, and compute. As for-malized by foundational scaling laws [18, 20], predictable performance gains are intrinsically tied to architectural expansion, where model depth emerges as a critical axis. This representational depth enables the hierarchical composition of features, empowering foundation models to sustain multi-step inference and de-compose abstract goals into structured plans. These emergent capabilities form the cornerstone of modern autonomous agents [36, 34]. Unlike static question-answering tasks, agents operate in dynamic environments that demand contin-uous sequential decision-making. They must select appropriate tools, interpret  
+
+> †
+
+Correspondence: xiangzhong.luo@seu.edu.cn  
+
+> arXiv:2605.27935v1 [cs.AI] 27 May 2026 2Z. Cui and X. Luo
+
+execution feedback, and maintain a coherent reasoning chain over extended, multi-turn trajectories [27]. Consequently, DeepSeek-R1 [12], OpenAI’s o1 [24], and Qwen3 [37] rely heavily on extended computational paths to bridge the gap between static linguistic knowledge and dynamic, executable actions. However, despite the empirical success of deep architectures, a fundamental paradox has recently emerged regarding depth efficiency. As models scale, the performance gains from adding layers begin to diminish, raising a critical question: Are these foundation models truly leveraging their immense depth to perform complex, hi-erarchical computations, or are they merely distributing redundant operations across a greater number of layers? 
+
+To address this fundamental question, recent mechanistic studies have begun to probe the internal dynamics supporting these capabilities, yielding mixed signals regarding the utility of depth. On one hand, evidence corroborates a reliance on depth for complexity. Investigations into prediction dynamics reveal that complex tasks, such as multi-token fact recall, demand significantly deeper processing layers [13], and dynamic routing studies show that deeper layers are intensively utilized for iterative refinement in reasoning benchmarks [16]. On the other hand, a provocative study by [17] suggests that in many general NLP tasks, LLMs utilize their depth inefficiently, often spreading computation uniformly or exhibiting redundancy in deeper layers. However, this dichotomy raises a critical question: Does this inefficient depth hypothesis hold for autonomous agents? 
+
+Unlike isolated benchmarks, multi-turn agentic trajectories demand long-horizon state tracking and iterative error correction. We hypothesize that this sequential complexity inherently forces a dynamic and adaptive allocation of depth. The fundamental limitation of prior mechanistic evaluations lies in their re-liance on static, single-turn generations, which inherently strip away this sequen-tial complexity. Constrained by these isolated setups, previous studies naturally concluded that depth is underutilized. However, our preliminary observations in dynamic environments reveal a starkly different phenomenon: as an agent engages in multi-turn tool-use, it appears to actively mobilize deeper compu-tational paths to handle the compounding burden of context maintenance and state updates. To systematically investigate this contradiction and decode how depth alloca-tion truly evolves, we construct a comprehensive dataset of complete multi-turn trajectories across three challenging domains: Deep Research, Code Generation, and Tabular Processing. By employing Residual Stream Analysis and Layer-Skipping Interventions, our evaluation moves beyond isolated prompts to probe the full reasoning cycle encompassing user queries, internal thoughts, actions, and environmental observations. Tracking how layer efficacy dynamically adapts as the planning horizon expands, this work represents the first systematic at-tempt to decode the dynamic layer-wise mechanistic behavior of autonomous agents during complex sequential planning. Our main contributions are summa-rized as follows: 
+
+• Discovery of progressive layer mobilization. We uncover a temporal evolution in depth utilization specific to agentic trajectories. Unlike static Do Agents Think Deeper? 3
+
+tasks, as interaction turns increase, models recruit more layers and establish stronger inter-layer dependencies. This suggests that accumulating trajec-tory context unlocks deeper computational paths that remain less active in shorter interactions. 
+
+• Identification of intensified feature refinement cycles. Through resid-ual stream analysis, we show that internal processing becomes more dynamic as the planning horizon expands. Transitions between feature acquisition and refinement increase in later turns, implying that the agent must continually inject and refine representations to maintain state. 
+
+• Quantification of a refinement gap in representation maturity. Us-ing Logit Lens and Effective Depth probes, we identify a clear decoupling be-tween internal feature construction and final output stability. While models often establish semantic direction early, they still require deeper refinement to stabilize output probabilities. This suggests that deep layers are allocated to fine-grained calibration for precise tool execution, unlike the saturation observed in standard tasks. 
+
+2 Related Work 
+
+Mechanistic Interpretability of Model Depth. While the scaling of Trans-former depth has historically been viewed as a primary driver of model capabil-ity [18], enabling the hierarchical composition of features, recent mechanistic in-terpretations reveal a nuanced picture characterized by significant layer-wise re-dundancy. Challenging the strict necessity of sequential depth, [11] demonstrated the unreasonable ineffectiveness of deeper layers, while [19] and [31] observed re-markable robustness to block-wise skipping, suggesting that intermediate layers often perform interchangeable rather than strictly dependent operations. Cor-roborating these findings, [14] noted that semantic feature construction typically saturates early in the network. Providing a mechanistic grounding for this inef-ficiency, [3] recently identified a phase transition where the network’s latter half is often relegated to iteratively refining output probabilities rather than con-structing new features. This static depth allocation establishes a strong baseline for standard LLMs, raising the critical question of whether such rigidity persists under the dynamic constraints of agentic workflows. 
+
+Cognitive Dynamics in Autonomous Agents. Unlike static benchmarks that evaluate isolated reasoning steps, autonomous agents operate in dynamic environments necessitating continuous state maintenance and iterative decision-making [36, 34]. To support these capabilities, the dominant paradigm has fo-cused on scaling computation along the temporal axis, utilizing techniques like Chain-of-Thought (CoT) [35] and ReAct [38] to externalize intermediate reason-ing into the context window. However, this reliance on reasoning in the token space largely treats the model as a black box, overlooking how internal computa-tional resources are allocated [22, 21]. While recent studies on latent thinking [9, 15] suggest that additional compute improves planning, the specific interplay be-tween extended interaction trajectories and the model’s effective depth remains 4 Z. Cui and X. Luo 
+
+underexplored [25, 3]. Our work bridges this gap by extending the mechanistic analysis of [3] into the agentic domain, investigating whether the functional de-mands of tool use and error correction compel the model to break patterns of shallow saturation and engage in dynamic deepening. 
+
+3 Preliminaries 
+
+In this work, we analyze the internal mechanics of foundation models based on the decoder-only pre-layernorm Transformer architecture [33], within the context of multi-turn agentic planning . All our analyzed models adhere to the Sparse Mixture-of-Experts (MoE) structure [30, 8]. 
+
+Sparse MoE Transformer Architecture. An agent trajectory consists of a sequence of turns T = {1, . . . , R }. At turn r ∈ T , the model processes a cumulative input sequence x(r), whose length nr expands progressively (i.e., 
+
+nr > n r−1). The forward pass of layer l at turn r is defined as: 
+
+a(r) 
+
+> l
+
+= SelfAttention l(RMSNorm (h(r) 
+
+> l
+
+)) (1) 
+
+ˆh(r) 
+
+> l
+
+= h(r) 
+
+> l
+
++ a(r) 
+
+> l
+
+(2) Let ˜x(r) 
+
+> l
+
+= RMSNorm (ˆh(r) 
+
+> l
+
+) denote the normalized intermediate representation. In a Sparse Mixture-of-Experts (MoE) architecture [30, 8], the standard dense Feed-Forward Network is replaced by a routing mechanism that selectively acti-vates a subset of expert networks. The general MoE update is formulated as: 
+
+m(r) 
+
+> l
+
+=
+
+> E
+
+X
+
+> i=1
+
+gl,i (˜ x(r) 
+
+> l
+
+)FFN l,i (˜ x(r) 
+
+> l
+
+) (3) where E is the total number of experts, FFN l,i is the i-th expert network, and 
+
+gl,i (·) is the routing gate function (typically a sparsely activated Top-K softmax) that computes the routing weight for the i-th expert. Crucially, some advanced architectures analyzed in this work (e.g., GLM-4.5-Air) employ a Shared-Sparse Expert paradigm [4]. In this setting, the FFN output is decomposed into a universally activated shared component and dynamically routed sparse components: 
+
+m(r) 
+
+> l
+
+= FFN l, shared (˜ x(r) 
+
+> l
+
+) + X
+
+> i∈S K
+
+gl,i (˜ x(r) 
+
+> l
+
+)FFN l,i (˜ x(r) 
+
+> l
+
+) (4) where FFN l, shared captures universal features across all tokens, and SK denotes the set of K dynamically selected sparse experts for the specific token. Finally, the residual stream is updated as: 
+
+h(r) 
+
+> l+1
+
+= ˆh(r) 
+
+> l
+
++ m(r) 
+
+> l
+
+(5) Here, h(r) 
+
+> l
+
+∈ Rnr ×dmodel is the residual stream [7], with a(r) 
+
+> l
+
+and m(r) 
+
+> l
+
+representing the Attention and MoE sublayer contributions. RMSNorm [39] is the chosen normalization. Do Agents Think Deeper? 5Deep Layer    
+
+> Deep Research Code Gen eration Tabular Process
+
+Seed Tasks 
+
+× n turns 
+
+Multi-turn Interacton 
+
+Trajecotry Dataset s
+
+。。。。。。 
+
+Trajectory 
+
+> I need a Python function to normalize the
+> sales values so they can be compared across
+> regions?
+> Deep Reasoning
+
+Architectural Signatures of Depth Utilization 
+
+> Process the values using min-max normalization ？
+> ...(Long long conversation)
+> Tools ：
+> Thinks:
+> code_generator execute_bash
+> generate preprocessing function
+> I need sales summary table by region.
+
+... 
+
+> Sure, what columns do you have?
+> ...(Long long conversation)
+> tabular_generator execute python code
+> reuse earlier requirements:
+> month bucketing; totals
+> Tools ：
+> Thinks:
+
+...   
+
+> Based on the normalized sales summary,
+> Explain which region is likely underperforming
+> and suggest possible business reasons?
+> East shows lower normalized sales.
+> Want me to investigate why?
+> Tool s：
+> Thinks:
+> literature_searcher
+> reuse earlier computed sales trends
+> Outputs ：The East region shows lower normalized
+> sales. Possible causes include weaker
+> demand or distribution issues.
+> ...(Long long conversation)
+> Mobilized Layers
+> Shallower Layes
+> Shallow Reasoning
+> Intermediate Reasoning
+> Deep Reasoning
+> Deeper Layes
+> Feature Correction Dynamics
+
+① ②
+
+③
+
+Fig. 1. Overview of our study. Left: we construct multi-turn agent trajectories from three seed domains, including Deep Research, Code Generation, and Tabular Pro-cessing. Middle: we illustrate a compositional, tool-mediated trajectory in which later turns reuse intermediate artifacts produced earlier (e.g., generated code and derived tables), thereby increasing cross-turn dependency and reasoning complexity. This pro-gression is accompanied by progressively deeper layer mobilization, moving from shal-low to intermediate and then deep reasoning. Right: as interaction depth increases, residual updates exhibit more frequent correction dynamics, while model families dis-play distinct depth-utilization signatures, including a construction-refinement gap in Qwen/Minimax and a domain-dependent shared-expert divergence in GLM. 
+
+4 Methodology and Analysis 
+
+Overview. To systematically decode the mechanistic behaviors of LLM agents, our investigation is driven by three progressive research questions. First, in 
+
+Sec. 4.1 , to determine if agentic planning drives deeper computation, we ask: 
+
+1○Does the model increasingly rely on deep layers for feature construction as the multi-turn state becomes more complex? Second, in Sec. 4.2 , to elucidate how the model qualitatively modifies its internal state, we ask: 2○Do layer up-dates transition from simple feature accumulation to active feature correction as the reasoning trajectory extends? Third, to quantify this depth utilization, 
+
+Sec. 4.3 asks: 3○When do internal representations reach maturity, and is full depth strictly necessary to stabilize final output probabilities? Figure 1 provides an overview of our framework and key findings, illustrating how multi-turn tra-jectories reveal progressive layer mobilization, correction-dominant residual dy-namics, and architecture-dependent depth utilization patterns. 
+
+4.1 Dynamic Layer Mobilization via Causal Tracing Setting. While various domain-specific benchmarks exist, there is a scarcity of open-source datasets that simultaneously capture the full spectrum of agentic behavior, specifically the interplay of tool use, multi-step planning, and complex 6 Z. Cui and X. Luo 
+
+(a) Turn 1 0 10 20 30 40  
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(b) Turn 2 0 10 20 30 40  
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(c) Turn 3 (d) Turn 4 
+
+Fig. 2. Causal dependency maps across four turns of a representative Code Generation trajectory for Qwen3-Thinking. Each panel shows the Future Effect E(r)(s, l ) when an earlier layer s is skipped. Dependencies evolve from sparse, localized interactions in early turns to denser and deeper coupling in later turns. 
+
+reasoning required for a holistic mechanistic analysis. To address this, we inno-vatively constructed an evaluation suite covering diverse agentic task scenarios. We employ a highly capable agentic model to synthesize complete multi-turn trajectories, explicitly structuring them into interleaved sequences of reasoning (Thought ), execution ( Action ), and feedback ( Observation ). To ensure validity, seed problems are sourced from established high-quality benchmarks: Deep Re-search scenarios from the EDR-200 dataset [28], Code Generation tasks from the SWE-Gym [26], and Tabular Processing QA from TableLLM [40]. We begin with a representative case study on Qwen3-30B-Thinking in the Code Generation domain, analyzing a complete multi-turn trajectory to visualize how causal layer dependencies evolve as planning depth increases. 
+
+Future Effect via Layer Skipping. To track how layer mobilization evolves across multiple turns, we quantify the causal dependencies between layers using an intervention method adapted from [3]. For a given turn r and input sequence 
+
+x(r), we first record the baseline residual stream states h(r) 
+
+> l
+
+. We then perform an intervention where a specific layer s is effectively skipped for all tokens starting from a position p. This is implemented by setting the intervened state ˜h(r)
+
+> s+1
+
+[p :] = ˜h(r) 
+
+> s
+
+[p :] , thereby nullifying the contribution of layer s for the subsequent sequence. We measure the impact of this ablation on a downstream layer l > s by computing the maximum relative change in its contribution vector. Formally, the Future Effect metric E(r)(s, l ) is defined as: 
+
+E(r)(s, l ) = max 
+
+> p
+
+∥C(r) 
+
+> l
+
+− ˜C(r) 
+
+> l
+
+∥2
+
+∥C(r) 
+
+> l
+
+∥2
+
+(6) where C(r) 
+
+> l
+
+= h(r) 
+
+> l+1
+
+− h(r) 
+
+> l
+
+is the original contribution of layer l at turn r, and 
+
+˜C(r) 
+
+> l
+
+is the contribution under the intervention. This metric captures the causal necessity of layer s: a high value implies that layer l’s computation critically depends on the features generated by layer s. We select the maximum value Do Agents Think Deeper? 70 10 20 30 40 
+
+> Layer Skipped
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> 10000
+> Logit Change
+
+(a) Turn 1 0 10 20 30 40  
+
+> Layer Skipped
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> Logit Change
+
+(b) Turn 2 0 10 20 30 40  
+
+> Layer Skipped
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> Logit Change
+
+(c) Turn 3 (d) Turn 4 
+
+Fig. 3. Layer-wise impact on future predictions across four turns of the same Code Generation trajectory (Qwen3-Thinking). Bar height indicates the Logit Change Norm 
+
+D(r)(s). As the interaction progresses, future predictions depend on a broader and deeper set of layers, indicating progressively greater depth utilization in later turns. 
+
+over sequence positions p to capture sparse but critical reasoning steps typical in agentic logic. 
+
+Progressive Layer Mobilization. Figure 2 visualizes the model’s internal topology, displaying the evolution of causal dependencies across a complete multi-turn task. From Turn 1 to Turn 4, causal dependencies become markedly denser and deeper. In the initial turn (Fig. 2a), causal dependencies remain sparse and highly localized. However, as the agent progresses to later turns (Fig. 2d), which require more complex state updates and reasoning, we observe a striking expansion of high-dependency structural linkages. This transition from isolated local effects to dense, long-range causal chains confirms that, as the inter-action context deepens, the model increasingly mobilizes its full depth, rendering earlier-layer features indispensable for downstream computations. To quantify the impact on future token generation, we sample a pivot position 
+
+ts, intervene on layer l for context tokens t ≤ ts, and measure the predictive divergence for the subsequent sequence t > t s. The results reveal a dramatic turn-dependent shift. In the initial turn (Fig. 3a), our observations align with static task baselines: the intermediate-to-deep layers exert minimal influence on future computations, exhibiting a classic U-shaped importance profile. Crucially, however, this pattern is fundamentally disrupted as the agent enters deeper planning stages (Fig. 3d). Here, the previously dormant intermediate-to-deep layers (e.g., Layers 10-45) exhibit a pronounced surge in influence, confirming their necessity for sustained multi-turn execution. 
+
+Validating the Universality of Dynamic Deepening. To verify that the observed dynamic layer mobilization is not an artifact of sample selection, we repeat the causal tracing analysis on two non-overlapping validation subsets (A and B) drawn from the Deep Research, Code Generation, and Tabular Pro-cessing domains. As shown in Fig. 4, both subsets exhibit the same transition: dependencies are relatively localized in the initial turn, but expand to near full-depth structures in later turns. This suggests that progressive depth allocation reflects a systematic response to increasing reasoning complexity rather than prompt-specific variation. 8 Z. Cui and X. Luo 0 20 40 
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(a) Set A: Turn 1 0 20 40  
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(b) Set A: Turn 4 0 9 18 27 36 45 47  
+
+> Effect @ layer
+> 0
+> 9
+> 18
+> 27
+> 36
+> 45
+> 47
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(c) Set B: Turn 1 0 9 18 27 36 45 47  
+
+> Effect @ layer
+> 0
+> 9
+> 18
+> 27
+> 36
+> 45
+> 47
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(d) Set B: Turn 4 
+
+Fig. 4. Intra-task consistency check on two non-overlapping validation subsets. Both subsets show the same transition from relatively localized dependencies in Turn 1 to broad full-depth mobilization in Turn 4. 0 20 40 60 
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(a) Minimax: Turn 1 0 20 40 60  
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(b) Minimax: Turn 4 0 10 20 30 40  
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(c) Qwen: Turn 1 0 10 20 30 40  
+
+> Effect @ layer
+> 0
+> 10
+> 20
+> 30
+> 40
+> Layer skipped
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Relative Change
+
+(d) Qwen: Turn 4 
+
+Fig. 5. Cross-model consistency check under synchronous (Minimax on Minimax-generated trajectories) and asynchronous (Qwen on Minimax-generated trajectories) evaluation. Both settings exhibit the same shift from sparse early-turn dependencies to broad full-depth mobilization in later turns. 
+
+A second potential confounder is the alignment between the trajectory gen-erator and the evaluator. Because the trajectories are generated by Minimax, the observed deepening could reflect a synchronous setting in which the model processes its own stylistic outputs. To control for this factor, we apply the same causal analysis to Qwen3 on the same Minimax-generated trajectories. Figure 5 shows that both synchronous and asynchronous settings exhibit the same shift, from sparse early-turn dependencies to broad full-depth mobilization in later turns. This suggests that dynamic depth allocation is driven primarily by the semantic complexity of the evolving task state rather than model-specific stylistic alignment. 
+
+4.2 Dynamic Feature Evolution via Residual Cosine Similarity 
+
+While Sec. 4.1 reveals where critical computation occurs, it does not elucidate 
+
+how the model modifies its internal state. To determine whether extended rea-soning shifts internal processing from simple feature accumulation toward active feature correction, we analyze the geometric alignment between layer updates and the residual stream. 
+
+Setting. To examine how internal feature updates evolve over time, we com-pare residual cosine similarity patterns for Qwen3-30B-Instruct and Qwen3-30B-Do Agents Think Deeper? 9
+
+(a) Qwen3-Instruct (Turn 1) (b) Qwen3-Instruct (Turn 5) 
+
+(c) Qwen3-Thinking (Turn 1) (d) Qwen3-Thinking (Turn 5) 
+
+Fig. 6. Residual cosine similarity patterns for Qwen3-Instruct (top) and Qwen3-Thinking (bottom), comparing Turn 1 (left) and Turn 5 (right). Later turns exhibit more frequent phase changes, especially in intermediate and deep layers, indicating a shift from stable feature amplification toward more active feature correction. 
+
+Thinking between early and late turns on matched agentic trajectories, using the same setup as in Sec. 4.1. 
+
+Residual Cosine Similarity. Let u(r) 
+
+> l
+
+= a(r) 
+
+> l
+
++ m(r) 
+
+> l
+
+denote the total additive contribution of layer l at turn r. We quantify the alignment between this update and the incoming residual stream h(r) 
+
+> l
+
+as: 
+
+S(r)
+
+> layer
+
+(l) = cossim (u(r) 
+
+> l
+
+, h(r) 
+
+> l
+
+) (7) where cossim (x, y) = x·y 
+
+> ∥x∥2∥y∥2
+
+.
+
+Mechanistic Interpretation of Alignment. Following [3], we interpret S(r)
+
+> layer
+
+(l)
+
+as a proxy for the functional role of layer updates, with three regimes: 
+
+• Orthogonal injection ( S ≈ 0): the layer introduces features largely or-thogonal to the current state, suggesting new information injection. 
+
+• Feature amplification ( S > 0): the update aligns with the residual direc-tion, reinforcing existing semantic features. 
+
+• Feature correction ( S < 0): the update opposes the residual direction, indicating suppression or redirection of previously accumulated features. 10 Z. Cui and X. Luo 
+
+Intensification of Feature Correction Dynamics. Figure 6 shows a clear temporal shift in these alignment patterns. Early turns are dominated by rela-tively stable positive alignment, consistent with gradual feature accumulation. As the trajectory lengthens, however, the alignment profiles become increasingly oscillatory, with frequent sign changes emerging in intermediate and deep layers. As the interaction progresses from Turn 1 to Turn 5, residual stream dy-namics exhibit a marked increase in phase changes . In the Attention updates, initially smooth alignment patterns break into repeated positive-negative tran-sitions; in the MoE updates, broad amplification regions observed in Turn 1 give way to alternating correction-amplification regimes by Turn 5. The result is a substantially more dynamic residual evolution in later turns. This collective behavior suggests that later turns mobilize deeper layers to ac-tively re-orient the internal state, contrasting sharply with the monotonic trans-formations of initial queries. Consequently, high-frequency feature correc-tion emerges as a fundamental signature of deep iterative planning .As context accumulates, simple feature addition becomes insufficient; the model must repeatedly correct and calibrate the information flow. 
+
+4.3 Probing Representation Maturity and Depth Necessity 
+
+While the preceding analyses reveal dynamic layer mobilization, they do not specify when internal representations mature or whether full network depth is required for stable outputs. To quantify depth utilization, we measure Effective Depth (ED) following [3], using two complementary probes that capture internal feature evolution and output stabilization. Quantitative results across the three agentic domains are summarized in Table 1. 
+
+Setting. For quantitative comparison, we replicate the effective-depth analy-sis across multiple model families, including Qwen3-30B-Instruct, Qwen3-30B-Thinking, GLM-4.5-Air, and Minimax-M2, over the three agentic domains stud-ied in this section. 
+
+Effective Depth via Feature Orientation. Following [3], we define Cosine Effective Depth (lcos ) as the layer where residual cosine similarity makes its final sustained transition from negative to positive. This boundary separates the 
+
+Construction Phase , where representations are still being actively re-oriented, from the Refinement Phase , where features are primarily amplified. 
+
+Effective Depth via Output Stability. To estimate when intermediate rep-resentations become sufficient for final predictions, we apply Logit Lens [2]. We report ED using two criteria: (i) Logit Lens KL , defined as the layer at which the KL divergence between intermediate and final output distributions falls below half of its maximum; and (ii) Logit Lens Overlap , defined as the layer at which the top-5 token overlap with the final distribution exceeds 0.3. 
+
+Comparative Analysis: Architectural Signatures of Depth. Table 1 re-veals two distinct structural patterns across model families. Do Agents Think Deeper? 11 Model Cosine Similarity Logit Lens KL Logit Lens Overlap                                                                                       
+
+> DeepRes. Code Tabular DeepRes. Code Tabular DeepRes. Code Tabular
+> ED Ratio ED Ratio ED Ratio ED Ratio ED Ratio ED Ratio ED Ratio ED Ratio ED Ratio Qwen3-Instruct 19 0.40 20 0.42 19 0.40 44 0.92 44 0.92 45 0.94 45 0.94 45 0.94 46 0.96 Qwen3-Thinking 19 0.40 20 0.42 20 0.42 44 0.92 44 0.92 45 0.94 45 0.94 45 0.94 47 0.98
+> GLM-4.5-Air 13 0.28 34 0.74 34 0.74 31 0.67 32 0.70 36 0.78 36 0.78 39 0.85 41 0.89
+> Minimax-M2 16 0.26 29 0.47 20 0.32 55 0.89 56 0.90 58 0.94 62 1.00 62 1.00 62 1.00
+
+Table 1. Effective depth (ED) and normalized depth ratio (ED + 1) /L across model families and agentic domains, computed from Residual Cosine Similarity, Logit Lens KL, and Logit Lens Overlap. The table highlights systematic differences in how model families allocate depth between internal feature construction and output stabilization. 
+
+Construction-refinement gap (Qwen and Minimax). Qwen3 exhibits a highly consistent separation between internal feature construction and out-put convergence across all three domains. Its Cosine ED remains shallow (ratio 
+
+0.40 -0.42 ), whereas both Logit Lens probes stabilize only near the end of the network (KL ratio 0.92 -0.94 ; Overlap ratio 0.94 -0.98 ), indicating that although active feature re-orientation completes relatively early, a large fraction of depth is still used to progressively refine already-formed representations before the final output stabilizes. Minimax-M2 shows the same qualitative construction-refinement gap, but with substantially greater domain variation: its Cosine ED 
+
+ranges from 0.26 to 0.47 , while Logit-based ED remains consistently deep (KL ratio 0.89 -0.94 ; Overlap ratio 1.00 across all three domains), suggesting that Minimax also devotes a large portion of depth to refinement, but does so with less stable feature-construction depth across tasks. 
+
+Shared-expert divergence (GLM). GLM exhibits a distinctly different and strongly domain-dependent pattern. In Code Generation and Tabular Pro-cessing, its Cosine ED reaches 0.74 , substantially deeper than in the other model families, while its KL-based Logit Lens ED remains close ( 0.70 and 0.78 ), indi-cating that active feature re-orientation persists deep into the network even as output distributions are already approaching stability. Although the Overlap-based ED is somewhat deeper ( 0.85 and 0.89 ), the gap remains much smaller than in Qwen3 or Minimax-M2. By contrast, in Deep Research, GLM falls back to a much shallower Cosine ED (0.28 ), while its Logit-based ED remains mod-erate ( 0.67 for KL and 0.78 for Overlap), suggesting that GLM allocates depth differently depending on task structure. A definitive causal explanation would require explicit routing analysis. How-ever, one plausible hypothesis is that GLM’s hybrid Shared-Sparse Expert ar-chitecture induces this domain dependence: specialized tasks such as code and tabular reasoning may recruit sparse experts for deeper feature transformation, whereas more open-ended research trajectories may rely more heavily on shared experts, leading to shallower construction dynamics and comparatively earlier stabilization. 12 Z. Cui and X. Luo 
+
+4.4 Further Discussion 
+
+Our findings suggest several directions for future work. The progressive expan-sion of causal dependencies across turns indicates that agentic computation may be allocated conditionally on interaction state, rather than uniformly across depth. This raises the possibility of linking mechanistic depth analysis with adaptive-compute and routing-based inference mechanisms [16, 29, 6]. The correction-dominant residual dynamics observed in later turns suggest that long-horizon agent behavior depends not only on feature accumulation, but also on repeated state revision. A natural next step is to study how these internal correction patterns interact with external memory, retrieval, and long-context management in agent systems [25, 21]. The architecture-dependent depth signatures observed across Qwen, Mini-max, and GLM suggest that effective agent design may need to be architecture-aware. Some model families appear to rely on prolonged late-stage refinement, whereas others show more domain-dependent depth allocation, potentially re-flecting differences in conditional computation and expert routing [30, 8, 5]. Fu-ture work could combine layer-wise tracing with explicit routing or expert-level analysis to clarify when deeper computation reflects semantic planning, memory repair, or output calibration [16, 29]. 
+
+5 Conclusion 
+
+In this work, we present a systematic mechanistic study of layer-wise dynamics in autonomous LLM agents during multi-turn planning. Moving beyond static benchmarks, we show that agentic reasoning induces a distinct pattern of adap-tive depth allocation. As interaction trajectories unfold, models progressively recruit broader and deeper computation, while residual dynamics become in-creasingly correction-dominant in later turns. Quantitative probing further re-veals a substantial construction-refinement gap: semantic direction often forms relatively early, yet deep layers remain necessary to stabilize final outputs. Across domains and model families, these results provide mechanistic evidence that se-quential planning, tool use, and iterative state tracking place distinctive demands on architectural depth, underscoring the functional importance of deep models in autonomous agent settings. 
+
+References 
+
+> 1. Anthropic: The Claude 3 Model Family: Opus, Sonnet, Haiku (2024), https://www-cdn.anthropic.com/c6a80a657af445f40e31afac050f3bf76d3b1404.pdf, technical re-port, published March 4, 2024 2. Belrose, N., Ostrovsky, I., McKinney, L., et al.: Eliciting Latent Predictions from Transformers with the Tuned Lens (2025) 3. Csordás, R., Manning, C.D., Potts, C.: Do Language Models Use Their Depth Efficiently? (2025)
+
+Do Agents Think Deeper? 13 4. Dai, D., Deng, C., Zhao, C., Xu, R.X., et al.: Deepseekmoe: Towards ultimate expert specialization in mixture-of-experts language models (2024) 5. DeepSeek-AI, Liu, A., Feng, B., Xue, B., Wang, B., et al.: DeepSeek-V3 Technical Report (2025) 6. Dehghani, M., Gouws, S., Vinyals, O., Uszkoreit, J., Łukasz Kaiser: Universal Transformers (2019) 7. Elhage, N., Nanda, N., Olsson, C., et al.: A Mathematical Framework for Transformer Circuits. Transformer Circuits Thread (2021), https://transformer-circuits.pub/2021/framework/index.html 8. Fedus, W., Zoph, B., Shazeer, N.: Switch Transformers: Scaling to Trillion Param-eter Models with Simple and Efficient Sparsity (2022) 9. Geiping, J., McLeish, S., Jain, N., et al.: Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach (2025) 10. Grattafiori, A., Dubey, A., Jauhri, A., et al.: The Llama 3 Herd of Models (2024) 11. Gromov, A., Tirumala, K., Shapourian, H., Glorioso, P., Roberts, D.A.: The Un-reasonable Ineffectiveness of the Deeper Layers (2025) 12. Guo, D., Yang, D., Zhang, H., et al.: DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning. Nature 645 (8081), 633–638 (Sep 2025). https://doi.org/10.1038/s41586-025-09422-z, http://dx.doi.org/10.1038/s41586-025-09422-z 13. Gupta, A., Yeung, J., Anumanchipalli, G., Ivanova, A.: How Do LLMs Use Their Depth? (2026) 14. Gurnee, W., Tegmark, M.: Language Models Represent Space and Time (2024) 15. Hao, S., Sukhbaatar, S., Su, D., et al.: Training Large Language Models to Reason in a Continuous Latent Space (2025) 16. Heakl, A., Gubri, M., Khan, S., Yun, S., Oh, S.J.: Dr.LLM: Dynamic Layer Routing in LLMs (2025) 17. Hu, Y., Zhou, C., Zhang, M.: What Affects the Effective Depth of Large Language Models? (2025) 18. Kaplan, J., McCandlish, S., Henighan, T., Brown, T.B., Chess, B., Child, R., Gray, S., Radford, A., Wu, J., Amodei, D.: Scaling Laws for Neural Language Models (2020) 19. Lad, V., Lee, J.H., Gurnee, W., Tegmark, M.: The Remarkable Robustness of LLMs: Stages of Inference? (2025) 20. Li, H., Zheng, W., Wang, Q., Ding, Z., Wang, H., Wang, Z., Xuyang, S., Ding, N., Zhou, S., Zhang, X., Jiang, D.: Predictable Scale: Part II, Farseer: A Refined Scaling Law in Large Language Models (2025) 21. Liu, N.F., Lin, K., Hewitt, J., Paranjape, A., et al.: Lost in the Middle: How Language Models Use Long Contexts (2023) 22. Mialon, G., Dessì, R., Lomeli, M., Nalmpantis, C., Pasunuru, R., et al.: Augmented Language Models: a Survey (2023) 23. OpenAI: Hello GPT-4o (2024), https://openai.com/index/hello-gpt-4o/, openAI blog, published May 13, 2024 24. OpenAI: Learning to Reason with LLMs (2024), https://openai.com/index/learning-to-reason-with-llms/, openAI blog, pub-lished September 12, 2024 25. Packer, C., Wooders, S., Lin, K., et al.: MemGPT: Towards LLMs as Operating Systems (2024) 26. Pan, J., Wang, X., Neubig, G., et al.: Training Software Engineering Agents and Verifiers with SWE-Gym (2025) 14 Z. Cui and X. Luo 27. Park, J.S., O’Brien, J.C., Cai, C.J., Morris, M.R., Liang, P., Bernstein, M.S.: Gen-erative Agents: Interactive Simulacra of Human Behavior (2023) 28. Prabhakar, A., Ram, R., Chen, Z., et al.: Enterprise Deep Research: Steerable Multi-Agent Deep Research for Enterprise Analytics (2025) 29. Raposo, D., Ritter, S., Richards, B., Lillicrap, T., Humphreys, P.C., Santoro, A.: Mixture-of-Depths: Dynamically allocating compute in transformer-based language models (2024) 30. Shazeer, N., Mirhoseini, A., Maziarz, K., et al.: Outrageously Large Neural Net-works: The Sparsely-Gated Mixture-of-Experts Layer (2017) 31. Sun, Q., Pickett, M., Nain, A.K., Jones, L.: Transformer Layers as Painters (2025) 32. Team, G., Georgiev, P., Lei, V.I., Burnell, R., et al.: Gemini 1.5: Unlocking multi-modal understanding across millions of tokens of context (2024) 33. Vaswani, A., Shazeer, N., Parmar, N., et al.: Attention Is All You Need (2023) 34. Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., et al.: A survey on large language model based autonomous agents. Frontiers of Com-puter Science 18 (6) (Mar 2024). https://doi.org/10.1007/s11704-024-40231-1, http://dx.doi.org/10.1007/s11704-024-40231-1 35. Wei, J., Wang, X., Schuurmans, D., Bosma, M., et al.: Chain-of-Thought Prompt-ing Elicits Reasoning in Large Language Models (2023) 36. Xi, Z., Chen, W., Guo, X., He, W., et al.: The Rise and Potential of Large Language Model Based Agents: A Survey (2023) 37. Yang, A., Li, A., Yang, B., Zhang, B., Hui, B., et al.: Qwen3 Technical Report (2025) 38. Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., Cao, Y.: ReAct: Synergizing Reasoning and Acting in Language Models (2023) 39. Zhang, B., Sennrich, R.: Root Mean Square Layer Normalization (2019) 40. Zhang, X., Luo, S., Zhang, B., et al.: TableLLM: Enabling Tabular Data Manipu-lation by LLMs in Real Office Usage Scenarios (2025)

@@ -6,61 +6,58 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-29
-- 运行时间：2026-05-29 22:20:38 UTC
+- 最新运行日期：2026-05-30
+- 运行时间：2026-05-30 21:09:06 UTC
 - 运行状态：成功
-- 本次总论文数：13
-- 精读区：7
+- 本次总论文数：12
+- 精读区：6
 - 速读区：6
 
 ### 今日简报（AI）
-今日精读两篇9分工作，聚焦具身多模态大模型如何在长期交互中记忆个性化习惯，以及用可控虚拟环境为移动GUI智能体训练显式记忆。
-最值得关注：让AI助手真正“记住你”的两种路径——从长期聊天中动态构建用户模型，或在仿真环境中预植入可迁移的操作记忆。
-下步建议：如果你正在用手机助手或智能家居，留心它们是否会在多次互动后形成稳定偏好；开发者可关注开源虚拟环境如何降低GUI智能体的训练成本。
-- 详情：[/202605/29/README](/202605/29/README)
+今日聚焦智能体前沿：全合成任务训练与长期对话记忆检索两大精读研究揭示，让AI智能体深度推理和持久对话更高效、更可靠。
+最值得关注的是：用全合成数据低成本训练深度研究智能体（QUEST），以及通过级联检索适应工作负载的对话记忆方案（AgentIR），两者均在性能与成本间找到新平衡点。
+建议读者优先阅读这两篇精读论文，从中汲取构建下一代智能体系统的工程灵感，并关注速读中“预算可控多智能体协作”的落地思路。
+- 详情：[/202605/30/README](/202605/30/README)
 
 ### 精读区论文标签
-1. [Personalizing Embodied Multimodal Large Language Model Agents over Long-term User Interactions](/202605/29/2605.26256v1-personalizing-embodied-multimodal-large-language-model-agents-over-long-term-user-interactions)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：将历史交互组织为多模态知识图谱以实现长期个性化记忆
-2. [STAMP: Training Explicit Memory for Mobile GUI Agents in Controllable and Scalable Virtual Environments](/202605/29/2605.29324v1-stamp-training-explicit-memory-for-mobile-gui-agents-in-controllable-and-scalable-virtual-environments)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：在长周期任务中通过可控虚拟环境训练移动 GUI 智能体的显式记忆
-3. [Meta-Cognitive Memory Policy Optimization for Long-Horizon LLM Agents](/202605/29/2605.30159v1-meta-cognitive-memory-policy-optimization-for-long-horizon-llm-agents)  
-   标签：评分：9.0/10、query:agent-memory
-   evidence：通过关注中间摘要的信念清晰度而非仅轨迹成功来优化长程Agent的记忆策略
-4. [SpatialClaw: A Memory-Augmented Autonomous Ecosystem for Spatial Omics Analysis](/202605/29/biorxiv-10-64898-2026-05-21-723451-v1-spatialclaw-a-memory-augmented-autonomous-ecosystem-for-spatial-omics-analysis)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：用于空间组学科学发现的记忆增强自主生态系统
-5. [CARIBOU: Computational AI Research Interface for Bioinformatics, Omics, and Unifying Agents](/202605/29/biorxiv-10-64898-2026-05-25-727730-v1-caribou-computational-ai-research-interface-for-bioinformatics-omics-and-unifying-agents)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：用于自主生物信息学分析的多智能体框架，支持可编辑工作流
-6. [Discovery Agents for Real-Time Analytics: Toward Proactive Insight Systems](/202605/29/2605.27571v1-discovery-agents-for-real-time-analytics-toward-proactive-insight-systems)  
+1. [QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks](/202605/30/2605.24218v1-quest-training-frontier-deep-research-agents-with-fully-synthetic-tasks)  
    标签：评分：8.0/10、query:autoresearch
-   evidence：多智能体系统用于自主假设驱动的洞察发现
-7. [SkillBrew: Multi-Objective Curation of Skill Banks for LLM Agents](/202605/29/2605.29440v1-skillbrew-multi-objective-curation-of-skill-banks-for-llm-agents)  
+   evidence：深度研究智能体经过事实查找、引文扎根和报告合成训练，直接用于文献综述
+2. [AgentIR: A Workload-Adaptive Cascade Retrieval Substrate for Long-Term Conversational Memory](/202605/30/2605.25092v1-agentir-a-workload-adaptive-cascade-retrieval-substrate-for-long-term-conversational-memory)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：将技能库策展形式化为多目标优化，以改善智能体决策
+   evidence：自适应级联检索用于长时对话记忆
+3. [Multi-Agent Coordination Adaptation via Structure-Guided Orchestration](/202605/30/2605.25746v1-multi-agent-coordination-adaptation-via-structure-guided-orchestration)  
+   标签：评分：8.0/10、query:agent-memory
+   evidence：基于概率推断的多智能体协调框架，平衡结构与适应性
+4. [AIBuildAI-2: A Knowledge-Enhanced Agent for Automatically Building AI Models](/202605/30/2605.27873v1-aibuildai-2-a-knowledge-enhanced-agent-for-automatically-building-ai-models)  
+   标签：评分：8.0/10、query:autoresearch
+   evidence：知识增强的智能体，自动构建AI模型，辅助生物、物理、化学领域的科学发现
+5. [Enhancing Multi-Agent Communication through Attention Steering with Context Relevance](/202605/30/2605.30136v1-enhancing-multi-agent-communication-through-attention-steering-with-context-relevance)  
+   标签：评分：8.0/10、query:agent-memory
+   evidence：通过动态引导注意力到相关上下文，改进多智能体系统通信，解决协调和上下文管理问题。
+6. [A Multi-Agent RAG Framework for Biomedical Literature Analysis](/202605/30/biorxiv-10-64898-2026-05-26-727050-v1-a-multi-agent-rag-framework-for-biomedical-literature-analysis)  
+   标签：评分：8.0/10、query:autoresearch
+   evidence：开发多智能体 RAG 变体，结合证据质量和时效性改进生物医学文献分析
 
 ### 速读区论文标签
-1. [DeepSurvey: Enhancing Analytical Depth and Citation Reliability in Automated Survey Generation](/202605/29/2605.29522v1-deepsurvey-enhancing-analytical-depth-and-citation-reliability-in-automated-survey-generation)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：用于自动综述生成并具有引证溯源和跨论文分析能力的智能体系统
-2. [PAIRED: A Process-Anchored Framework for Transparent Reporting of AI Contributions in Scientific Research](/202605/29/2605.24325v1-paired-a-process-anchored-framework-for-transparent-reporting-of-ai-contributions-in-scientific-research)  
+1. [ATOM: Instantiating Budget-Controllable Multi-Agent Collaboration via Nucleus-Electron Hierarchy](/202605/30/2605.26178v1-atom-instantiating-budget-controllable-multi-agent-collaboration-via-nucleus-electron-hierarchy)  
+   标签：评分：7.0/10、query:agent-memory
+   evidence：基于强化学习的预算可控多智能体协作拓扑
+2. [Learning to Orchestrate Agents under Uncertainty](/202605/30/2605.27073v1-learning-to-orchestrate-agents-under-uncertainty)  
+   标签：评分：7.0/10、query:agent-memory
+   evidence：解决不确定下异构智能体的自适应编排，属于多智能体协调问题。
+3. [Governed Evolution of Agent Runtimes through Executable Operational Cognition](/202605/30/2605.27328v1-governed-evolution-of-agent-runtimes-through-executable-operational-cognition)  
    标签：评分：7.0/10、query:autoresearch
-   evidence：过程锚定报告实现AI辅助研究的透明度和溯源
-3. [BioRAG-DRAG: A Multimodal Biological Retrieval Layer for Local-First Biomedical Agents](/202605/29/biorxiv-10-64898-2026-05-19-726174-v1-biorag-drag-a-multimodal-biological-retrieval-layer-for-local-first-biomedical-agents)  
-   标签：评分：7.0/10、query:autoresearch
-   evidence：面向生物医学代理的多模态检索层，结合神经检索、BLAST和基于图的证据封装
-4. [OpenSkillEval: Automatically Auditing the Open Skill Ecosystem for LLM Agents](/202605/29/2605.23657v2-openskilleval-automatically-auditing-the-open-skill-ecosystem-for-llm-agents)  
+   evidence：将智能体生成工件形式化为持久运行时能力，进行受控生命周期管理和操作进化
+4. [Do Agents Think Deeper? A Mechanistic Investigation of Layer-Wise Dynamics in Sequential Planning](/202605/30/2605.27935v1-do-agents-think-deeper-a-mechanistic-investigation-of-layer-wise-dynamics-in-sequential-planning)  
+   标签：评分：7.0/10、query:agent-memory
+   evidence：分析代理序列规划任务的层动态，揭示深层逐步调用用于状态维护。
+5. [Memory-Induced Tool-Drift in LLM Agents](/202605/30/2605.24941v1-memory-induced-tool-drift-in-llm-agents)  
    标签：评分：6.0/10、query:agent-memory
-   evidence：自动评估技能增强型LLM代理系统
-5. [Interpreting Omics Data Analysis with Large Language Models for Disease Target and Drug Discovery](/202605/29/biorxiv-10-64898-2026-04-30-721768-v2-interpreting-omics-data-analysis-with-large-language-models-for-disease-target-and-drug-discovery)  
+   evidence：研究长期记忆中性格偏见导致LLM智能体工具漂移
+6. [Mechanistic Identifiability Preservation for Hybrid Neural Differential Equations](/202605/30/biorxiv-10-1101-2024-12-08-627408-v2-mechanistic-identifiability-preservation-for-hybrid-neural-differential-equations)  
    标签：评分：6.0/10、query:autoresearch
-   evidence：提出一个溯源感知的 Text-to-Target 框架，耦合 LLM 检索与组学数据分析
-6. [AI-Discovered Cognitive Models Reveal Novel Insights into Human and Animal Learning](/202605/29/biorxiv-10-64898-2026-05-18-725921-v1-ai-discovered-cognitive-models-reveal-novel-insights-into-human-and-animal-learning)  
-   标签：评分：6.0/10、query:autoresearch
-   evidence：使用AI自动发现认知模型
+   evidence：为科学建模中使用的混合神经常微分方程提供可识别性的理论保证，支持严格的 AI for Science。
 
 
 <div class="dpr-home-promo-card">
