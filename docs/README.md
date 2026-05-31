@@ -6,58 +6,49 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-30
-- 运行时间：2026-05-30 21:09:06 UTC
+- 最新运行日期：2026-05-31
+- 运行时间：2026-05-31 20:37:59 UTC
 - 运行状态：成功
-- 本次总论文数：12
-- 精读区：6
+- 本次总论文数：9
+- 精读区：3
 - 速读区：6
 
 ### 今日简报（AI）
-今日聚焦智能体前沿：全合成任务训练与长期对话记忆检索两大精读研究揭示，让AI智能体深度推理和持久对话更高效、更可靠。
-最值得关注的是：用全合成数据低成本训练深度研究智能体（QUEST），以及通过级联检索适应工作负载的对话记忆方案（AgentIR），两者均在性能与成本间找到新平衡点。
-建议读者优先阅读这两篇精读论文，从中汲取构建下一代智能体系统的工程灵感，并关注速读中“预算可控多智能体协作”的落地思路。
-- 详情：[/202605/30/README](/202605/30/README)
+今日深入探查AI科研评判力与智能体可靠性，精读SoundnessBench等2篇重磅论文，并速读智能体对齐与寿命工程3篇前沿研究。  
+最值得关注：SoundnessBench（满分研究）表明AI科学家在甄别优劣研究想法上尚不可靠，且Memory机制会引发LLM Agent的工具漂移，导致隐蔽失效。  
+建议正在构建自主科研或长期服务型Agent的团队，优先引入稳健性评测与工具调用偏差的持续监控。
+- 详情：[/202605/31/README](/202605/31/README)
 
 ### 精读区论文标签
-1. [QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks](/202605/30/2605.24218v1-quest-training-frontier-deep-research-agents-with-fully-synthetic-tasks)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：深度研究智能体经过事实查找、引文扎根和报告合成训练，直接用于文献综述
-2. [AgentIR: A Workload-Adaptive Cascade Retrieval Substrate for Long-Term Conversational Memory](/202605/30/2605.25092v1-agentir-a-workload-adaptive-cascade-retrieval-substrate-for-long-term-conversational-memory)  
+1. [SoundnessBench: Can Your AI Scientist Really Tell Good Research Ideas from Bad Ones?](/202605/31/2605.30329v1-soundnessbench-can-your-ai-scientist-really-tell-good-research-ideas-from-bad-ones)  
+   标签：评分：10.0/10、query:autoresearch
+   evidence：评估AI科研智能体在研究提案阶段判断方法论可靠性的基准。
+2. [Memory-Induced Tool-Drift in LLM Agents](/202605/31/2605.24941v1-memory-induced-tool-drift-in-llm-agents)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：自适应级联检索用于长时对话记忆
-3. [Multi-Agent Coordination Adaptation via Structure-Guided Orchestration](/202605/30/2605.25746v1-multi-agent-coordination-adaptation-via-structure-guided-orchestration)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：基于概率推断的多智能体协调框架，平衡结构与适应性
-4. [AIBuildAI-2: A Knowledge-Enhanced Agent for Automatically Building AI Models](/202605/30/2605.27873v1-aibuildai-2-a-knowledge-enhanced-agent-for-automatically-building-ai-models)  
+   evidence：研究长期记忆偏差导致智能体工具调用漂移
+3. [MOOSE-Copilot: A Web-Based Interactive Assistant for Unified Exploratory and Fine-Grained Scientific Hypothesis Discovery](/202605/31/2605.29475v1-moose-copilot-a-web-based-interactive-assistant-for-unified-exploratory-and-fine-grained-scientific-hypothesis-discovery)  
    标签：评分：8.0/10、query:autoresearch
-   evidence：知识增强的智能体，自动构建AI模型，辅助生物、物理、化学领域的科学发现
-5. [Enhancing Multi-Agent Communication through Attention Steering with Context Relevance](/202605/30/2605.30136v1-enhancing-multi-agent-communication-through-attention-steering-with-context-relevance)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：通过动态引导注意力到相关上下文，改进多智能体系统通信，解决协调和上下文管理问题。
-6. [A Multi-Agent RAG Framework for Biomedical Literature Analysis](/202605/30/biorxiv-10-64898-2026-05-26-727050-v1-a-multi-agent-rag-framework-for-biomedical-literature-analysis)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：开发多智能体 RAG 变体，结合证据质量和时效性改进生物医学文献分析
+   evidence：基于LLM的科学假设发现助手，具有结构化人机交互。
 
 ### 速读区论文标签
-1. [ATOM: Instantiating Budget-Controllable Multi-Agent Collaboration via Nucleus-Electron Hierarchy](/202605/30/2605.26178v1-atom-instantiating-budget-controllable-multi-agent-collaboration-via-nucleus-electron-hierarchy)  
-   标签：评分：7.0/10、query:agent-memory
-   evidence：基于强化学习的预算可控多智能体协作拓扑
-2. [Learning to Orchestrate Agents under Uncertainty](/202605/30/2605.27073v1-learning-to-orchestrate-agents-under-uncertainty)  
-   标签：评分：7.0/10、query:agent-memory
-   evidence：解决不确定下异构智能体的自适应编排，属于多智能体协调问题。
-3. [Governed Evolution of Agent Runtimes through Executable Operational Cognition](/202605/30/2605.27328v1-governed-evolution-of-agent-runtimes-through-executable-operational-cognition)  
+1. [A Sober Look at Agentic Misalignment in Automated Workflows](/202605/31/2605.24197v1-a-sober-look-at-agentic-misalignment-in-automated-workflows)  
    标签：评分：7.0/10、query:autoresearch
-   evidence：将智能体生成工件形式化为持久运行时能力，进行受控生命周期管理和操作进化
-4. [Do Agents Think Deeper? A Mechanistic Investigation of Layer-Wise Dynamics in Sequential Planning](/202605/30/2605.27935v1-do-agents-think-deeper-a-mechanistic-investigation-of-layer-wise-dynamics-in-sequential-planning)  
+   evidence：提出智能体证据归因提供结构化证据以支撑行动，适用于研究中有据声明维护。
+2. [Your Agents Are Aging Too: Agent Lifespan Engineering for Deployed Systems](/202605/31/2605.26302v1-your-agents-are-aging-too-agent-lifespan-engineering-for-deployed-systems)  
    标签：评分：7.0/10、query:agent-memory
-   evidence：分析代理序列规划任务的层动态，揭示深层逐步调用用于状态维护。
-5. [Memory-Induced Tool-Drift in LLM Agents](/202605/30/2605.24941v1-memory-induced-tool-drift-in-llm-agents)  
-   标签：评分：6.0/10、query:agent-memory
-   evidence：研究长期记忆中性格偏见导致LLM智能体工具漂移
-6. [Mechanistic Identifiability Preservation for Hybrid Neural Differential Equations](/202605/30/biorxiv-10-1101-2024-12-08-627408-v2-mechanistic-identifiability-preservation-for-hybrid-neural-differential-equations)  
+   evidence：测量长期智能体内存增长和事实修订导致可靠性退化的纵向基准
+3. [VitaBench 2.0: Evaluating Personalized and Proactive Agents in Long-Term User Interactions](/202605/31/2605.27141v1-vitabench-20-evaluating-personalized-and-proactive-agents-in-long-term-user-interactions)  
+   标签：评分：7.0/10、query:agent-memory
+   evidence：评测长期个性化智能体交互，需要随时间维护状态
+4. [SpatialDataAgent: Autonomous Spatial Omics Data Curation at Decade Scale](/202605/31/biorxiv-10-64898-2026-05-27-727615-v1-spatialdataagent-autonomous-spatial-omics-data-curation-at-decade-scale)  
+   标签：评分：7.0/10、query:autoresearch
+   evidence：自主空间组学数据整理的智能体工作流，含自我优化标准化与证据评估
+5. [What Makes a Medical Checker Trainable? Diagnosing Signal Collapse and Reward Hacking in Checker-Guided RAG for Biomedical QA](/202605/31/2605.25988v1-what-makes-a-medical-checker-trainable-diagnosing-signal-collapse-and-reward-hacking-in-checker-guided-rag-for-biomedical-qa)  
    标签：评分：6.0/10、query:autoresearch
-   evidence：为科学建模中使用的混合神经常微分方程提供可识别性的理论保证，支持严格的 AI for Science。
+   evidence：用声明级NLI检查器训练医疗RAG以将声明扎根于证据，诊断信号坍塌与奖励黑客
+6. [Anchor: Mitigating Artifact Drift in Agent Benchmark Generation](/202605/31/2605.26321v1-anchor-mitigating-artifact-drift-in-agent-benchmark-generation)  
+   标签：评分：6.0/10、query:agent-memory
+   evidence：解决长时程业务操作任务基准生成中的工件漂移，确保一致性
 
 
 <div class="dpr-home-promo-card">

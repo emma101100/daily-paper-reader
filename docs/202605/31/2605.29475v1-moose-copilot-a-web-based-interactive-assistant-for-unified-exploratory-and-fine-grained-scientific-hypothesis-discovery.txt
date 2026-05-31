@@ -1,0 +1,165 @@
+Title: MOOSE-Copilot: A Web-Based Interactive Assistant for Unified Exploratory and Fine-Grained Scientific Hypothesis Discovery
+
+URL Source: https://arxiv.org/pdf/2605.29475v1
+
+Published Time: Fri, 29 May 2026 00:45:43 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# MOOSE-Copilot: A Web-Based Interactive Assistant for Unified Exploratory and Fine-Grained Scientific Hypothesis Discovery 
+
+Hongran An 
+
+Central Conservatory of Music 
+
+hongran761@gmail.com 
+
+Zonglin Yang †
+
+Nanyang Technological University 
+
+zonglin001@ntu.edu.sg 
+
+Abstract 
+
+Large language models (LLMs) show remark-able potential in scientific hypothesis discov-ery. However, existing approaches face two critical limitations: they treat divergent ex-ploratory ideation and convergent fine-grained refinement as isolated tasks, and they operate autonomously with little to no human guid-ance. We present MOOSE-Copilot, the first unified framework to bridge this abstraction gap through a formalized human–AI interac-tion (HAII) protocol. Our system empowers scientists to steer the generative process via three explicit signals: initial blueprints, inter-stage routing, and regenerative feedback. Quan-titative evaluations demonstrate that injecting these structured expert signals significantly outperforms purely autonomous baselines, es-tablishing a performance ceiling under oracle guidance. Furthermore, to democratize this paradigm, we develop an intuitive web-based interface featuring interactive tree visualization. This explicitly eliminates the steep learning curve of complex command-line agentic tools, empowering interdisciplinary researchers to di-rectly leverage, visually orchestrate, and accel-erate end-to-end scientific breakthroughs. Web-site: https://moosedemo.com Video: www. youtube.com/watch?v=_GSa-42ArIA 
+
+1 Introduction 
+
+Recently, large language models (LLMs) have demonstrated remarkable potential in assisting var-ious stages of scientific research, including hypoth-esis generation, experiment design and execution, manuscript writing, and peer review (Luo et al., 2025). Among these, scientific hypothesis discov-ery lies at the heart of the research process, as it plays a critical role in shaping research direction and influencing the potential significance and im-pact of the resulting work. 
+
+> †Corresponding author.
+
+We conceptualize the landscape of automated scientific hypothesis discovery as encompassing two distinct paradigms: exploratory and fine-grained discovery. Exploratory discovery focuses on broadly diverging to generate diverse, high-level research directions from a given background con-text. However, this often yields rough, underspec-ified ideas. Most existing agentic systems for sci-entific discovery operate within this exploratory regime (Yang et al., 2024; Zhou et al., 2024; Li et al., 2024; Shojaee et al., 2024; Hu et al., 2024; Pu et al., 2024). Among these, MOOSE-Chem (Yang et al., 2025b) is the first to formalize exploratory discovery as an explicit search problem. In contrast, fine-grained discovery—recently introduced by MOOSE-Chem2 (Yang et al., 2025a)—operates convergently. It builds upon an initial conceptual blueprint, leveraging LLMs to optimize plausibility and coherence while system-atically enriching the idea with methodological and experimental details. This process ultimately trans-lates an abstract inspiration into a concrete, exe-cutable research protocol. We observe that these two tasks correspond to two complementary stages of the scientific dis-covery process: exploration and exploitation. Ex-ploratory discovery enables the broad search for promising directions, while fine-grained discovery deepens and refines those directions into actionable research hypotheses. Despite their complementarity, two key gaps re-main. First, it is entirely unexplored how these two stages might be synergistically combined within a unified framework. Unifying them is inherently challenging due to the massive abstraction gap be-tween divergent ideation and precise experimental convergence, yet this integration is an essential step toward a unified framework of automated scien-tific discovery. Second, current approaches to both tasks typically rely on standalone LLM workflows or agentic methods, offering little to no support 
+
+> arXiv:2605.29475v1 [cs.CL] 28 May 2026
+
+for human input or control. Consequently, a ma-jor bottleneck persists: we lack a cohesive system that successfully bridges the exploratory and fine-grained phases while simultaneously empowering scientists to actively steer, course-correct, and vali-date this end-to-end automated process. To overcome this bottleneck, we introduce a prin-cipled human–AI interaction (HAII) paradigm that formally bridges exploratory and fine-grained hy-pothesis discovery. We instantiate this paradigm through MOOSE-Copilot, a unified framework that elevates the human scientist to the role of a cen-tral navigator. Rather than treating human-in-the-loop as a mere feature, we define a structured in-teraction protocol where scientists can inject initial blueprints, make critical explore-exploit routing decisions, and provide targeted feedback. This synergy mitigates the search space explosion and resolves the ambiguity of when to diverge versus when to refine, transforming an intractable auto-mated process into a manageable, human-guided workflow. To validate this unified framework, we system-atically evaluate the impact of the core guiding signals—initial blueprints, explore-exploit routing, and directional feedback—on the quality of the final hypotheses. Our quantitative analyses, com-plemented by qualitative case studies, demonstrate that structured intervention significantly outper-forms purely autonomous baselines, providing ac-tionable insights into how scientists can best lever-age these guiding signals. Furthermore, a theoretical interaction protocol is only impactful if it is accessible to its target audience. Recognizing that many domain ex-perts—particularly in fields like chemistry and biol-ogy—are hindered by the barrier of command-line agentic tools, we operationalize our HAII paradigm through a comprehensive web-based graphical user interface (GUI). Designed for usability and transparency, 
+
+MOOSE-Copilot visualizes the complex, high-dimensional hypothesis search trajectory as an intuitive, interactive tree structure. This transparent design empowers researchers to effortlessly trace the evolution of generated ideas, select promising conceptual branches for fine-grained exploita-tion, and inject domain knowledge precisely where needed, thereby grounding the automated discovery process in human expertise. In conclusion, this paper makes the following four contributions: • We propose the first work that unifies ex-ploratory search and fine-grained exploitation in scientific hypothesis discovery. • We formalize a principled human–AI inter-action protocol that empowers scientists to steer the automated process through explicit explore-exploit routing and targeted feedback. • We systematically evaluate the impact of high-quality guiding signals (representing ideal in-terventions that human experts can provide), demonstrating that such structured feedback significantly outperforms baselines. • We operationalize this paradigm into an acces-sible web-based system featuring interactive tree visualization to ensure transparency and seamless human-in-the-loop control. 
+
+2 Methodology 
+
+2.1 Preliminaries 2.1.1 Exploratory Hypothesis Discovery 
+
+Generating a scientific hypothesis h from a re-search background b is often intractable. MOOSE-Chem (Yang et al., 2025b) addresses this by de-composing the conditional distribution P (h | b)
+
+into a structured sequence of subtasks so that it transforms the exploratory discovery task into a standard search problem. This framework assumes that hypotheses emerge by associating background knowledge b with inspiration knowledge i ∈ I
+
+from diverse domains, where I represents a collec-tion of paper titles and abstracts. Formally, the process is modeled as a Markov Decision Process (MDP). Each step incrementally updates the hypothesis hj−1 by incorporating a new inspiration ij :
+
+b i1
+
+−→ h1 i2
+
+−→ h2 ··· 
+
+−→ hk−1
+
+> ik
+
+−→ hk = h (1) The intractable distribution P (h | b) is thus approx-imated by the product of tractable sub-operations: 
+
+P (h | b) ≈
+
+> k
+
+Y
+
+> j=1
+
+P (ij | b, h j−1, I )·P (hj | b, h j−1, i j )
+
+(2) In practice, an LLM-based agent iteratively selects 
+
+ij ∈ I to expand the hypothesis search space, form-ing a tree-like structure where each path represents a distinct sequence of inspiration-driven updates. We adopt MOOSE-Chem as the exploratory dis-covery stage for our system. 2.1.2 Fine-Grained Hypothesis Discovery 
+
+MOOSE-Chem2 (Yang et al., 2025a) introduced the task of fine-grained hypothesis discovery, which aims to refine an initial hypothesis idea h0
+
+within a latent search space to maximize its sci-entific plausibility and quality. This process is framed as an optimization problem where the sys-tem seeks a locally optimal hypothesis whose inter-nal reward—assigned by an LLM—approaches the global optimum. To navigate this potentially noisy reward land-scape, MOOSE-Chem2 employs a hierarchical search strategy . It first explores coarse-grained cor-rections at a high level of abstraction to smooth the reward surface, acting as a low-pass filter to reduce local noise. Fine-grained refinements are only per-formed once the coarser level reaches convergence. This sequential approach ensures more reliable opti-mization by leveraging the coarse-level reward as a stable approximation of its underlying fine-grained variants. As the only existing work on fine-grained hypothesis discovery, we adopt MOOSE-Chem2 for the fine-grained refinement stage of our system. 
+
+2.2 Unified Hypothesis Discovery Framework 
+
+Our unified framework is motivated by our observa-tion that existing research on hypothesis discovery can be broadly categorized into two complemen-tary tasks: exploratory and fine-grained hypothesis discovery, corresponding to the classical notions of exploration and exploitation, respectively. Figure 1 presents the overall framework of MOOSE-Copilot. The left side of the figure shows the exploratory stage , implemented with MOOSE-Chem. Here the system searches the large inspiration-knowledge space: at each step it selects an inspiration ij (the title and abstract of a paper) and incrementally up-dates the working hypothesis, expanding a tree of diverse coarse-grained research directions. The right side of the figure depicts the fine-grained stage , implemented with MOOSE-Chem2. Taking a coarse hypothesis as input, this module performs hierarchical refinement. Corrections and added details are organised by abstraction level; optimisation begins at the most abstract layer and proceeds downward to more specific layers. This coarse-to-fine strategy smooths the reward land-scape and enables more reliable optimisation. Together, the two stages balance exploration and exploitation, transforming an initial research ques-tion into a fully specified, executable hypothesis. We identify three key guiding signals needed for this unified framework: 1. Initial blueprints that constrain the starting region of the exploration–exploitation pro-cess. 2. Inter-stage routing : when to transition be-tween exploration and exploitation, and on which intermediate hypothesis. 3. Intra-stage feedback : in which direction to continue refining within the current stage. 
+
+2.3 Formalizing the HAII Protocol 
+
+Integrating divergent exploration and fine-grained exploitation autonomously is computationally in-tractable. A fully specified hypothesis resides in the massive joint space H = C × E , where C is the exploratory space of high-level inspirations and 
+
+E is the exploitation space of executable details. Finding the optimal hypothesis requires marginal-izing over H, triggering a combinatorial explosion of abstract branches and microscopic parameters. To overcome this, we formalize MOOSE-Copilot as a human-intervened state machine in which expert interventions act as routing operators that prune and redirect the search trajectory through three guiding signals F = {finit , f route , f dir }:• finit (Initial Blueprint ): root-node con-straints injected to prune the initial boundaries of C.• froute (Inter-stage Routing ): a bidirectional transition operator that lets experts shift search granularity—drilling down from concepts to execution ( C → E ), or elevating refined ideas back to seek novel inspirations ( E → C ). • fdir (Intra-stage Feedback ): a regenerative correction loop active within either stage. It injects targeted critiques by updating the ac-tive context ( b′ = b ∪ { hprev , feedback }) and re-running the generation to iteratively correct trajectories. Conditioning hypothesis generation on F factor-izes the intractable joint distribution into a manage-able, expert-routed sequence: : background 
+
+> : inspiration
+> : hypothesis
+> : init point
+> : local optimum
+> Feedback from exploitation to exploration
+> Feedback from exploration to exploitation
+> Feedback on further exploitation
+> Feedback on further exploration
+
+Exploration  Exploitation Figure 1: Overview of MOOSE-Copilot. Yellow rectangles indicate hypotheses actively selected by the user for further exploration or exploitation. Blue and purple paths represent user-directed transitions to additional exploration or fine-grained exploitation stage, respectively. Feedback can be provided along with each additional stage selection. 
+
+P (h | b0, F) ≈ P (c1...T | b0, f init , f dir )
+
+· Tfroute (c∗ ⇌ e∗)
+
+| {z }
+
+> human-routed transition
+
+· P (e1...K | c∗, b exp , f dir )
+
+(3) Here, the first term captures divergent explo-ration in C, iteratively refined via fdir . The transi-tion operator Tfroute denotes the bidirectional hu-man pivot ( ⇌) that selects a node c∗ for stage transition. The final term represents convergent exploitation in E under the expanded context bexp .This factorization substantially reduces the effec-tive search complexity, replacing a joint search over 
+
+C × E with a targeted, human-steered trajectory through both spaces. This protocol directly dictates the MOOSE-Copilot interface (Figure 1). Researchers inject 
+
+finit via the background input. The interactive tree operationalizes froute , allowing users to route nodes between macroscopic branching and fine-grained refinement. Finally, the feedback module instantiates fdir across both stages, appending cri-tiques to the historical context and triggering regen-erative generation to keep the search grounded in domain expertise. 
+
+3 MOOSE-Copilot Web Interface 
+
+Figure 2 shows the input interface of MOOSE-Copilot. Users can enter their LLM API credentials, specify a research question, optionally provide a literature survey, and upload a custom inspiration knowledge corpus to guide the exploratory search. 
+
+Figure 2: Input interface of MOOSE-Copilot. 
+
+Figure 3 illustrates the tree view of the generated hypotheses. Each node represents a hypothesis gen-erated at a particular step, forming an interpretable search trace that visualizes the evolution of ideas through iterative inspiration-driven updates. Figure 4 presents the rank view of generated hypotheses. This view lists the ranked hypotheses along with their averaged self-evaluation scores produced by the LLM, allowing users to assess and compare hypothesis quality. Figure 5 displays the feedback interface. After selecting a hypothesis, users can optionally provide feedback and choose the next step: continuing ex-ploration using MOOSE-Chem (MOOSE1) or tran-sitioning to fine-grained exploitation via MOOSE-Figure 3: Tree view of the hypothesis generation process in MOOSE-Copilot. 
+
+Figure 4: Hypothesis ranking interface in MOOSE-Copilot. 
+
+Figure 5: Feedback interface in MOOSE-Copilot. Method Name Description Recall # Search Steps baseline_MC (Yang et al., 2025b) MC 11.44% -baseline_MC2 (Yang et al., 2025a) MC2 10.33% 478.6 MC_with_hint MC + initial blueprint 15.37% -MC_with_soft_feedback_with_hint MC + initial blueprint + (oracle ranking + soft feed-back) + MC 16.78% -MC_with_feedback_with_hint MC + initial blueprint + (oracle ranking + feedback) + MC 16.93% -MC2_with_MC_input_self_rank MC + initial blueprint + (self-ranking) + MC2 12.74% 321.2 MC2_with_MC_input_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 18.26% 336.6 MC2_with_feedback_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + feedback) + MC2]x1 21.98% 166.1 MC2_with_feedback_x2_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + feedback) + MC2]x2 21.91% 149.9 MC2_with_feedback_x3_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + feedback) + MC2]x3 22.35% 123.1 MC2_with_feedback_x4_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + feedback) + MC2]x4 20.99% 107.4 MC2_with_strong_feedback_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + strong feedback) + MC2]x1 23.10% 129.4 MC2_with_strong_feedback_x2_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + strong feedback) + MC2]x2 25.54% 102.1 MC2_with_strong_feedback_x3_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + strong feedback) + MC2]x3 25.70% 123.1 MC2_with_strong_feedback_x4_oracle_rank MC + initial blueprint + (oracle-ranking) + MC2 + [(oracle ranking + strong feedback) + MC2]x4 26.96% 90.1 
+
+Table 1: Experimental results. “MC” represents MOOSE-Chem, “MC2” represents MOOSE-Chem2. 
+
+Chem2 (MOOSE2). 
+
+4 Experiments 
+
+We evaluate our system on the TOMATO-Chem2 dataset (Yang et al., 2025a), leveraging its detailed annotations (research questions, literature surveys, and fine-grained hypotheses) across 51 top-tier pa-pers. Following Yang et al. (2025a), we compute the recall of ground-truth elements recovered by the generated hypotheses (Table 1). Our quantitative experiments isolate and assess the impact of our protocol’s three core guiding signals: (1) initial blueprints, (2) explore-exploit routing, and (3) directional feedback. 
+
+Justification for Oracle-Simulated Evaluation. 
+
+To rigorously measure the system’s intrinsic re-sponsiveness to these signals—free from the con-founding variance of human expertise, subjective bias, and cognitive load—we employ an oracle-simulated evaluation paradigm . Specifically, feed-back is provided by an oracle LLM that has ac-cess to the ground-truth fine-grained hypothesis but is instructed to generate directional critiques without verbatim disclosure of the answer. Node selection is likewise simulated by oracle ranking against the ground-truth target. This programmatic simulation of ideal expert interventions eliminates human-induced noise and establishes a definitive performance ceiling for the system under consis-tently high-quality guidance. The results yield three main conclusions: (1) Ini-tial blueprints significantly bound and enhance overall search effectiveness. (2) Thoughtful rout-ing (node selection) strictly dictates the trajectory and success of the final performance. (3) Targeted feedback drives substantially stronger, faster re-finements than purely autonomous baselines. Ultimately, MOOSE-Copilot effectively reduces the cognitively demanding task of hypothesis gen-eration into manageable subtasks of conceptual selection and critique. Furthermore, we observe that hypotheses refined through prior exploration or early feedback accelerate fine-grained conver-gence, requiring fewer optimization steps to reach high-quality outputs. 
+
+5 Conclusion 
+
+We presented MOOSE-Copilot, the first framework to bridge the abstraction gap between exploratory search and fine-grained exploitation in scientific hypothesis discovery. By formalizing a principled human–AI interaction protocol, we empower sci-entists to steer the automated process via initial blueprints, inter-stage routing, and regenerative feedback. Evaluations demonstrate that structured expert guidance significantly outperforms purely autonomous baselines, establishing a performance ceiling under oracle guidance. Furthermore, our in-teractive web interface lowers the technical barrier of command-line agentic tools, making AI-assisted hypothesis discovery accessible to interdisciplinary researchers. 
+
+Limitations 
+
+MOOSE-Copilot currently has two main limita-tions. First, it does not integrate automated experi-ment execution (Liu et al., 2025; Romera-Paredes et al., 2024; Novikov et al., 2025), which would close the loop between hypothesis generation and empirical validation. The system does, however, ex-pose a hook for incorporating external experimen-tal results through the intra-stage feedback signal 
+
+fdir . Second, it does not yet leverage post-training methods specifically developed for scientific hy-pothesis discovery (Yang and Bing, 2026), which could improve the generation quality of both the exploratory and fine-grained stages. We leave both as directions for future work. 
+
+Ethics Statement 
+
+This work aims to support scientific research by de-veloping a system that assists in hypothesis genera-tion through human–AI collaboration. All datasets used in this study are derived from publicly avail-able scientific literature and do not contain person-ally identifiable or sensitive information. The sys-tem does not produce or promote misinformation intentionally, and user interactions remain local unless explicitly shared. While MOOSE-Copilot has the potential to ac-celerate scientific discovery, we acknowledge pos-sible misuse—for example, generating misleading or unfounded hypotheses if used without proper domain knowledge or oversight. We emphasize that the system is intended to augment, not replace, expert judgment, and we encourage responsible use by qualified researchers. Future work should further investigate the societal and epistemic im-plications of AI-augmented scientific workflows, including issues of bias, overreliance, and repro-ducibility. We have made efforts to promote transparency, reproducibility, and accessibility by releasing our code and interface under a permissive open-source license. 
+
+Broader Impact Statement 
+
+MOOSE-Copilot aims to democratize and accel-erate scientific discovery by providing researchers with a powerful, interactive assistant for hypothesis generation. By integrating both exploratory and fine-grained reasoning processes into a single hu-man–AI framework, the system has the potential to support more systematic, creative, and efficient research workflows across a wide range of scien-tific disciplines, including chemistry, biology, and materials science. This broader accessibility may empower smaller research teams, early-career scientists, and institu-tions with fewer computational resources to partici-pate more actively in hypothesis-driven research. It also opens new opportunities for interdisciplinary collaboration, as researchers can more easily ex-plore ideas outside their immediate domain exper-tise with LLM-assisted support. However, there are also potential risks. Improper use of the system—such as uncritical acceptance of AI-generated hypotheses, misuse in ideologically driven or pseudoscientific contexts, or reinforce-ment of biases present in training data—could neg-atively affect the scientific process. To mitigate this, MOOSE-Copilot is designed to keep humans mean-ingfully in the loop, encouraging critical reflection, transparency, and control. Overall, we view this work as a step toward more inclusive, efficient, and assistive scientific research, while recognizing the importance of responsible use, continuous evaluation, and community over-sight in its deployment and development. 
+
+References      
+
+> Xiang Hu, Hongyu Fu, Jinge Wang, Yifeng Wang, Zhikun Li, Renjun Xu, Yu Lu, Yaochu Jin, Lili Pan, and Zhenzhong Lan. 2024. Nova: An itera-tive planning and search approach to enhance novelty and diversity of llm generated ideas. arXiv preprint arXiv:2410.14255 .Ruochen Li, Liqiang Jing, Chi Han, Jiawei Zhou, and Xinya Du. 2024. Learning to generate re-search idea with dynamic control. arXiv preprint arXiv:2412.14626 .Wanhao Liu, Zonglin Yang, Jue Wang, Lidong Bing, Di Zhang, Dongzhan Zhou, Yuqiang Li, Houqiang Li, Erik Cambria, and Wanli Ouyang. 2025. Moose-chem3: Toward experiment-guided hypothesis rank-ing via simulated experimental feedback. arXiv preprint arXiv:2505.17873 .
+
+Ziming Luo, Zonglin Yang, Zexin Xu, Wei Yang, and Xinya Du. 2025. Llm4sr: A survey on large lan-guage models for scientific research. arXiv preprint arXiv:2501.04306 .Alexander Novikov, Ngân V ˜u, Marvin Eisenberger, Emilien Dupont, Po-Sen Huang, Adam Zsolt Wag-ner, Sergey Shirobokov, Borislav Kozlovskii, Fran-cisco JR Ruiz, Abbas Mehrabian, et al. 2025. Alphae-volve: A coding agent for scientific and algorithmic discovery. arXiv preprint arXiv:2506.13131 .Kevin Pu, KJ Feng, Tovi Grossman, Tom Hope, Bhavana Dalvi Mishra, Matt Latzke, Jonathan Bragg, Joseph Chee Chang, and Pao Siangliulue. 2024. Ideasynth: Iterative research idea develop-ment through evolving and composing idea facets with literature-grounded feedback. arXiv preprint arXiv:2410.04025 .Bernardino Romera-Paredes, Mohammadamin Barekatain, Alexander Novikov, Matej Balog, M Pawan Kumar, Emilien Dupont, Francisco JR Ruiz, Jordan S Ellenberg, Pengming Wang, Omar Fawzi, et al. 2024. Mathematical discoveries from program search with large language models. Nature ,625(7995):468–475. Parshin Shojaee, Kazem Meidani, Shashank Gupta, Amir Barati Farimani, and Chandan K. Reddy. 2024. LLM-SR: scientific equation discovery via programming with large language models. CoRR ,abs/2404.18400. Zonglin Yang and Lidong Bing. 2026. Moose-star: Un-locking tractable training for scientific discovery by breaking the complexity barrier. In Proceedings of the 43rd International Conference on Machine Learn-ing .Zonglin Yang, Xinya Du, Junxian Li, Jie Zheng, Sou-janya Poria, and Erik Cambria. 2024. Large lan-guage models for automated open-domain scientific hypotheses discovery. In Findings of the Associa-tion for Computational Linguistics: ACL 2024 , pages 13545–13565, Bangkok, Thailand. Association for Computational Linguistics. Zonglin Yang, Wanhao Liu, Ben Gao, Yujie Liu, Wei Li, Tong Xie, Lidong Bing, Wanli Ouyang, Erik Cam-bria, and Dongzhan Zhou. 2025a. Moose-chem2: Exploring llm limits in fine-grained scientific hypoth-esis discovery via hierarchical search. In Advances in Neural Information Processing Systems .Zonglin Yang, Wanhao Liu, Ben Gao, Tong Xie, Yuqiang Li, Wanli Ouyang, Soujanya Poria, Erik Cambria, and Dongzhan Zhou. 2025b. Moose-chem: Large language models for rediscovering unseen chemistry scientific hypotheses. In Proceedings of the International Conference on Learning Represen-tations (ICLR) .Yangqiaoyu Zhou, Haokun Liu, Tejes Srivastava, Hongyuan Mei, and Chenhao Tan. 2024. Hypoth-esis generation with large language models. CoRR ,abs/2404.04326.

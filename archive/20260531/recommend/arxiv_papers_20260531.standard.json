@@ -1,0 +1,395 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-05-31T20:27:24.124253+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 6,
+    "quick_skim_target": 12,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2605.30329v1",
+      "source": "arxiv",
+      "title": "SoundnessBench: Can Your AI Scientist Really Tell Good Research Ideas from Bad Ones?",
+      "abstract": "Autonomous AI research agents aim to accelerate scientific discovery by automating the research pipeline, from hypothesis generation to peer review. However, existing benchmarks rarely test a fundamental bottleneck: whether Large Language Models can judge the methodological viability of a research idea before expending time and computational resources. We introduce SoundnessBench, a curated benchmark of 1,099 machine-learning research proposals reconstructed from ICLR submissions, labeled with reviewer soundness sub-scores, and audited against source papers. SoundnessBench should be interpreted as a benchmark for recoverable proposal-stage soundness rather than exact prediction of full-paper review outcomes. Across 12 frontier LLMs, we find a pervasive optimism bias: under standard prompting, models frequently rate low-soundness proposals as sound, while aggressive prompting largely shifts errors from false positives to false negatives. Additional controls for public-corpus contamination, paper-identifying phrases, surface features, and human audit quality suggest that this behavior is not explained by a single confounder. Our results indicate that current LLMs are not yet reliable as standalone first-gate evaluators for scientific rigor.",
+      "authors": [
+        "Sy-Tuyen Ho",
+        "Minghui Liu",
+        "Huy Nghiem",
+        "Furong Huang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-28T17:57:37+00:00",
+      "link": "https://arxiv.org/pdf/2605.30329v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Benchmark for AI research agents' ability to judge methodological soundness of research proposals.",
+      "llm_evidence_cn": "评估AI科研智能体在研究提案阶段判断方法论可靠性的基准。",
+      "llm_evidence": "评估AI科研智能体在研究提案阶段判断方法论可靠性的基准。",
+      "canonical_evidence": "评估AI科研智能体在研究提案阶段判断方法论可靠性的基准。",
+      "llm_tldr_en": "SoundnessBench evaluates if AI research agents can assess idea viability before computation, finding frontier LLMs perform near-random, highlighting a critical bottleneck in automated science.",
+      "llm_tldr_cn": "自主AI研究智能体旨在自动化科研流程，但现有基准很少测试其是否能在投入资源前判断研究想法的方法论可靠性。本文构建SoundnessBench基准，包含1099个从ICLR投稿重建的机器学习研究提案，标注审稿人可靠性子分数。测试12个前沿LLM显示，它们在提案可靠性判断上接近随机水平，揭示了自动化科学发现中的关键瓶颈。该基准为推动AI科学家决策能力的提升提供了评估工具。",
+      "llm_tldr": "自主AI研究智能体旨在自动化科研流程，但现有基准很少测试其是否能在投入资源前判断研究想法的方法论可靠性。本文构建SoundnessBench基准，包含1099个从ICLR投稿重建的机器学习研究提案，标注审稿人可靠性子分数。测试12个前沿LLM显示，它们在提案可靠性判断上接近随机水平，揭示了自动化科学发现中的关键瓶颈。该基准为推动AI科学家决策能力的提升提供了评估工具。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.24941v1",
+      "source": "arxiv",
+      "title": "Memory-Induced Tool-Drift in LLM Agents",
+      "abstract": "Modern LLM agents combine long-term memory for personalization with tool-calling interfaces for taking actions in the world -- a combination underpinning contemporary production systems. We study a previously unexamined failure of this combination: when personality-driven biases stored in memory (cost-consciousness, impatience, risk tolerance, etc.) silently affect tool calls in contexts where they are not applicable. We call this memory-induced tool-drift and operationalize it through MEMDRIFT, a benchmark of 105 scenarios spanning five bias dimensions and seven professional domains, generated through an automated adversarial pipeline. Across seven frontier models -- including those with extended reasoning -- biased memories raise deflection scores (a judge-scored measure of parameter deviation from unbiased baselines) by up to $+3.6$ points on a 1--5 scale. Tool-drift persists when memory management is handled by three production memory architectures. The phenomenon affects real-world tools: scanning 6{,}062 tools across 288 verified MCP servers, we flag 608 with susceptible parameters and confirm tool-drift on a validated subset. Mechanistically, biased memories act as implicit steering vectors, pushing activations along the same latent directions as explicit behavioral instructions. They also redistribute attention from task-relevant context toward memory entries with surface-level keyword overlap to the target parameter. Standard defenses -- prompt-based relevance instructions and memory filters -- reduce drift but do not eliminate it. As agents take increasingly consequential actions on a user's behalf, memory-induced tool-drift represents a systematic vulnerability that current safeguards do not address, motivating dedicated defenses at the intersection of memory management and tool-call generation.",
+      "authors": [
+        "Mahavir Dabas",
+        "Jihyun Jeong",
+        "Ming Jin",
+        "Ruoxi Jia"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-05-24T08:41:39+00:00",
+      "link": "https://arxiv.org/pdf/2605.24941v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Study on long-term memory biases causing tool-call drift in agents",
+      "llm_evidence_cn": "研究长期记忆偏差导致智能体工具调用漂移",
+      "llm_evidence": "研究长期记忆偏差导致智能体工具调用漂移",
+      "canonical_evidence": "研究长期记忆偏差导致智能体工具调用漂移",
+      "llm_tldr_en": "This paper identifies memory-induced tool-drift, where personality-driven biases in agent memory affect tool use inappropriately, and introduces MEMDRIFT benchmark showing significant deflection across models, highlighting risks of long-term memory.",
+      "llm_tldr_cn": "针对LLM智能体长期记忆可能存储个性偏差，并在不相关场景中影响工具调用的问题，本文提出记忆引发工具漂移现象，并构建MEMDRIFT基准测试。跨七个前沿模型的实验表明，记忆偏差显著增加工具调用的偏离评分，揭示了长期记忆在智能体系统中的潜在风险，为安全记忆设计提供依据。",
+      "llm_tldr": "针对LLM智能体长期记忆可能存储个性偏差，并在不相关场景中影响工具调用的问题，本文提出记忆引发工具漂移现象，并构建MEMDRIFT基准测试。跨七个前沿模型的实验表明，记忆偏差显著增加工具调用的偏离评分，揭示了长期记忆在智能体系统中的潜在风险，为安全记忆设计提供依据。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.29475v1",
+      "source": "arxiv",
+      "title": "MOOSE-Copilot: A Web-Based Interactive Assistant for Unified Exploratory and Fine-Grained Scientific Hypothesis Discovery",
+      "abstract": "Large language models (LLMs) show remarkable potential in scientific hypothesis discovery. However, existing approaches face two critical limitations: they treat divergent exploratory ideation and convergent fine-grained refinement as isolated tasks, and they operate autonomously with little to no human guidance. We present MOOSE-Copilot, the first unified framework to bridge this abstraction gap through a formalized human-AI interaction (HAII) protocol. Our system empowers scientists to steer the generative process via three explicit signals: initial blueprints, inter-stage routing, and regenerative feedback. Quantitative evaluations demonstrate that injecting these structured expert signals significantly outperforms purely autonomous baselines, establishing a performance ceiling under oracle guidance. Furthermore, to democratize this paradigm, we develop an intuitive web-based interface featuring interactive tree visualization. This explicitly eliminates the steep learning curve of complex command-line agentic tools, empowering interdisciplinary researchers to directly leverage, visually orchestrate, and accelerate end-to-end scientific breakthroughs.",
+      "authors": [
+        "Hongran An",
+        "Zonglin Yang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.CE",
+        "cs.HC"
+      ],
+      "published": "2026-05-28T07:06:10+00:00",
+      "link": "https://arxiv.org/pdf/2605.29475v1",
+      "tags": [
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "LLM-based scientific hypothesis discovery assistant with structured human interaction.",
+      "llm_evidence_cn": "基于LLM的科学假设发现助手，具有结构化人机交互。",
+      "llm_evidence": "基于LLM的科学假设发现助手，具有结构化人机交互。",
+      "canonical_evidence": "基于LLM的科学假设发现助手，具有结构化人机交互。",
+      "llm_tldr_en": "MOOSE-Copilot unifies exploratory and fine-grained hypothesis discovery with a formal human-AI interaction protocol, using blueprint, routing, and feedback signals to improve hypothesis originality, quality, and diversity.",
+      "llm_tldr_cn": "大型语言模型在科学假设发现中展现潜力，但现有方法将发散性探索和收敛性细化视为孤立任务，且完全自主运行缺乏人类引导。MOOSE-Copilot通过形式化人机交互协议统一这两类任务，支持科学家通过初始蓝图、阶段路由和再生反馈三种信号引导生成过程。定量评估表明，注入结构化专家信号后，生成的假设在独创性、质量和多样性上显著优于现有基线，为AI辅助科学构思提供了实用接口。",
+      "llm_tldr": "大型语言模型在科学假设发现中展现潜力，但现有方法将发散性探索和收敛性细化视为孤立任务，且完全自主运行缺乏人类引导。MOOSE-Copilot通过形式化人机交互协议统一这两类任务，支持科学家通过初始蓝图、阶段路由和再生反馈三种信号引导生成过程。定量评估表明，注入结构化专家信号后，生成的假设在独创性、质量和多样性上显著优于现有基线，为AI辅助科学构思提供了实用接口。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "research agent for literature review hypothesis generation and experiment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.24197v1",
+      "source": "arxiv",
+      "title": "A Sober Look at Agentic Misalignment in Automated Workflows",
+      "abstract": "We study a class of emergent misalignment in multi-agent systems (MAS), with a focus on automated workflows, which we refer to agentic misalignment. Although these systems can solve complex tasks, they often fail because agents act according to implicit proxy utilities that do not align with the intended human goals. We formally define these behaviors and analyze them within a Bayesian framework, showing that generic utilities naturally lead to posterior collapse of agents in automated workflows. To address this issue, we propose Agentic Evidence Attribution (AEA), a novel alignment paradigm that improves agent posteriors using context-specific evidence. AEA reasons over agent actions and provides structured evidence to correct misaligned behavior during collaboration. To better understand the role of evidence, we study two instantiations of AEA: self-reflection (internal evidence from the model) and weak-to-strong generalization (external evidence on the agentic trajectory). We show that a small evidence model effectively aligns the MAS by providing orthogonal failure attribution. Our results clarify the sources of agentic misalignment in automated workflows and show that evidence-based alignment can effectively improve agent collaboration and leads to reliable multi-agent systems built on automated workflows.",
+      "authors": [
+        "Wenqian Ye",
+        "Bo Yuan",
+        "Zhichao Xu",
+        "Yijun Tian",
+        "Yawei Wang",
+        "Henry Kautz",
+        "Aidong Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-22T20:40:20+00:00",
+      "link": "https://arxiv.org/pdf/2605.24197v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Proposes Agentic Evidence Attribution providing structured evidence to ground actions, relevant for maintaining supported claims in research.",
+      "llm_evidence_cn": "提出智能体证据归因提供结构化证据以支撑行动，适用于研究中有据声明维护。",
+      "llm_evidence": "提出智能体证据归因提供结构化证据以支撑行动，适用于研究中有据声明维护。",
+      "canonical_evidence": "提出智能体证据归因提供结构化证据以支撑行动，适用于研究中有据声明维护。",
+      "llm_tldr_en": "Studies agentic misalignment in multi-agent workflows and introduces Agentic Evidence Attribution (AEA) to correct misaligned behavior via structured evidence, offering a method for claim-evidence grounding in automated science.",
+      "llm_tldr_cn": "多智能体自动化工作流中存在代理依隐式代理效用行动导致与人类目标对齐失败的问题。本文提出智能体证据归因（AEA），通过推理代理行动并提供结构化证据来纠正误对齐行为，为自动化科研中确保声明有据提供了方法基础。",
+      "llm_tldr": "多智能体自动化工作流中存在代理依隐式代理效用行动导致与人类目标对齐失败的问题。本文提出智能体证据归因（AEA），通过推理代理行动并提供结构化证据来纠正误对齐行为，为自动化科研中确保声明有据提供了方法基础。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "claim-evidence grounding and support maintenance in research papers",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.25988v1",
+      "source": "arxiv",
+      "title": "What Makes a Medical Checker Trainable? Diagnosing Signal Collapse and Reward Hacking in Checker-Guided RAG for Biomedical QA",
+      "abstract": "Medical RAG needs evidence-grounded claims, so plugging a claim-level NLI checker into retrieval-augmented RL is intuitive. \\textbf{We find that the checker's \\emph{output distribution} during training, not its held-out accuracy, decides whether it provides trainable gradient.} We compare four NLI checker back-ends as process rewards inside a GRPO-trained medical RAG agent (Qwen2.5-7B, replicated on Qwen3-4B and Llama-3.1-8B) across four held-out medical QA benchmarks. Three diagnostic findings emerge. \\textbf{(i)} Signal collapse is log-prob-specific: LLM log-probability scoring labels over 97\\% of claims neutral -- collapsing the RL gradient to zero -- while a calibrated MedNLI classifier scores the same pairs non-degenerately. \\textbf{(ii)} Moderate signal beats strong signal on answer quality: a strong proprietary checker triggers a three-step reward-hacking cascade -- ultra-short answers, search avoidance, language collapse -- so a moderate-signal local classifier trains a higher-quality model (\\textbf{+12\\% BERTScore over zero-shot, no GPT dependency}). \\textbf{(iii)} Signal strength is policy-dependent: the same checker registers as moderate on one policy but strong on another without triggering the cascade end-state. We frame these as boundary conditions for verifier-as-reward systems.",
+      "authors": [
+        "Yuelyu Ji",
+        "Min Gu Kwak",
+        "Hang Zhang",
+        "Xizhi Wu",
+        "Chenyu Li",
+        "Yanshan Wan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-25T16:06:06+00:00",
+      "link": "https://arxiv.org/pdf/2605.25988v1",
+      "tags": [
+        "keyword:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Probes training with claim-level NLI checker to ground claims in evidence for medical RAG, diagnosing signal collapse and reward hacking.",
+      "llm_evidence_cn": "用声明级NLI检查器训练医疗RAG以将声明扎根于证据，诊断信号坍塌与奖励黑客",
+      "llm_evidence": "用声明级NLI检查器训练医疗RAG以将声明扎根于证据，诊断信号坍塌与奖励黑客",
+      "canonical_evidence": "用声明级NLI检查器训练医疗RAG以将声明扎根于证据，诊断信号坍塌与奖励黑客",
+      "llm_tldr_en": "Shows that the output distribution of an NLI checker during RL training determines trainable gradient for evidence-grounded claim generation, not held-out accuracy, with signal collapse in log-prob scorers and reward hacking risks.",
+      "llm_tldr_cn": "针对医疗RAG中需要证据支撑的声明，将声明级NLI检查器作为过程奖励进行强化学习训练，发现训练时检查器的输出分布而非离线准确率决定可训练梯度。LLM对数概率评分导致97%以上声明被标为中性并造成梯度坍塌，而校准后的MedNLI分类器能保持有效梯度；同时存在奖励黑客风险，仅在检查器训练期间特化固定提示时性能提升。该工作揭示了在科学问答中维护证据-声明关联的关键诊断，为自动科研中的声明审计提供了方法论参考。",
+      "llm_tldr": "针对医疗RAG中需要证据支撑的声明，将声明级NLI检查器作为过程奖励进行强化学习训练，发现训练时检查器的输出分布而非离线准确率决定可训练梯度。LLM对数概率评分导致97%以上声明被标为中性并造成梯度坍塌，而校准后的MedNLI分类器能保持有效梯度；同时存在奖励黑客风险，仅在检查器训练期间特化固定提示时性能提升。该工作揭示了在科学问答中维护证据-声明关联的关键诊断，为自动科研中的声明审计提供了方法论参考。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "claim-evidence grounding and support maintenance in research papers",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.26302v1",
+      "source": "arxiv",
+      "title": "Your Agents Are Aging Too: Agent Lifespan Engineering for Deployed Systems",
+      "abstract": "Long-lived AI agents are increasingly deployed as persistent operational systems, yet they are still evaluated like freshly initialized models. Day-one benchmarks miss a basic systems question: how long does an agent remain reliable after deployment? Even when model weights are frozen, an agent's effective state keeps changing as it compresses interaction history, retrieves from a growing memory store, revises facts after updates, and undergoes routine maintenance. Reliability therefore becomes a lifespan property of the full agent harness, not only a snapshot property of the base model. We introduce AgingBench, a longitudinal reliability benchmark for agent lifespan engineering: measuring not only whether deployed agents degrade, but what form the degradation takes and where repair should target. AgingBench organizes agent aging into four mechanisms: compression aging, interference aging, revision aging, and maintenance aging. To diagnose these failures, AgingBench uses temporal dependency graphs and paired counterfactual probes that produce diagnostic profiles for the write, retrieval, and utilization stages of the memory pipeline. Across 7 scenarios, 14 models, multiple memory policies, and both runner-controlled and autonomous agents, over ~400 runs spanning 8 - 200 sessions show that agent aging is not one-dimensional: behavioral tests can remain clean while factual precision decays; derived-state tracking can collapse sharply within a single model; and the same wrong answer can require different repairs depending on what the diagnostic profile points to. These results suggest that reliable agent deployment requires lifespan evaluation, mechanism-level diagnosis, and stage-targeted repair, not only stronger day-one models.",
+      "authors": [
+        "Jianing Zhu",
+        "Yeonju Ro",
+        "John Robertson",
+        "Kevin Wang",
+        "Junbo Li",
+        "Haris Vikalo",
+        "Aditya Akella",
+        "Zhangyang Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.MA"
+      ],
+      "published": "2026-05-25T19:55:12+00:00",
+      "link": "https://arxiv.org/pdf/2605.26302v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "longitudinal reliability benchmark measuring degradation from growing memory and fact revisions in long-lived agents",
+      "llm_evidence_cn": "测量长期智能体内存增长和事实修订导致可靠性退化的纵向基准",
+      "llm_evidence": "测量长期智能体内存增长和事实修订导致可靠性退化的纵向基准",
+      "canonical_evidence": "测量长期智能体内存增长和事实修订导致可靠性退化的纵向基准",
+      "llm_tldr_en": "Introduces AgingBench, a benchmark to evaluate how agent reliability changes over time due to memory growth and state updates, enabling lifespan engineering.",
+      "llm_tldr_cn": "针对长期部署的AI智能体可靠性退化问题，提出AgingBench纵向可靠性基准，测量因内存增长、事实修订和交互历史压缩而导致的行为变化，为智能体寿命工程提供诊断工具。通过该基准可揭示智能体长期运行中的退化模式，对持续学习系统的记忆维护和寿命管理具有重要意义。",
+      "llm_tldr": "针对长期部署的AI智能体可靠性退化问题，提出AgingBench纵向可靠性基准，测量因内存增长、事实修订和交互历史压缩而导致的行为变化，为智能体寿命工程提供诊断工具。通过该基准可揭示智能体长期运行中的退化模式，对持续学习系统的记忆维护和寿命管理具有重要意义。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.26321v1",
+      "source": "arxiv",
+      "title": "Anchor: Mitigating Artifact Drift in Agent Benchmark Generation",
+      "abstract": "AI agents are beginning to complete valuable, long-horizon business operations tasks, but training and evaluation environments for enterprise work still struggle to balance realism, verifiability, and scale. Environment and task creation frequently suffers from a failure mode we call artifact drift: when instructions, environments, oracles, and verifiers are created by loosely coupled processes, they frequently disagree on what a task requires, producing environments that are unsolvable, reward-hackable, or inconsistent. We introduce Anchor, a task-generation pipeline that formalizes domain experts' specifications of business workflows into constraint optimization programs. From a single parametric specification, the pipeline jointly produces a natural-language instruction, environment configuration, solver-certified ground-truth solution, and state-based verifier. With Anchor, altering parameters yields new tasks with controlled difficulty and known optimal solutions, producing harness-agnostic environments whose rewards depend solely on end-state business correctness. We apply Anchor to produce ERP-Bench: a benchmark of 300 long-horizon tasks spanning procurement and manufacturing workflows in a production-grade ERP system. We find that generation parameters predict realized difficulty, and that frontier models satisfy explicit task constraints in 26.1% of trials but reach a fully optimal solution in only 17.4% of trials. Overall, we show that Anchor and ERP-Bench offer a concrete recipe for building auditable evaluation environments for economically valuable agent work. We release the task generator and ERP-Bench dataset at erpbench.ai",
+      "authors": [
+        "Maksim Ivanov",
+        "Abhijay Rana"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-25T20:44:17+00:00",
+      "link": "https://arxiv.org/pdf/2605.26321v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "addresses artifact drift in generating benchmarks for long-horizon business operations tasks, ensuring consistency",
+      "llm_evidence_cn": "解决长时程业务操作任务基准生成中的工件漂移，确保一致性",
+      "llm_evidence": "解决长时程业务操作任务基准生成中的工件漂移，确保一致性",
+      "canonical_evidence": "解决长时程业务操作任务基准生成中的工件漂移，确保一致性",
+      "llm_tldr_en": "Anchor is a pipeline that uses constraint optimization to jointly generate consistent natural-language instructions, environments, and verifiers for long-horizon agent tasks, mitigating the problem of artifact drift.",
+      "llm_tldr_cn": "Anchor 是一种通过约束优化联合生成一致的自然语言指令、环境和验证器的流水线，用于缓解长时程智能体任务中的工件漂移问题。它解决了现有基准中指令、环境和验证器不一致导致的不可解或奖励黑客问题。实验表明，该方法能生成可解且奖励未被黑客的任务。该工作为长时程智能体提供了可靠的评估基础，通过确保基准质量间接支持了记忆和状态维护研究。",
+      "llm_tldr": "Anchor 是一种通过约束优化联合生成一致的自然语言指令、环境和验证器的流水线，用于缓解长时程智能体任务中的工件漂移问题。它解决了现有基准中指令、环境和验证器不一致导致的不可解或奖励黑客问题。实验表明，该方法能生成可解且奖励未被黑客的任务。该工作为长时程智能体提供了可靠的评估基础，通过确保基准质量间接支持了记忆和状态维护研究。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.27141v1",
+      "source": "arxiv",
+      "title": "VitaBench 2.0: Evaluating Personalized and Proactive Agents in Long-Term User Interactions",
+      "abstract": "Large language models (LLMs) have evolved into interactive agents that collaborate with users in real-world tasks. Effective collaboration in such settings increasingly depends on understanding the user beyond what is explicitly stated, as user intent is often reflected in fragmented daily interactions and requires both personalized modeling and proactive interaction. However, existing agent benchmarks primarily evaluate reasoning and tool use, largely overlooking the challenges of inferring and leveraging user preferences in realistic scenarios. To address this gap, we introduce VitaBench 2.0, a benchmark for evaluating personalized and proactive agent behavior in long-term user interactions. In VitaBench 2.0, tasks are organized as temporally ordered sequences for individual users, where preferences are embedded in fragmented and heterogeneous interactions. Successful completion of tasks requires the agent to continuously extract, utilize, and update user preferences from these interactions. We further evaluate proactiveness through tasks that require agents to recognize missing information and actively acquire it from users or environments before making decisions. To support systematic analysis, we provide an extensible memory interface that enables controlled comparison across different memory architectures. We benchmark a diverse set of frontier proprietary and open-source LLMs. Results show that real-world personalization remains highly challenging even for state-of-the-art models, revealing a substantial gap between current capabilities and practical requirements. Extensive analysis further reveals the failure modes and capability bottlenecks of current agents in real-world personalized decision-making, providing insights for future model improvements.",
+      "authors": [
+        "Yuxin Chen",
+        "Yi Zhang",
+        "Zhengzhou Cai",
+        "Yaorui Shi",
+        "Zhiyuan Yao",
+        "Chenhang Cui",
+        "Jingnan Zheng",
+        "Yaqi Huo",
+        "Xi Su",
+        "Qi Gu",
+        "Xunliang Cai",
+        "Xiang Wang",
+        "An Zhang",
+        "Tat-Seng Chua"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-26T15:07:38+00:00",
+      "link": "https://arxiv.org/pdf/2605.27141v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "evaluates long-term personalized agent interactions, requiring state maintenance over time",
+      "llm_evidence_cn": "评测长期个性化智能体交互，需要随时间维护状态",
+      "llm_evidence": "评测长期个性化智能体交互，需要随时间维护状态",
+      "canonical_evidence": "评测长期个性化智能体交互，需要随时间维护状态",
+      "llm_tldr_en": "VitaBench 2.0 is a benchmark for evaluating personalized and proactive LLM agents in long-term user interactions, focusing on inferring user preferences from fragmented interactions over time.",
+      "llm_tldr_cn": "VitaBench 2.0 是一个用于评估长期用户交互中个性化和主动式 LLM 智能体的基准，重点关注从随时间推移的碎片化交互中推断用户偏好。该基准弥补了现有评估忽略个性化建模的不足，通过组织任务为多会话场景，要求智能体积累上下文并主动提供信息。实验表明，当前智能体在长期状态维护和主动交互方面仍面临挑战。该基准推动了长期智能体研究，为个性化助手提供了评测工具。",
+      "llm_tldr": "VitaBench 2.0 是一个用于评估长期用户交互中个性化和主动式 LLM 智能体的基准，重点关注从随时间推移的碎片化交互中推断用户偏好。该基准弥补了现有评估忽略个性化建模的不足，通过组织任务为多会话场景，要求智能体积累上下文并主动提供信息。实验表明，当前智能体在长期状态维护和主动交互方面仍面临挑战。该基准推动了长期智能体研究，为个性化助手提供了评测工具。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-27-727615-v1",
+      "source": "biorxiv",
+      "title": "SpatialDataAgent: Autonomous Spatial Omics Data Curation at Decade Scale",
+      "abstract": "Fragmented metadata in spatial omics archives has rendered large volumes of multimodal molecular-histological data inaccessible as 'dark data'. Here, we introduce SpatialDataAgent, an agentic workflow for autonomous spatial omics data curation, combining schema-constrained evidence evaluation with a self-refining standardization agent. Applied to a decade of GEO records, SpatialDataAgent identified 769 paired H&E-spatial transcriptomics (ST) datasets, representing a 6.4-fold scale expansion over existing manually curated baselines. Within the benchmarking window, the framework achieved a 141% increase in high-confidence (Class A) paired datasets, which were automatically filtered and assembled to establish HESRT (a datalake containing 29.2 million spots/cells), establishing a blueprint for evidence-grounded autonomous curation of multimodal biomedical archives.",
+      "authors": [
+        "Ji, J.-H.",
+        "Zou, Q.",
+        "Cheng, J.",
+        "She, Z.",
+        "Hao, Y.",
+        "Liu, W.",
+        "Zhang, D.",
+        "Wang, Z.",
+        "Yu, J.-T.",
+        "Yuan, Z."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-05-30T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.27.727615v1.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "agentic workflow for autonomous spatial omics data curation with self-refining standardization and evidence evaluation",
+      "llm_evidence_cn": "自主空间组学数据整理的智能体工作流，含自我优化标准化与证据评估",
+      "llm_evidence": "自主空间组学数据整理的智能体工作流，含自我优化标准化与证据评估",
+      "canonical_evidence": "自主空间组学数据整理的智能体工作流，含自我优化标准化与证据评估",
+      "llm_tldr_en": "Presents SpatialDataAgent, an autonomous agent for curating spatial omics data, scaling paired dataset recovery by 6.4x.",
+      "llm_tldr_cn": "为解决空间组学数据元数据碎片化导致的大量‘暗数据’不可用问题，提出SpatialDataAgent自主整理流程。该智能体通过模式约束证据评估与自我优化标准化，从十年GEO记录中识别出769个配对H&E-空间转录组数据集，规模扩大6.4倍，并建立HESRT数据湖。该工作展示了智能体在生命科学数据整理中的规模化能力，为多模态数据自主发现提供了蓝图。",
+      "llm_tldr": "为解决空间组学数据元数据碎片化导致的大量‘暗数据’不可用问题，提出SpatialDataAgent自主整理流程。该智能体通过模式约束证据评估与自我优化标准化，从十年GEO记录中识别出769个配对H&E-空间转录组数据集，规模扩大6.4倍，并建立HESRT数据湖。该工作展示了智能体在生命科学数据整理中的规模化能力，为多模态数据自主发现提供了蓝图。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
