@@ -1,0 +1,654 @@
+Title: Property Prediction of Stacked Bilayer Materials: A Multimodal Learning Approach
+
+URL Source: https://arxiv.org/pdf/2606.01012v1
+
+Published Time: Tue, 02 Jun 2026 01:12:43 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Property Prediction of Stacked Bilayer Materials: A Multimodal Learning Approach 
+
+## An Vuong 1 , Minh-Hao Van 1 , Chen Zhao 2 and Xintao Wu 11University of Arkansas 
+
+> 2
+
+## Baylor University 
+
+## {anv, haovan }@uark.edu, chen zhao@baylor.edu, xintaowu@uark.edu 
+
+## Abstract 
+
+AI for materials science is a critical topic within AI for science, aiming to accelerate materials discovery and produce accurate property predictions. Bilayer 2D material stacking is essential for exploring new materials with novel functions and inherent phenom-ena, enabling the creation of new 2D bilayers for diverse real-world applications. Research on bilayer vdWs materials has made significant progress from experimental and computational perspectives. Vari-ous bilayer materials have been successfully synthe-sized experimentally and the increasing utilization of high-throughput computing technology has con-structed several computational two-dimensional ma-terials databases. However, the use of AI to model bilayer stacking and predict new properties remains underexplored, necessitating further research stud-ies. In this work, we propose a novel multimodal learning approach to study the interfaces between dissimilar materials that jointly enable new or multi-ple functions, and to predict new properties arising from the vertical integration (stacking) of different functional material layers under given configura-tions. Comprehensive experiments demonstrate the effectiveness and efficiency of our approach com-pared to baseline methods. Our code is available at https://github.com/AnVuong123/bimat ml. 
+
+## 1 Introduction 
+
+Bilayer materials are two-dimensional structures composed of two individual layers of 2D materials that are stacked on top of each other. The layers are held together by weak van der Waals forces, but the way they are stacked can be manipulated, a process that allows for fine-tuning of the material’s proper-ties. Stacking layers can create new electronic, optical, and mechanical properties that are not present in the single-layer (monolayer) versions of the materials. This is especially true when the layers are twisted relative to each other, creating a moir ´e superlattice. For example, twisted bilayers (TBL) of 2D materials have emerged as a versatile platform for novel interface phenomena [ Li et al. , 2010 ]. The two layers that form these twisted structures when isolated do not exhibit ferroelectricity, indicating that the effect arises from interlayer coupling, charge redistribution, and moir ´e-induced asymmetry rather than lattice displacements. There has been increasing necessity of considering various stacking modes in 2D vdWs bilayer structures, including pat-terns and sequences, which significantly affect the material properties. A key task is to predict the properties of stacked bilayer materials from their stacking configuration. Computa-tional simulation such as density functional theory (DFT) has been a popular method for calculating the intrinsic properties of materials on the basis of electron density. When stacking 2D materials, the high degree of freedom of stacking results in a large material space. The high computational cost of DFT makes it difficult to study stacked 2D materials. Graph neural networks (GNNs) have been introduced into materials sci-ence for processing molecular/crystal data with non-Euclidean structures and many works [Xie and Grossman, 2018a; Choudhary and DeCost, 2021 ] demonstrate high performance because they effectively represent and capture graph structures from crystallographic information files (CIFs) of materials. However, for stacked two dimensional materials, inter-layer atomic interactions are bound by weak van der Waals forces and intra-layer atomic interactions are bound by chemical bounds. Directly applying GNN models on the stacked ma-terials cannot differentiate between intralayer and interlayer interactions, thus being unable to achieve accurate property predictions of the properties of stacked 2D materials. In this paper, we propose a unified multimodal learning framework for modeling bilayer materials, namely BiMat-ML, that jointly models monolayer material structures, stacking configurations, and intrinsic monolayer properties to predict target properties of stacked bilayer materials. By explicitly in-tegrating information across these complementary modalities, our approach captures both intra-layer chemistry and inter-layer stacking effects within a single predictive model. Our proposed framework is model-agnostic, applicable to diverse stacking configurations of both homobilayer and heterobilayer settings. Experimental results demonstrate that our method achieves prediction accuracy comparable to density func-tional theory (DFT) calculations while providing orders-of-magnitude improvements in computational efficiency. These results highlight the potential of multimodal learning as a gen-eral and scalable paradigm for rapid screening and inverse design of stacked 2D materials. 
+
+> arXiv:2606.01012v1 [cs.AI] 31 May 2026
+
+## 2 Related Work 
+
+Bilayer materials are atomically thin structures consisting of two stacked layers of 2D materials, such as graphene or transition metal dichalcogenides, held together by van der Waals (vdWs) forces. These stacked layers have unique elec-tronic, optical, and mechanical properties that can be tuned by controlling the stacking pattern between the layers. The different stacking patterns can be created through rotations around the vertical axis or horizontal layer sliding [Wang et al. , 2021 ] . Research on bilayer vdWs materials has made significant progress from experimental and computational per-spectives. Various bilayer materials have been successfully synthesized experimentally and the increasing utilization of high-throughput computing technology has constructed sev-eral computational two-dimensional materials databases such as C2DB [ Gjerding et al. , 2021 ], MC2D [ Mounet et al. , 2018 ],2DMatPedia [ Zhou et al. , 2019 ] , BMDS [ Barik and Woods, 2023 ], BiDB [Pakdel et al. , 2024 ] , and HetDB [Sauer et al. ,2025 ]. These databases provide a rich theoretical founda-tion for materials research and significantly accelerate the research and development of 2D materials. To simply the high-throughtput computational process, the authors in [ Zhang 
+
+et al. , 2025 ] developed a specialized Python package, PyHT-Stack2D, designed for the efficient High-Throughput Stacking of 2D materials, including both homo- and hetero- structures. The package assists in generating input files and shell scripts for batch computation submissions to the Vienna Ab initio Simulation Package (VASP). Advanced AI models are catalyzing a transformative shift in materials science. Many AI algorithms have been devel-oped to support various discovery tasks such as atomistic simulation, property prediction, materials structure design and discovery, process planning and optimization [Van et al. , 2025; Merchant et al. , 2023 ]. Unlike 3D materials, the AI develop-ment for bilayer 2D materials received very little study. [ Chen 
+
+et al. , 2024 ] developed a structural embedding method for property prediction of stacked bilayer materials. The devel-oped structure-embedded PAINN (SE-PAINN) independently considers intra-layer and inter-layer neighbors when determin-ing the connectivity between nodes (atoms) and uses two sym-metric neural networks to handle intra-layer interactions and inter-layer interactions separately. They showed SE-PAINN can approximately reproduce the DFT calculation results of predicting the binding energy and band gap of twisted stacked 2D materials with significantly reduced computational cost. However, this method still requires the access of CIFs of stacked bilayer materials in both training and inference, thus being unable to support the bilayer property prediction task when CIFs of only monolayer materials are available. 
+
+## 3 Property Prediction of Stacked Bilayer Materials via Multimodal Learning 
+
+Bilayer materials are created by stacking two monolayers according to a specified configuration. In typical bilayer con-struction workflows, one monolayer is assigned as the bottom layer and the other as the top layer. Each monolayer is de-scribed by a crystallographic information file (CIF), which stores its crystal structure data. The objective of this work is to predict the target properties of the resulting bilayer material using the stacking configuration, the CIF files and the known properties of individual monolayers. In this section, we first present our framework BiMat-ML and then describe in detail each component including the graph encoder used for learning representation of each monolayer, and stacking configuration autoencoder used for learning configuration representation. 
+
+3.1 Framework 
+
+We propose a unified multimodal learning framework that jointly models monolayer material structures, stack-ing configuration, and properties of monolayer mate-rials, to predict target properties of bilayer materials. Formally, the bilayer material dataset is represented as 
+
+D = {(Gbottom , Pbottom , Gtop , Ptop , S), Y} , where Gbottom 
+
+(Gtop ) denotes the crystal graph structure of the bottom (top) monolayer, Pbottom (Ptop ) represents known properties of the bottom (top) monolayer, S denotes the stacking configu-ration information, and Y is the target property of the bilayer material. The objective is to learn a mapping function 
+
+fθ : ( Gbottom , Pbottom , Gtop , Ptop , S) → Y , (1) where θ denotes the set of learnable parameters. Figure 1 illus-trates the architecture of BiMat-ML that consists of three main components: (i) a graph encoder EG that encodes monolayer crystal graphs into graph representations, (ii) a stacking config-uration encoder ES that encodes stacking configurations into latent representations, and (iii) a multimodal fusion module that integrates structural, stacking, and property information into a joint embedding for property prediction. 
+
+Algorithm 1 Property Prediction of Stacked Bilayer Material via Multimodal Learning (BiMat-ML) 
+
+Input: Bottom and top monolayer CIF Cbottom , Ctop ; stack-ing configurations S; monolayer properties Pbottom , Ptop 
+
+Output: Predicted bilayer property ˆY 
+
+> 1:
+
+Zbottom  
+
+> G
+
+← EG (Cbottom ) 
+
+> 2:
+
+Ztop  
+
+> G
+
+← EG (Ctop ) 
+
+> 3:
+
+ZS ← ES (S) 
+
+> 4:
+
+Z ← Z bottom  
+
+> G
+
+⊕ P bottom ⊕ Z top  
+
+> G
+
+⊕ P top ⊕ Z S 
+
+> 5:
+
+ˆY ← MLP( Z) 
+
+> 6:
+
+L ← | ˆY − Y|  
+
+> 7:
+
+Update all parameters by minimizing L 
+
+> 8:
+
+return ˆY
+
+Algorithm 1 shows the pseudo code of BiMat-ML training algorithm. Specifically, we use CGCNN encoder (denoted as 
+
+EG ) to learn graph-level embeddings of each monolayer. EG
+
+first constructs monolayer crystal graphs ( Gbottom ,Gtop ) from monolayer CIFs ( Cbottom , Ctop ) and then maps crystal graphs to graph-level embeddings ( Zbottom  
+
+> G
+
+, Ztop  
+
+> G
+
+). We than use the stacking configuration encoder ES to map stacking config-urations S to stacking embeddings. These representations, together with the monolayer material properties P, are sub-sequently fused to form a unified multimodal representation. As the learned graph representations Zbottom  
+
+> G
+
+, Ztop  
+
+> G
+
+∈ RdG ,Top monolayer   
+
+> Bottom monolayer
+> CIF
+> CIF
+> CGCNN
+> Crystal Graph
+> Generation
+> CGCNN
+> Model
+> 𝒵 𝒢
+> "#$
+> 𝒵 𝒢
+> %#""#&
+> 𝒵 𝒮
+> …
+> Stacking vector 𝒮
+> Stacking Configuration
+> Encoding 𝐸 !
+> 𝒫 Monolayer Properties
+> …
+> Fused
+> Representation
+> .
+> .
+> .
+> .
+> .
+> .
+> MLP
+> Target Property
+
+Figure 1: Architecture of property prediction of stacked bilayer material via multimodal learning (BiMat-ML) 
+
+stacking configuration representation ZS ∈ RdS , and mono-layer property Pbottom , Ptop ∈ RdP , all modality-specific representations are concatenated to form a unified embedding 
+
+Z = Zbottom  
+
+> G
+
+⊕P bottom ⊕Z top  
+
+> G
+
+⊕P top ⊕Z S ∈ R2( dG +dP )+ dS .
+
+The joint representation Z is subsequently passed through a multi-layer perceptron (MLP) to predict the target bilayer material property. The entire framework is trained end-to-end by minimizing the mean absolute error loss L = | ˆY − Y| .
+
+3.2 Monolayer Representation via Graph Encoder 
+
+Algorithm 2 describes steps to use CGCNN to map a crystal structure to a fixed-dimensional representation. The structure information in a CIF file C is first parsed to extract atomic species, lattice vectors, and atomic coordinates. Based on the atomic coordinates and periodic boundary conditions, inter-atomic distances are computed. For each atom i, neighboring atoms are identified based on interatomic distances within a cutoff radius R, and up to a maximum of N nearest neighbors are retained to form a local edge set Ei. The crystal graph is represented as G = ( V, E) where V is the set of atoms and 
+
+E = S|V|  
+
+> i=1
+
+Ei. Each atom i ∈ V is initialized with an elemental feature vector v(0)  
+
+> i
+
+, obtained by mapping its atomic identity to a fixed-length embedding following the CGCNN framework. Due to periodic boundary conditions, multiple edges (i, j )k
+
+may exist between the same atom pair, where (i, j )k denotes the k-th bond connection between atom i and atom j. For each edge (i, j )k, the corresponding interatomic distance d(i,j )k is encoded into a fixed-dimensional edge feature vector u(i,j )k
+
+using a Gaussian basis expansion. The graph encoder applies T graph convolution layers to iteratively update node representations. At convolution layer 
+
+t, the feature of atom i is updated by aggregating informa-tion from its neighboring atoms j connected through edges 
+
+(i, j )k ∈ E i. For each neighbor interaction, the atom feature 
+
+v(t) 
+
+> i
+
+, neighbor feature v(t) 
+
+> j
+
+, and edge feature u(i,j )k are con-catenated to form z(t)(i,j )k = v(t) 
+
+> i
+
+⊕ v(t) 
+
+> j
+
+⊕ u(i,j )k . A gated convolution operation is then applied, where a sigmoid func-tion σ(·) produces a learned gate and g(·) denotes a nonlinear activation function. The update rule is given by 
+
+v(t+1)  
+
+> i
+
+= v(t)
+
+> i
+
++ X 
+
+> (i,j )k∈E i
+
+σ
+
+
+
+z(t)(i,j )k W (t) 
+
+> f
+
++ b(t)
+
+> f
+
+
+
+⊙ g
+
+
+
+z(t)(i,j )k W (t) 
+
+> s
+
++ b(t)
+
+> s
+
+
+
+,
+
+where W (t) 
+
+> f
+
+, W (t) 
+
+> s
+
+and b(t) 
+
+> f
+
+, b(t) 
+
+> s
+
+are learnable weight matri-ces and bias vectors at layer t, and ⊙ denotes element-wise multiplication. After T convolution layers, the final node rep-resentations {v(T ) 
+
+> i
+
+}i∈V encode the local atomic environments. A mean pooling operation over all atoms yields the graph-level representation 
+
+ZG = 1
+
+|V| 
+
+X
+
+> i∈V
+
+v(T ) 
+
+> i
+
+,
+
+where ZG ∈ RdG is the crystal graph embedding and serves as a compact structural embedding of the crystal. 
+
+3.3 Stacking Configuration Representation via AutoEncoder …
+
+> …
+> …
+> …
+> …
+
+…
+
+…
+
+…  
+
+> Matrix 𝑆
+> …
+> Flatten
+> 𝒵 !
+> Encoder Decoder
+> 𝒮
+> …
+> 𝒮 $
+> Autoencoder
+
+Figure 2: Architecture of extracting stacking configuration represen-tation via Autoencoder ( ES ). Algorithm 2 CGCNN-based Graph Encoding ( EG )
+
+Input: CIF file C; number of graph convolution layers T
+
+Output: Graph representation ZG 
+
+> 1:
+
+Parse C to obtain atomic species and coordinates.  
+
+> 2:
+
+For each atom i, identify neighboring atoms within cutoff radius R and form a local edge set Ei. 
+
+> 3:
+
+Construct crystal graph G = ( V, E). 
+
+> 4:
+
+Initialize node features {v(0)  
+
+> i
+
+| i ∈ V} . 
+
+> 5:
+
+Initialize edge features {u(i,j )k | (i, j )k ∈ E i}. 
+
+> 6:
+
+for t = 0 to T − 1 do  
+
+> 7:
+
+for each atom i ∈ V do  
+
+> 8:
+
+v(t+1)  
+
+> i
+
+← v(t) 
+
+> i
+> 9:
+
+for each (i, j )k ∈ E i do  
+
+> 10:
+
+z(t)(i,j )k ← v(t) 
+
+> i
+
+⊕ v(t) 
+
+> j
+
+⊕ u(i,j )k 
+
+> 11:
+
+v(t+1)  
+
+> i
+
+←v(t+1)  
+
+> i
+
++ σ(z(t)(i,j )k W (t) 
+
+> f
+
++ b(t) 
+
+> f
+
+)⊙
+
+g(z(t)(i,j )k W (t) 
+
+> s
+
++ b(t) 
+
+> s
+
+) 
+
+> 12:
+
+end for  
+
+> 13:
+
+end for  
+
+> 14:
+
+end for  
+
+> 15:
+
+ZG ← 1
+
+> |V|
+
+P 
+
+> i
+
+v(T ) 
+
+> i
+> 16:
+
+return ZG
+
+Stacking two-dimensional materials provides a powerful strategy for engineering novel properties beyond those of the individual layers. By vertically assembling atomically thin monolayers into bilayer heterostructures, we can tune elec-tronic, optical, and mechanical behavior through interlayer coupling, relative orientation, and stacking order. Variations in stacking configuration, such as layer sequence, interlayer distance, and twist angle, can significantly affect the atomic co-ordinates and the in-plane lattice vectors. As a result, stacked 2D materials may display emergent phenomena not present in isolated monolayers. Stacking configuration is often pre-sented as a matrix and can then be mapped to embeddings. Figure 2 illustrates the construction of stacking configuration embedding via AutoEncoder. Algorithm 3 describes the stacking configuration encoder used to obtain a latent representation of a stacking configura-tion. Each stacking configuration is represented as a matrix 
+
+S ∈ Rn×m and is flattened into a vector S ∈ Rnm . The en-coder maps the flattened stacking vector S into a latent space through a feed-forward network. Specifically, a linear trans-formation followed by a ReLU activation maps S to a hidden vector h1 ∈ RdS /2, which is then projected to a latent stacking representation ZS ∈ RdS . The dimensionality dS is chosen to be consistent with the graph embedding dimension, enabling fusion with structural graph representations. A symmetric de-coder maps the latent vector ZS to a hidden vector h2 ∈ RdS /2
+
+using a linear layer followed by a ReLU activation, and then linearly projects h2 to reconstruct the stacking configuration vector ˆS. The encoder–decoder network is trained by mini-mizing the reconstruction loss LS = ∥ ˆS − S∥ 2. After training, the latent vector ZS is used as the stacking configuration rep-resentation for subsequent multimodal fusion. 
+
+Algorithm 3 Stacking Configuration Encoding ( ES )
+
+Input: Stacking configuration matrix S ∈ Rn×m
+
+Output: Latent stacking representation ZS ∈ RdS 
+
+> 1:
+
+S ← Flatten( S), S ∈ Rnm  
+
+> 2:
+
+h1 ← ReLU( W1S + b1), h1 ∈ RdS /2 
+
+> 3:
+
+ZS ← W2h1 + b2, ZS ∈ RdS 
+
+> 4:
+
+h2 ← ReLU( W3ZS + b3), h2 ∈ RdS /2 
+
+> 5:
+
+ˆS ← W4h2 + b4, ˆS ∈ Rnm  
+
+> 6:
+
+LS ← ∥ ˆS − S∥ 2 
+
+> 7:
+
+Update parameters to minimize LS 
+
+> 8:
+
+return ZS
+
+## 4 Stacking Settings of Bilayer Materials 
+
+Bilayer materials can be broadly classified into homobilayers and heterobilayers based on the composition of their con-stituent layers. Homobilayer materials are formed by stacking two identical monolayers, where differences in physical prop-erties arise primarily from variations in stacking order, relative translation, or twist angle between the layers. In contrast, het-erobilayer materials consist of two distinct monolayers with different chemical compositions or crystal structures, enabling more diverse interlayer interactions and band alignments. 
+
+4.1 Homobilayer Materials 
+
+Homogeneous bilayers keep one monolayer fixed as a refer-ence. Different stacking configurations are obtained by apply-ing a layer-specific transformation of the form t ◦ R ◦ F to the other monolayer, where t denotes an in-plane translation, R
+
+denotes an in-plane rotation, F denotes an optional operation. Specifically, the stacking configuration can be described as a single affine transformation matrix 
+
+A =
+
+
+
+p1 p3 0
+
+p2 p4 00 0 p5
+
+p6 p7 δz 
+
+ ,
+
+where p1–p4 encode the in-plane rotation R , p6–p7 specify the in-plane translation t, and p5 ∈ { +1 , −1} represents the op-tional flip transformation F . δz is defined as the fractional shift along the z axis that positions the transformed top monolayer relative to the fixed bottom monolayer δz = ztop −p5 zbottom ,where zbottom and ztop are the fractional z coordinates of cor-responding atoms in the bottom and top monolayers, respec-tively, and p5 ∈ { +1 , −1} denotes the flip choice. The value of δz is identical for all atom pairs up to numerical precision, serving as a consistency check for the stacking configuration. In general, δz ∈ [0 , 1] can be chosen by the user to specify the initial distance between two monolayers. The stacking transformation is applied by multiplying the homogeneous atomic coordinates (xi, y i, z i, 1) of each atom in the bottom reference monolayer with the affine transforma-tion matrix A, yielding the corresponding atomic coordinates of the top monolayer. Periodic boundary conditions in the in-plane directions are enforced by wrapping the resulting fractional coordinates back into the reference unit cell, which is equivalent to applying a modulo-1 operation. Under the row-vector convention adopted in this work, the atomic co-ordinates of the bottom reference monolayer are collected row-wise in the matrix Xbottom , and the stacking configu-ration is represented by the affine transformation matrix A
+
+with the homogeneous column omitted. The stacking trans-formation is applied by direct matrix multiplication between the bottom-layer atomic coordinate matrix and the stacking configuration matrix Xtop = M(Xbottom A), where M is a function to perform element-wise modulo-by-1 operation. In Appendix A, we show an example CIF file and configuration matrix of the bilayer material Al 4S4 that is stacked by two monolayer materials of Al 2S2.For homobilayer materials, since both layers share the same crystal structure, only a monolayer graph is built from its CIF file and then is encoded using the graph encoder EG (·) to obtain a monolayer-level representation ZG ∈ RdG . The stack-ing configuration of the bilayer is independently encoded by the stacking configuration encoder ES (·) to obtain a stacking representation ZS ∈ RdS . In addition, monolayer proper-ties are represented by P ∈ RdP . These representations are concatenated to form a homogeneous bilayer embedding 
+
+Zhomo = ZG ⊕ Z S ⊕ P ∈ RdG +dS +dP .
+
+4.2 Heterobilayer Materials 
+
+A heterobilayer consists of two distinct 2D monolayers stacked via van der Waals interactions. The stacking patterns and sequences in heterostructures generally exhibit greater com-plexity compared to those in homostructures. The stacking configuration of heterobilayer is often defined by in-plane relative translation between the two layers, relative rotation (twist angle), interlayer distance, and relative orientation of sublattices and atomic species. For hexagonal lattices such as transition-metal dichalcogenides and graphene-based systems, several high-symmetry stacking configurations are commonly considered, including AA stacking, where identical atoms are vertically aligned, and AB or BA stacking, where one layer is shifted so that different atomic species overlap. In heterobilay-ers, unlike homobilayers, these configurations are generally inequivalent due to broken inversion symmetry, resulting in distinct total energies and electronic structures. The relative stability of different stackings arises from the interplay of elec-trostatic interactions, interlayer orbital hybridization, and local atomic registry, and while one configuration corresponds to the global energy minimum, metastable stackings may coexist and form experimentally observed stacking domains. When stacking heterogeneous bilayers, primitive unit cells of two different monolayers usually cannot be stacked directly due to large lattice mismatch. To resolve this, lattice transfor-mation matrices are applied to each monolayer to construct supercells, and the lattice mismatch between the two supercell monolayers is quantified by the induced in-plane strain. For each monolayer pair, multiple supercell pairs are first gener-ated and then filtered by requiring the in-plane strain of both monolayers to remain below a prescribed threshold, together with additional constraints such as a limit on the total number of atoms in the supercell. Among all supercell pairs that satisfy the prescribed criteria, the optimal pair is selected and stacked to form a bilayer structure, which is then subjected to further optimization steps, including interlayer distance optimization and structural relaxation, in order to limit computational cost. 
+
+## 5 Experiments 
+
+5.1 Datasets 
+
+Homobilayer materials. We use the BiDB dataset, which con-tains homogeneous bilayers derived from monolayers in the C2DB database. After removing 250 bilayers associated with 10 monolayers lacking CIF files, we obtain 10,899 valid bi-layer structures. Eliminating duplicate stacking configurations yields 3,902 unique configurations, which are used to train the autoencoder. We choose bandgap as our target prediction prop-erty and exclude samples without bandgap labels, resulting in a final dataset of 6,683 bilayer materials formed from 940 unique monolayers. Since a single monolayer can generate multiple homogeneous bilayers under different stacking con-figurations, we perform 4-fold cross-validation by splitting the data at the monolayer level rather than the bilayer level. This strategy ensures that bilayers derived from the same monolayer do not appear in both training and test sets, thereby preventing data leakage. The BiDB stacking descriptor encodes only the in-plane stacking transformation and omits the out-of-plane shift between monolayers. In our experiment , we simply set 
+
+δz as a constant value and use seven parameters p1–p7 of the configuration matrix A discussed in Section 4.1. 
+
+Heterobilayer materials. We use the HetDB dataset, which comprises 336 heterogeneous bilayer materials constructed from 38 distinct monolayers. Each bilayer in HetDB is formed by stacking two different monolayers, and no duplicate bilay-ers are generated from the same monolayer pair under different stacking configurations. Accordingly, we employ 4-fold cross-validation, with data splits performed at the bilayer level, to evaluate model performance on HetDB. We use the twisted an-gle between the two monolayers provided directly in HetDB as the stacking configuration for each bilayer. The graph encoder 
+
+EG (·) is applied independently to the bottom and top mono-layers to obtain Zbottom  
+
+> G
+
+, Ztop  
+
+> G
+
+∈ RdG . These embeddings are then combined with the corresponding monolayer prop-erty vectors Pbottom , Ptop ∈ RdP and stacking configuration embedding ZS ∈ RdS to form the final representation. 
+
+5.2 Experiment Settings 
+
+BiMat-ML. In the homobilayer setting, our BiMat-ML fuses the CGCNN-derived monolayer representation, the autoencoder-derived stacking configuration embedding, and the monolayer band gap. The autoencoder is trained for 100 epochs using Adam (learning rate 0.001, batch size 16) to obtain latent stacking representations. The CGCNN model consists of three convolutional layers ( T = 3 ). Atomic neigh-bors are determined within a cutoff radius R = 8 ˚A , with a maximum of N = 12 neighbors per atom. The model uses 64-dimensional atomic features and 128 hidden features, and is trained for 500 epochs using stochastic gradient descent (SGD) with a learning rate of 0.001 and a batch size of 128. For heterobilayers, we adopt the same CGCNN architecture and training setup. In HetDB, we additionally include the con-duction band minimum (CBM) of both monolayers as input features, since the band gap is defined by the CBM–VBM difference and combining the band gap with either CBM or VBM is sufficient. 
+
+Baselines. For comparison, we evaluate several baseline mod-els, including the original CGCNN (referred to as Direct in our experiments) [ Xie and Grossman, 2018b ], SE-CGCNN [ Chen 
+
+et al. , 2024 ], SE-MEGNET [Chen et al. , 2024 ] and SE-PAINN [ Chen et al. , 2024 ]. For both the BiDB and HetDB datasets, these baselines are trained using the CIFs of stacked bilayer materials and also require access to bilayer CIFs during the inference. Unfortunately, CIFs of stacked bilayers can only be obtained through costly DFT calculations. In contrast, our proposed BiMat-ML does not rely on this strong assumption and instead predicts bilayer properties using only the CIFs and properties of the monolayers. All experiments are conducted on NVIDIA V100 GPU with 32GB RAM. 
+
+5.3 Experiment Results 
+
+Performance on Homobilayer Materials                                                  
+
+> Model MAE ↓MSE ↓RMSE ↓R2↑
+> BiMat-ML 0.13 ±0.02 0.07 ±0.02 0.26 ±0.05 0.94 ±0.02
+> BiMat-ML w/o P0.35 ±0.05 0.36 ±0.11 0.59 ±0.09 0.68 ±0.06
+> Direct 0.38 ±0.02 0.38 ±0.02 0.61 ±0.04 0.66 ±0.02
+> SE-CGCNN 0.38 ±0.05 0.49 ±0.19 0.69 ±0.12 0.57 ±0.12
+> SE-MEGNET 0.36 ±0.05 0.37 ±0.13 0.60 ±0.11 0.67 ±0.06
+> SE-PAINN 0.36 ±0.04 0.40 ±0.08 0.63 ±0.07 0.64 ±0.06
+
+Table 1: Performance comparison of BiMat-ML and baseline models for bandgap prediction on the BiDB. 
+
+Table 1 compares the bandgap prediction performance of BiMat-ML and baseline models on the BiDB dataset. BiMat-ML achieves the best overall performance, exhibiting the low-est MAE (0.13), MSE (0.07), and RMSE (0.26), as well as the highest coefficient of determination ( R2 = 0 .94 ). Con-ventional single-CIF baselines, including Direct, SE-CGCNN and SE-PAINN (all without P), show comparable but inferior performance, with MAE values of around 0.38. Removing the monolayer property component (BiMat-ML without P) results in a substantial degradation in performance relative to the full BiMat-ML model, with MAE and RMSE increasing to 0.35 and 0.59, respectively, and R2 decreasing to 0.68. Nevertheless, even under this ablation, BiMat-ML outperforms the other baselines across most metrics, including MAE, MSE, and RMSE. These results highlight the critical role of incorporating monolayer property information for ac-curate bilayer bandgap prediction. Overall, these results demonstrate that BiMat-ML not only significantly outperforms existing baselines but also benefits strongly from explicitly incorporating monolayer property in-formation, enabling more accurate and robust bilayer bandgap prediction without requiring bilayer CIFs. 
+
+Performance on Heterobilyaer Materials 
+
+Table 2 reports the band gap prediction performance of BiMat-ML and baseline models on the HetDB dataset. In contrast to MAE ↓ MSE ↓ RMSE ↓ R2 ↑                                               
+
+> BiMat-ML 0.13 ±0.02 0.04 ±0.01 0.21 ±0.03 0.88 ±0.04
+> BiMat-ML w/o P0.16 ±0.01 0.09 ±0.04 0.29 ±0.06 0.76 ±0.12
+> BiMat-ML w/o S0.14 ±0.02 0.05 ±0.02 0.22 ±0.04 0.86 ±0.05
+> BiMat-ML w/o S&P0.16 ±0.02 0.09 ±0.03 0.30 ±0.04 0.73 ±0.09
+> Direct 0.14 ±0.01 0.05 ±0.02 0.22 ±0.05 0.85 ±0.07
+> SE-CGCNN 0.12 ±0.02 0.03 ±0.02 0.18 ±0.02 0.91 ±0.02
+> SE-MEGNET 0.19 ±0.02 0.09 ±0.03 0.29 ±0.06 0.76 ±0.08
+> SE-PAINN 0.11 ±0.02 0.03 ±0.02 0.17 ±0.02 0.91 ±0.02
+
+Table 2: Performance comparison of BiMat-ML and baseline models for bandgap prediction on the HetDB. 
+
+the BiDB results, conventional single-CIF baselines achieve stronger performance on HetDB, with SE-PAINN and SE-CGCNN yielding the lowest errors and highest predictive accuracy. In particular, SE-PAINN achieves the best overall performance, with an MAE of 0.11 , an RMSE of 0.17 , and an 
+
+R2 of 0.91 , closely followed by SE-CGCNN with comparable accuracy. The original CGCNN model (Direct) also performs competitively, achieving an MAE of 0.14 and an R2 of 0.85 .BiMat-ML attains strong performance without access to bi-layer CIFs, achieving an MAE of 0.13 , an RMSE of 0.21 , and an R2 of 0.88 , outperforming the Direct baseline in terms of MAE and R2. These findings indicate that, for heterogeneous bilayers, direct access to bilayer structures offers a predictive advantage by explicitly capturing complex interlayer interac-tions and stacking diversity. Nevertheless, BiMat-ML remains competitive without requiring bilayer CIFs derived from com-putationally expensive DFT calculations, making it a practical and scalable alternative for large-scale bilayer screening. Ablation results further highlight the contributions of differ-ent model components. Removing monolayer property infor-mation ( P) leads to a noticeable degradation in performance, with the MAE increasing to 0.16 and the R2 score dropping to 0.76 . In contrast, removing stacking descriptors ( S) re-sults in a smaller but consistent decline in accuracy (MAE 
+
+= 0 .14 , R2 = 0 .86 ). Eliminating both components yields the poorest performance among all BiMat-ML variants, con-firming that monolayer properties and stacking information provide complementary predictive value for heterogeneous bi-layers. However, compared with the ablation results observed on BiDB, both monolayer property and stacking configura-tion information are less critical for the HetDB dataset. For HetDB, the correlations between the top and bottom mono-layer band gaps and the bilayer band gap are substantially weaker ( r ≈ 0.42 and 0.54 , respectively). In contrast, for BiDB, the monolayer and bilayer band gaps are much more strongly correlated (Pearson r ≈ 0.94 ). 
+
+Running Time 
+
+We compare the training and inference runtimes of BiMat-ML and baseline models on both datasets. On BiDB, BiMat-ML and CGCNN-Direct have similar training times (900 s), while SE-PAINN remains comparable (923 s), SE-CGCNN is slower (1501 s), and SE-MEGNET is the slowest (2725 s). On HetDB, BiMat-ML is the most efficient, requiring 100 s for training versus 212 s for CGCNN-Direct, 236 s for SE-CGCNN, 375 s for SE-MEGNET and 110 s for SE-PAINN. All models exhibit identical per-sample inference times (0.5 s). In contrast, density functional theory calculations using VASP [Kresse and Furthm ¨uller, 1996 ] take approximately 4.9 hours on an Intel Xeon Gold 6130H CPU [ Chen et al. , 2024 ] .Overall, BiMat-ML achieves competitive or superior efficiency while avoiding costly DFT-based structure calculation. 
+
+## 6 Conclusion 
+
+In this work, we proposed a multimodal learning framework that can effectively capture the relationships between the struc-tures and properties of stacked two-dimensional materials. Our BiMat-ML framework does not require the access of CIFs of stacked bilayer materials as baselines and instead uses two CGCNNs to process CIFs of bottom and top layer materials respectively and effectively fuses them with configuration rep-resentation learned by one autoeconder. We emphasize that CIFs of stacked bilayer materials are less available due to very high DFT computational cost. We evaluated our method with BiDB for homogeneous bilayers and HetDB for heteroge-neous bilayers. Experimental results evaluated with BIDB for homogeneous bilayers and HetDB for heterogeneous bilayers demonstrate effectiveness and efficiency of our framework. Our BiMat-ML framework is model-agnostic and readily ap-plicable to a range of graph neural network architectures. In future, we will study other GNN architectures such as MEG-NET [ Chen et al. , 2019 ] and PAINN [ Sch ¨utt et al. , 2023 ] .We also plan to develop algorithms for determining stacking configurations that potentially produce emergent properties in stacked bilayer materials. 
+
+## A Example of Stacking Configuration Construction  
+
+> Figure 3: CIF file of an Al 4S4bilayer showing the fractional atomic coordinates.
+
+We illustrate the stacking configuration construc-tion using the bilayer Al 4S4 shown in Figure 3. The corresponding BiDB stacking descriptor is 
+
+2AlS-2-2--1 0 0 -1-Iz-0.33 -0.33 which speci-fies a stacking configuration that includes a flip transformation (Iz , p5 = −1). Inspection of the associated CIF file shows that the first four atoms belong to the bottom monolayer, while the remaining four atoms correspond to the top monolayer. We first determine the out-of-plane shift δz from the CIF. For the Al atom pair (Al 1, Al 3), the fractional z coordi-nates are zbottom = 0 .28 and ztop = 0 .63 . Using the def-inition δz = ztop − p5 zbottom with p5 = −1, we obtain 
+
+δz = 0 .63 + 0 .28 = 0 .91 . The same value is obtained for all other corresponding atom pairs (e.g., Al 2/Al 4, S 1/S 3, S 2/S 4), confirming that the interlayer shift is uniform across the bi-layer. In practice, δz can therefore be computed from any corresponding atom pair and used as a consistency check for the stacking configuration. Next, we construct the stacking transformation from the descriptor parameters. The in-plane rotation parameters are 
+
+p1 = −1, p2 = 0 , p3 = 0 , and p4 = −1; the flip parameter is 
+
+p5 = −1; the in-plane translation is (p6, p 7) = (0 .33 , −0.33) ;and the interlayer shift is δz = 0 .91 . Extracted from the CIF file shown in Figure 3, we have atomic information in Table 3. Mono. Type Label Multi. x y z Occu. Bottom Al Al 1 1.00 0.67 0.33 0.28 1.00 Al Al 2 1.00 0.67 0.33 0.37 1.00 S S1 1.00 0.33 0.67 0.25 1.00 S S2 1.00 0.33 0.67 0.40 1.00 Top Al Al 3 1.00 0.67 0.33 0.63 1.00 Al Al 4 1.00 0.67 0.33 0.54 1.00 S S3 1.00 0.00 0.00 0.66 1.00 S S4 1.00 0.00 0.00 0.51 1.00 
+
+> Table 3: Atomic information extracted from CIF.
+
+For better mathematical presentation, we re-denote Xtop 
+
+as Xt and Xbottom as Xb. From that, let Xb denote the fractional coordinates of the bottom monolayer atoms in ho-mogeneous coordinates, and let A denote the stacking trans-formation matrix: 
+
+Xb =
+
+
+
+0.67 0 .33 0 .28 1 0.67 0 .33 0 .37 1 0.33 0 .67 0 .25 1 0.33 0 .67 0 .40 1 
+
+ , A =
+
+
+
+−1 0 00 −1 00 0 −10.33 −0.33 0 .91 
+
+ .
+
+The stacking transformation is applied via matrix multipli-cation and we can calculate atomic position of top monolayer 
+
+Xt using inputs from Xb and A:
+
+Xt = M(Xb A)= M
+
+
+
+−0.33 −0.67 0 .63 
+
+−0.33 −0.67 0 .54 0 −1.00 0 .66 0 −1.00 0 .51 
+
+ =
+
+
+
+0.67 0 .33 0 .63 0.67 0 .33 0 .54 0.00 0 .00 0 .66 0.00 0 .00 0 .51 
+
+
+
+where M applies a modulo-1 operation to the in-plane coordi-nates to enforce periodic boundary conditions. This yields the final fractional atomic coordinates of the top monolayer. Acknowledgements 
+
+This work was supported in part by the National Institute of General Medical Sciences of National Institutes of Health under award P20GM139768, and the Arkansas Integrative Metabolic Research Center at the University of Arkansas. 
+
+## References 
+
+[Barik and Woods, 2023] Ranjan Kumar Barik and Lilia M Woods. High throughput calculations for a dataset of bilayer materials. Scientific Data , 10(1):232, 2023. [Chen et al. , 2019] Chi Chen, Weike Ye, Yunxing Zuo, Chen Zheng, and Shyue Ping Ong. Graph networks as a universal machine learning framework for molecules and crystals. 
+
+Chemistry of Materials , 31(9):3564–3572, 2019. [Chen et al. , 2024] Xinyu Chen, Guoliang Ru, and Weihong Qi. Structural embedding methods for machine learning models accelerate research on stacked 2d materials. The Journal of Physical Chemistry C , 128(37):15512–15521, 2024. [Choudhary and DeCost, 2021] Kamal Choudhary and Brian DeCost. Atomistic line graph neural network for improved materials property predictions. npj Computational Materi-als , 7(1):185, 2021. [Gjerding et al. , 2021] M. N. Gjerding, A. Taghizadeh, A. Rasmussen, S. Ali, F. Bertoldo, T. Deilmann, N. R. Knøsgaard, M. Kruse, A. H. Larsen, S. Manti, T. G. Ped-ersen, U. Petralanda, T. Skovhus, M. K. Svendsen, J. J. Mortensen, T. Olsen, and K. S. Thygesen. Recent progress of the computational 2d materials database (c2db). 2D Materials , 8(4):044002, 2021. [Kresse and Furthm¨ uller, 1996] Georg Kresse and J ¨urgen Furthm ¨uller. Efficient iterative schemes for ab initio total-energy calculations using a plane-wave basis set. Physical review B , 54(16):11169, 1996. [Li et al. , 2010] Guohong Li, A Luican, JMB Lopes dos San-tos, AH Castro Neto, A Reina, J Kong, and EY Andrei. Observation of van hove singularities in twisted graphene layers. Nature physics , 6(2):109–113, 2010. [Merchant et al. , 2023] Amil Merchant, Simon Batzner, Samuel S Schoenholz, Muratahan Aykol, Gowoon Cheon, and Ekin Dogus Cubuk. Scaling deep learning for materials discovery. Nature , 624(7990):80–85, 2023. [Mounet et al. , 2018] Nicolas Mounet, Marco Gibertini, Philippe Schwaller, Davide Campi, Andrius Merkys, An-timo Marrazzo, Thibault Sohier, Ivano Eligio Castelli, An-drea Cepellotti, Giovanni Pizzi, et al. Two-dimensional materials from high-throughput computational exfoliation of experimentally known compounds. Nature nanotechnol-ogy , 13(3):246–252, 2018. [Pakdel et al. , 2024] Sahar Pakdel, Asbjørn Rasmussen, Alireza Taghizadeh, Mads Kruse, Thomas Olsen, and Kris-tian S Thygesen. High-throughput computational stacking reveals emergent properties in natural van der waals bilay-ers. Nature Communications , 15(1):932, 2024. [Sauer et al. , 2025] M. O. Sauer, P. M. Lyngby, and K. S. Thygesen. Dispersion-corrected machine learning poten-tials for 2d van der waals materials. Physical Review Mate-rials , 9(7), 2025. [Sch¨ utt et al. , 2023] Kristof T Sch ¨utt, Oliver T Unke, and Michael Gastegger. Equivariant message passing for the prediction of tensorial properties and molecular spectra. 2021. URL https://arxiv. org/abs/2102.03150 , 2023. [Van et al. , 2025] Minh-Hao Van, Prateek Verma, Chen Zhao, and Xintao Wu. A survey of ai for materials science: Foundation models, llm agents, datasets, and tools. arXiv preprint arXiv:2506.20743 , 2025. [Wang et al. , 2021] Shixuan Wang, Xuehao Cui, Chang’e Jian, Haowei Cheng, Mengmeng Niu, Jia Yu, Jiaxu Yan, and Wei Huang. Stacking-engineered heterostructures in transition metal dichalcogenides. Advanced Materials ,33(16):2005735, 2021. [Xie and Grossman, 2018a] Tian Xie and Jeffrey C Gross-man. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. 
+
+Physical review letters , 120(14):145301, 2018. [Xie and Grossman, 2018b] Tian Xie and Jeffrey C. Gross-man. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. 
+
+Physical Review Letters , 120(14):145301, 2018. [Zhang et al. , 2025] Qian Zhang, Jinlong Yang, and Wei Hu. Pyhtstack2d: A python package for high-throughput homo/hetero stacking of 2d materials. Computer Physics Communications , 312:109618, 2025. [Zhou et al. , 2019] Jun Zhou, Lei Shen, Miguel Dias Costa, Kristin A Persson, Shyue Ping Ong, Patrick Huck, Yun-hao Lu, Xiaoyang Ma, Yiming Chen, Hanmei Tang, et al. 2dmatpedia, an open computational database of two-dimensional materials from top-down and bottom-up approaches. Scientific data , 6(1):86, 2019.
