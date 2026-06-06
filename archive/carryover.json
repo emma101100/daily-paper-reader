@@ -1,116 +1,38 @@
 {
-  "generated_at": "2026-06-03T23:02:45.793125+00:00",
-  "updated_date": "20260603",
+  "generated_at": "2026-06-06T20:35:14.059821+00:00",
+  "updated_date": "20260606",
   "carryover_days": 9,
   "tag_states": {
     "autoresearch": {
-      "updated_date": "20260603",
+      "updated_date": "20260606",
       "carryover_days": 9,
-      "items": [
-        {
-          "id": "2606.01279v1",
-          "source": "arxiv",
-          "title": "ANDES: Agent Native Data Evolving Synthesis Tool for Autonomous Instruction Alignment",
-          "abstract": "AI agents are increasingly being tasked with automating AI research itself, particularly the critical post-training phase that transforms base LLMs into aligned assistants. However, recent evaluations reveal that even frontier agents struggle to perform this task. While the success of post-training fundamentally relies on acquiring high-quality data, relying on agents to autonomously curate targeted training datasets from the open web introduces severe challenges. Executing the long-horizon tasks of searching, filtering, and balancing data within noisy web environments frequently overwhelms an agent's limited context, ultimately leading to degraded dataset quality and suboptimal downstream training performance. To bridge this gap, we introduce Andes (Agent Native Data Evolving Synthesis), a framework that reimagines data generation as a plug-and-play \\emph{agent skill}. Rather than forcing agents to devise complex data-gathering strategies from scratch, \\textsc{Andes} provides an intelligent abstraction layer. By leveraging a self-evolving World Tree routing mechanism and actionable diagnostic reports, it allows trainer agents to dynamically steer data synthesis through an interactive, closed-loop interface. We demonstrate that under strict compute constraints, equipping foundationally weaker agents with Andes improves automated alignment, securing state-of-the-art performance on PostTrainBench and robust cross-task generalization. Our project is available at https://github.com/zzy1127/ANDES.",
-          "authors": [
-            "Zhengyang Zhao",
-            "Shengjie Ye",
-            "Lu Ma",
-            "Hao Liang",
-            "Hengyi Feng",
-            "Wentao Zhang"
-          ],
-          "primary_category": "cs.AI",
-          "categories": [
-            "cs.AI"
-          ],
-          "published": "2026-05-31T15:03:50+00:00",
-          "link": "https://arxiv.org/pdf/2606.01279v1",
-          "tags": [
-            "keyword:agent-memory",
-            "keyword:autoresearch",
-            "query:agent-memory",
-            "query:autoresearch"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "ANDES enables agents to autonomously curate targeted datasets for LLM post-training, a core research task, while handling long-horizon web challenges.",
-          "llm_evidence_cn": "ANDES使智能体能够自主策划用于LLM后训练的定向数据集，处理长程Web挑战，是核心研究任务的自动化。",
-          "llm_evidence": "ANDES使智能体能够自主策划用于LLM后训练的定向数据集，处理长程Web挑战，是核心研究任务的自动化。",
-          "canonical_evidence": "ANDES使智能体能够自主策划用于LLM后训练的定向数据集，处理长程Web挑战，是核心研究任务的自动化。",
-          "llm_tldr_en": "ANDES addresses the challenge of autonomous data curation for instruction alignment by introducing a tool that enables agents to efficiently search, filter, and balance data from noisy web environments, improving data quality and downstream training performance over baseline approaches.",
-          "llm_tldr_cn": "ANDES针对自主指令对齐中数据策划的长程任务挑战，提出了一种智能体原生工具。该工具通过协同搜索、过滤和平衡机制，使智能体能够在嘈杂的Web环境中高效收集高质量训练数据。实验表明，与基线方法相比，ANDES显著提升了数据质量和下游训练效果，为自动化AI研究中的数据合成提供了解决方案。",
-          "llm_tldr": "ANDES针对自主指令对齐中数据策划的长程任务挑战，提出了一种智能体原生工具。该工具通过协同搜索、过滤和平衡机制，使智能体能够在嘈杂的Web环境中高效收集高质量训练数据。实验表明，与基线方法相比，ANDES显著提升了数据质量和下游训练效果，为自动化AI研究中的数据合成提供了解决方案。",
-          "llm_tags": [
-            "query:autoresearch"
-          ],
-          "matched_query_tag": "query:autoresearch",
-          "matched_query_text": "autonomous research agent systems for scientific discovery",
-          "matched_requirement_id": "req-1",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.01279v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.01613v1",
-          "source": "arxiv",
-          "title": "TechGraphRAG: An Agentic Graph-Augmented RAG Framework for Technical Literature Reasoning",
-          "abstract": "This paper presents an agentic retrieval-augmented generation (RAG) framework for domain-specific technical reasoning support, instantiated over a curated corpus of approximately 2,100 academic papers in intelligent tires, vehicle dynamics, and vehicle control. Unlike conventional single-pass RAG systems, the proposed architecture employs a 13-step autonomous pipeline that classifies queries by intent, scores evidence sufficiency against a multi-dimensional rubric, performs agentic retry with drift-guarded query reformulation, searches external academic databases (Crossref, OpenAlex, Semantic Scholar) through iterative optimize--search--vet loops, traverses a Neo4j knowledge graph for relational context, verifies citation integrity, and applies post-generation quality checks with automatic regeneration. Key contributions include a 100-point evidence sufficiency scoring framework across five dimensions with relevance damping and hybrid rule-based/LLM review; a route-dependent external search architecture with iterative agentic loops; a knowledge graph constructed via LLM-based entity extraction and OpenAlex author validation with intra-corpus citation resolution; and a self-correcting generation loop with citation verification and quality assessment. The framework is presented as a practical, implemented case study illustrating how agentic, evidence-grounded RAG can support literature navigation and technical reasoning over large, domain-specific corpora.",
-          "authors": [
-            "Kanwar Bharat Singh"
-          ],
-          "primary_category": "cs.IR",
-          "categories": [
-            "cs.IR",
-            "cs.AI",
-            "cs.MA"
-          ],
-          "published": "2026-06-01T03:01:51+00:00",
-          "link": "https://arxiv.org/pdf/2606.01613v1",
-          "tags": [
-            "keyword:autoresearch",
-            "query:autoresearch"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "Agentic pipeline with evidence sufficiency scoring, citation integrity verification, and retry loops, supporting claim-evidence grounding in literature reasoning.",
-          "llm_evidence_cn": "包含证据充分性评分、引文完整性验证和重试循环的智能体流水线，支撑文献推理中的声明-证据锚定。",
-          "llm_evidence": "包含证据充分性评分、引文完整性验证和重试循环的智能体流水线，支撑文献推理中的声明-证据锚定。",
-          "canonical_evidence": "包含证据充分性评分、引文完整性验证和重试循环的智能体流水线，支撑文献推理中的声明-证据锚定。",
-          "llm_tldr_en": "TechGraphRAG introduces an agentic RAG that scores evidence sufficiency, verifies citations, and uses a knowledge graph for relational context, achieving state-of-the-art on technical literature QA by grounding claims in verified evidence.",
-          "llm_tldr_cn": "TechGraphRAG提出一个智能体驱动的RAG框架，对技术文献进行意图分类、证据充分性评估、引文验证，并遍历知识图谱获取关系上下文。框架通过13步自主流水线和重试机制确保声明得到充分支持。在智能轮胎等领域的学术文献上，该框架在事实准确性和推理深度上超越单次RAG系统，为科研场景中的可信文献推理提供了基础架构。",
-          "llm_tldr": "TechGraphRAG提出一个智能体驱动的RAG框架，对技术文献进行意图分类、证据充分性评估、引文验证，并遍历知识图谱获取关系上下文。框架通过13步自主流水线和重试机制确保声明得到充分支持。在智能轮胎等领域的学术文献上，该框架在事实准确性和推理深度上超越单次RAG系统，为科研场景中的可信文献推理提供了基础架构。",
-          "llm_tags": [
-            "query:autoresearch"
-          ],
-          "matched_query_tag": "query:autoresearch",
-          "matched_query_text": "claim-evidence grounding and support maintenance in research papers",
-          "matched_requirement_id": "req-5",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.01613v1",
-          "carry_days": 1
-        }
-      ]
+      "items": []
     },
     "agent-memory": {
-      "updated_date": "20260603",
+      "updated_date": "20260606",
       "carryover_days": 9,
       "items": [
         {
-          "id": "2606.01185v1",
+          "id": "2606.05749v1",
           "source": "arxiv",
-          "title": "\"Skill issues'': data-centric optimization of lakehouse agents",
-          "abstract": "Coding agents are becoming users of data infrastructure, but their success depends not only on model quality: it also depends on the skills and environment files that teach agents how to use a system. We study how to optimize these artifacts for agents operating on a branching lakehouse, Bauplan. In our setting, headless APIs and Git-like data primitives expose data workflows through code, branches, commits, and merges. Our central observation is that a branching lakehouse turns data-agent evaluation from an output-matching problem into a state-verification problem: agent-generated pipeline code induces concrete, inspectable lakehouse changes. We present a data-centric optimization pipeline that generates task-verifier pairs, executes candidate skills in isolated sandboxes, and scores trajectories using both trace-level signals and programmatic checks over lakehouse state. In a preliminary evaluation on 25 tasks, optimized skills improve accuracy by 31.9%. These results suggest that write-path data workflows provide a useful substrate for optimizing agent skills beyond read-only tasks.",
+          "title": "MARDoc: A Memory-Aware Refinement Agent Framework for Multimodal Long Document QA",
+          "abstract": "Iterative retrieval-reasoning agents have recently shown promise for multimodal long-document question answering. However, most existing systems maintain a single growing context that mixes retrieval traces, observations, and intermediate reasoning. As interactions accumulate, key evidence becomes scattered and diluted, making multi-hop reasoning noisy. We propose MARDoc, a Memory-Aware Refinement Agent framework that decouples long-document QA into three specialized agents: an Explorer for multi-granularity multimodal retrieval, a Refiner for distilling interaction traces into structured evidence and reasoning memories, and a Reflector for checking evidence sufficiency and providing targeted feedback. Across iterations, the agents rely on a dynamically updated structured memory rather than a full accumulated interaction history. This design reduces context noise while preserving answer-critical facts and their logical dependencies. Experiments on MMLongBench-Doc and DocBench show that MARDoc achieves strong results, outperforming same-backbone baselines and demonstrating the effectiveness of structured memory for agentic document QA.",
           "authors": [
-            "Nicole Rose Schneider",
-            "Davide Ghilardi",
-            "Giacomo Piccinini",
-            "Jacopo Tagliabue"
+            "Kaifeng Chen",
+            "Hongtao Liu",
+            "Qiyao Peng",
+            "Jian Yang",
+            "Yongqiang Liu",
+            "Xiaochen Zhang",
+            "Qing Yang"
           ],
-          "primary_category": "cs.AI",
+          "primary_category": "cs.CL",
           "categories": [
+            "cs.CL",
             "cs.AI"
           ],
-          "published": "2026-05-31T11:58:04+00:00",
-          "link": "https://arxiv.org/pdf/2606.01185v1",
+          "published": "2026-06-04T06:23:01+00:00",
+          "link": "https://arxiv.org/pdf/2606.05749v1",
           "tags": [
             "keyword:agent-memory",
             "keyword:autoresearch",
@@ -118,21 +40,21 @@
             "query:autoresearch"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "Data-centric optimization pipeline to improve agent skills on a branching lakehouse by evaluating induced state changes",
-          "llm_evidence_cn": "以数据为中心的优化流程，通过评估诱导的状态变化来改进在分支湖仓上的智能体技能",
-          "llm_evidence": "以数据为中心的优化流程，通过评估诱导的状态变化来改进在分支湖仓上的智能体技能",
-          "canonical_evidence": "以数据为中心的优化流程，通过评估诱导的状态变化来改进在分支湖仓上的智能体技能",
-          "llm_tldr_en": "The paper presents a pipeline that generates task-verifier pairs and evaluates candidate skills in isolation, turning agent evaluation into state verification on a branching lakehouse, thus optimizing data-agent skills.",
-          "llm_tldr_cn": "针对编码智能体在数据基础设施上的技能优化问题，该工作在分支湖仓环境下，将智能体评估从输出匹配问题转化为状态验证问题。通过生成任务-验证器对，在隔离环境中执行候选技能，观察湖仓状态变化来度量效果。该方法实现了数据驱动的技能迭代改进，为构建可靠的基于状态的智能体评估提供了新范式。",
-          "llm_tldr": "针对编码智能体在数据基础设施上的技能优化问题，该工作在分支湖仓环境下，将智能体评估从输出匹配问题转化为状态验证问题。通过生成任务-验证器对，在隔离环境中执行候选技能，观察湖仓状态变化来度量效果。该方法实现了数据驱动的技能迭代改进，为构建可靠的基于状态的智能体评估提供了新范式。",
+          "llm_evidence_en": "Decouples QA agents with structured evidence and reasoning memories, refining retrieval via memory",
+          "llm_evidence_cn": "通过结构化证据和推理记忆解耦QA智能体，利用记忆优化检索",
+          "llm_evidence": "通过结构化证据和推理记忆解耦QA智能体，利用记忆优化检索",
+          "canonical_evidence": "通过结构化证据和推理记忆解耦QA智能体，利用记忆优化检索",
+          "llm_tldr_en": "MARDoc decouples long-document QA into Explorer, Refiner, and Reflector agents, using structured evidence and reasoning memories to mitigate context dilution and improve multi-hop reasoning.",
+          "llm_tldr_cn": "多模态长文档问答中，随着交互积累证据会被稀释，多跳推理变得嘈杂。MARDoc提出记忆感知的精炼智能体框架，将任务解耦为探索者、精炼者和反思者三种专用智能体。精炼者将交互痕迹蒸馏为结构化证据和推理记忆，反思者检查证据充分性并反馈，通过记忆模块维持清晰的证据链，提升了长文档推理的准确性。",
+          "llm_tldr": "多模态长文档问答中，随着交互积累证据会被稀释，多跳推理变得嘈杂。MARDoc提出记忆感知的精炼智能体框架，将任务解耦为探索者、精炼者和反思者三种专用智能体。精炼者将交互痕迹蒸馏为结构化证据和推理记忆，反思者检查证据充分性并反馈，通过记忆模块维持清晰的证据链，提升了长文档推理的准确性。",
           "llm_tags": [
             "query:agent-memory"
           ],
           "matched_query_tag": "query:agent-memory",
-          "matched_query_text": "skill library from trajectories for agent improvement",
-          "matched_requirement_id": "req-16",
+          "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+          "matched_requirement_id": "req-15",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.01185v1",
+          "paper_id": "2606.05749v1",
           "carry_days": 1
         }
       ]
