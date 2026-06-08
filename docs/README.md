@@ -6,68 +6,55 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-07
-- 运行时间：2026-06-07 21:25:57 UTC
+- 最新运行日期：2026-06-08
+- 运行时间：2026-06-08 22:13:47 UTC
 - 运行状态：成功
-- 本次总论文数：16
+- 本次总论文数：11
 - 精读区：7
-- 速读区：9
+- 速读区：4
 
 ### 今日简报（AI）
-从技能创造到联邦进化，今日聚焦智能体如何“学会学习”与“持续成长”。最值得关注的是《ReSkill》如何让策略优化与技能创建相互驱动，以及《PersonaTree》用结构化记忆让 Agent 更懂“人”。想跟进前沿？不妨从“Agent 如何自我进化”切入，追踪技能涌现与记忆建模的最新实验。
-- 详情：[/202606/07/README](/202606/07/README)
+今日精读两篇满分论文，聚焦AI Agent的深度研究能力与科研全流程评估。  
+DuMate系统以可审计多智能体实现递归搜索与准则推理，另一项基准则全方位衡量大模型在真实科研生命周期中的表现。  
+下一步可关注：这些框架如何让AI从“助手”升级为能独立复核的“初级研究员”。
+- 详情：[/202606/08/README](/202606/08/README)
 
 ### 精读区论文标签
-1. [ReSkill: Reconciling Skill Creation with Policy Optimization in Agentic RL](/202606/07/2606.01619v1-reskill-reconciling-skill-creation-with-policy-optimization-in-agentic-rl)  
+1. [DuMate-DeepResearch: An Auditable Multi-Agent System with Recursive Search and Rubric-Grounded Reasoning](/202606/08/2606.07299v1-dumate-deepresearch-an-auditable-multi-agent-system-with-recursive-search-and-rubric-grounded-reasoning)  
+   标签：评分：10.0/10、query:autoresearch
+   evidence：多代理深度研究系统，具备递归搜索、准则推理和可审计性
+2. [Act As a Real Researcher: A Suite of Benchmarks Evaluating Frontier LLMs and Agentic Harnesses in Research Lifecycle](/202606/08/2606.07462v1-act-as-a-real-researcher-a-suite-of-benchmarks-evaluating-frontier-llms-and-agentic-harnesses-in-research-lifecycle)  
+   标签：评分：10.0/10、query:autoresearch
+   evidence：AARR基准评估LLM智能体在科研生命周期中模仿真实研究者的能力，侧重领域敏感性、伦理和科学判断。
+3. [Expanding Spatial and Temporal Context for Robotic Imitation Learning With Scene Graphs](/202606/08/2606.01072v2-expanding-spatial-and-temporal-context-for-robotic-imitation-learning-with-scene-graphs)  
    标签：评分：9.0/10、query:agent-memory
-   evidence：强化学习驱动的技能创建框架，从轨迹中提取可复用技能并优化策略
-2. [FederatedSkill: Federated Learning for Agentic Skill Evolution](/202606/07/2606.03143v1-federatedskill-federated-learning-for-agentic-skill-evolution)  
+   evidence：使用动态场景图作为显式结构化记忆，捕捉长程机器人模仿学习中的时序演化。
+4. [AdMem: Advanced Memory for Task-solving Agents](/202606/08/2606.06787v1-admem-advanced-memory-for-task-solving-agents)  
    标签：评分：9.0/10、query:agent-memory
-   evidence：联邦学习框架通过轨迹中提取的语义技能差异演化代理技能库
-3. [From Agent Traces to Trust: Evidence Tracing and Execution Provenance in LLM Agents](/202606/07/2606.04990v1-from-agent-traces-to-trust-evidence-tracing-and-execution-provenance-in-llm-agents)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：证据追踪建模了智能体执行中证据、工具输出、记忆项如何支撑每个声明
-4. [Executable Schema Contracts: From Automatic Ingestion to Multi-Source Retrieval](/202606/07/2606.05415v1-executable-schema-contracts-from-automatic-ingestion-to-multi-source-retrieval)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：自动发现可执行模式，并从多源数据构建具备溯源能力的知识图谱
-5. [Unsupervised Skill Discovery for Agentic Data Analysis](/202606/07/2606.06416v1-unsupervised-skill-discovery-for-agentic-data-analysis)  
+   evidence：集成语义、情景和程序记忆，用于长程任务解决，具备自适应检索和自动记忆管理。
+5. [Think Like a Pilot: Fine-Grained Long-Horizon UAV Navigation](/202606/08/2606.06836v1-think-like-a-pilot-fine-grained-long-horizon-uav-navigation)  
    标签：评分：9.0/10、query:agent-memory
-   evidence：DataCOPE通过无监督验证引导的技能发现，从未标记的探索轨迹中挖掘可复用的数据分析技能。
-6. [CascadeMAP: Autonomous Closed-loop Optimization of Enzyme Cascades via Microfluidics, Machine Learning and Agentic AI](/202606/07/biorxiv-10-64898-2026-06-04-730034-v1-cascademap-autonomous-closed-loop-optimization-of-enzyme-cascades-via-microfluidics-machine-learning-and-agentic-ai)  
+   evidence：长时域无人机导航，细粒度动作与状态推理
+6. [Workflow-to-Skill: Skill Creation via Routing-Workflow-Semantics-Attachments Decomposition](/202606/08/2606.06893v1-workflow-to-skill-skill-creation-via-routing-workflow-semantics-attachments-decomposition)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：从智能体轨迹和工具日志中自动构建技能
+7. [Explicit Evidence Grounding via Structured Inline Citation Generation](/202606/08/2606.07130v1-explicit-evidence-grounding-via-structured-inline-citation-generation)  
    标签：评分：9.0/10、query:autoresearch
-   evidence：提出CascadeMAP，集成微流控、贝叶斯优化与多智能体AI的自主闭环平台，实现酶级联优化，是自主科研智能体系统实例。
-7. [Adaptive Latent Agentic Reasoning](/202606/07/2606.02871v1-adaptive-latent-agentic-reasoning)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：双模式框架根据状态追踪自适应切换潜在与显式推理
+   evidence：FullCite为每条声明生成链接到支撑证据的结构化内联引用，直接解决声明-证据支撑问题。
 
 ### 速读区论文标签
-1. [PersonaTree: Structured Lifecycle Memory for Person Understanding in LLM Agents](/202606/07/2606.04780v1-personatree-structured-lifecycle-memory-for-person-understanding-in-llm-agents)  
+1. [SubtleMemory: A Benchmark for Fine-Grained Relational Memory Discrimination in Long-Horizon AI Agents](/202606/08/2606.05761v2-subtlememory-a-benchmark-for-fine-grained-relational-memory-discrimination-in-long-horizon-ai-agents)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：PersonaTree采用三级人物树，通过证据到声明的路径和整合机制实现长时记忆。
-2. [Recognize Your Orchestrator: An Entropy Dynamics Perspective for LLM Multi-Agent Systems](/202606/07/2606.01351v1-recognize-your-orchestrator-an-entropy-dynamics-perspective-for-llm-multi-agent-systems)  
+   evidence：面向长程AI智能体的细粒度关系记忆判别基准
+2. [A Held-Out Transition-Pair Falsifier for Long-Horizon Non-Abelian State Tracking](/202606/08/2606.07254v1-a-held-out-transition-pair-falsifier-for-long-horizon-non-abelian-state-tracking)  
    标签：评分：7.0/10、query:agent-memory
-   evidence：提出熵动力学模型分析集中式多智能体编排中的脆弱性，有助于理解多智能体系统的协调稳定性。
-3. [Can Generalist Agents Automate Data Curation?](/202606/07/2606.04261v1-can-generalist-agents-automate-data-curation)  
-   标签：评分：7.0/10、query:autoresearch
-   evidence：智能体基于基准反馈迭代地提出、实施、评估和修订数据策略，实现数据筛选循环的自动化。
-4. [MARDoc: A Memory-Aware Refinement Agent Framework for Multimodal Long Document QA](/202606/07/2606.05749v1-mardoc-a-memory-aware-refinement-agent-framework-for-multimodal-long-document-qa)  
-   标签：评分：7.0/10、query:agent-memory
-   evidence：记忆感知多代理框架，通过结构化证据记忆和定向反馈实现长文档问答
-5. [ChatSpatial: Schema-Enforced Agentic Orchestration for Reproducible and Cross-Platform Spatial Transcriptomics](/202606/07/biorxiv-10-64898-2026-02-26-708361-v3-chatspatial-schema-enforced-agentic-orchestration-for-reproducible-and-cross-platform-spatial-transcriptomics)  
-   标签：评分：7.0/10、query:autoresearch
-   evidence：基于LLM的平台强制使用预验证工具模式，构建跨Python和R的可重复分析工作流，确保溯源。
-6. [GeneKnow: AI-powered literature synthesis for gene-context analysis](/202606/07/biorxiv-10-64898-2026-05-28-728511-v1-geneknow-ai-powered-literature-synthesis-for-gene-context-analysis)  
-   标签：评分：7.0/10、query:autoresearch
-   evidence：提供源基、可追溯的文献综合，避免虚假引用的AI框架
-7. [Dynamic Coordination Strategy Selection for Enterprise Multi-Agent Systems](/202606/07/2606.00804v1-dynamic-coordination-strategy-selection-for-enterprise-multi-agent-systems)  
+   evidence：禁留转移对伪造器实现非阿贝尔状态跟踪，取得完美长程预测
+3. [Characterization of Multi-Model Agentic AI Systems on General Tasks via Trace-Driven Simulation](/202606/08/2606.01725v1-characterization-of-multi-model-agentic-ai-systems-on-general-tasks-via-trace-driven-simulation)  
    标签：评分：6.0/10、query:agent-memory
-   evidence：研究企业多智能体系统的动态协调策略选择
-8. [Entropy-Based Evaluation of AI Agents: A Lightweight Framework for Measuring Behavioral Patterns](/202606/07/2606.05872v1-entropy-based-evaluation-of-ai-agents-a-lightweight-framework-for-measuring-behavioral-patterns)  
+   evidence：捕获多模型智能体系统完整推理令牌和活动的追踪数据集
+4. [POIROT: Interrogating Agents for Failure Detection in Multi-Agent Systems](/202606/08/2606.02282v1-poirot-interrogating-agents-for-failure-detection-in-multi-agent-systems)  
    标签：评分：6.0/10、query:agent-memory
-   evidence：基于熵的框架，测量智能体行为，包括动作熵、轨迹熵、工具熵和鲁棒性
-9. [Species- and Topic-aware Representation Learning for Antimicrobial Peptide Discovery](/202606/07/biorxiv-10-64898-2026-05-28-728246-v1-species--and-topic-aware-representation-learning-for-antimicrobial-peptide-discovery)  
-   标签：评分：6.0/10、query:autoresearch
-   evidence：STAMP框架利用机器学习进行跨物种抗菌肽活性预测，实现自动化抗菌肽发现。
+   evidence：POIROT将智能体本身用作多智能体系统的故障检测诊断层，助力错误恢复。
 
 
 <div class="dpr-home-promo-card">
