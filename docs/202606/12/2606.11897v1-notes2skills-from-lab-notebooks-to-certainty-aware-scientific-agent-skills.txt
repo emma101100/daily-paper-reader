@@ -1,0 +1,698 @@
+Title: Notes2Skills: From Lab Notebooks to Certainty-Aware Scientific Agent Skills
+
+URL Source: https://arxiv.org/pdf/2606.11897v1
+
+Published Time: Thu, 11 Jun 2026 00:52:56 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+May 2026 
+
+# Notes2Skills : From Lab Notebooks to Certainty-Aware Scientific Agent Skills 
+
+Shi Liu 1 Jiayao Chen 1 Chengwei Qin 2 Yanqing Hu 1 Jufan Zhang 3 Linyi Yang 1,†   
+
+> 1Southern University of Science and Technology
+> 2The Hong Kong University of Science and Technology (Guangzhou)
+> 3University College Dublin
+
+Scientific discovery workflows usually contain and rely heavily on lab notes, where researchers record observations, interpret uncertain results, and plan follow-up experiments. Such infor-mative lab notes preserve evolving scientific reasoning and author uncertainty, rather than polished final results exhibited in publications, providing a valuable opportunity for AI to engage in scientific exploration at a more comprehensive and deeper level. However, most prior work on scientific text focuses on papers, protocols, or structured databases, leaving informal laboratory notes underexplored as inputs to AI agents for science. This gap matters because lab notes often intermingle validated observations, tentative judgments, and possible experimental next steps within the same passage. If these signals are conflated, an AI agent may mistake uncertain scientific judgments for confirmed conclusions or executable actions. To this end, we present Notes2Skills , a two-stage framework for turning lab notebooks into verifiable skills for scientific AI agents while preserving the author’s certainty. Across seven conditions and three wet-lab sessions, Notes2Skills is the only configuration that neither mistakes uncertain notes for firm instructions nor discards firm ones. We show that certainty preservation is the missing piece between lab notebooks and reliable agent skills, opening a path toward safer AI co-scientist systems. 
+
+Correspondence: yangly6@sustech.edu.cn  
+
+> †Corresponding author.
+
+# 1 Introduction 
+
+Lab notebooks are a central medium of scientific discovery, capturing researchers’ observations, interpreta-tions of uncertain results, and plans for subsequent experiments (Shi et al., 2024, Jiang et al., 2024). Early work in the machine-learning era focused on extracting structured flow graphs from relatively constrained domains such as cooking recipes (Mori et al., 2014). With the advent of neural sequence models, this line of research shifted toward deep-learning methods that identify and organize action sequences from published wet-lab protocols (Kulkarni et al., 2018, Tamari et al., 2021, O’Donoghue et al., 2023). More recently, large language models (LLMs) have expanded the scope of procedural text extraction, enabling workflows, tool usage, and execution logic to be compiled into agent-loadable skills (Giroh et al., 2025, Anthropic, 2025), such as AI co-scientist systems (Gottweis et al., 2026). Figure 1 summarizes this progression from recipe-level flow-graph extraction to protocol-level action modeling and, ultimately, LLM-based skill construction from procedural lab notes. A common assumption underlies these three eras: the input text is prescriptive. A recipe instructs the reader to mix ; a wet-lab protocol specifies centrifuge for 10 minutes ; and a standard operating procedure   
+
+> 1
+> arXiv:2606.11897v1 [cs.CL] 10 Jun 2026 Southern University of Science and Technology 2
+> Figure 1. Three eras of procedural text extraction.
+
+states set the temperature to 4 ℃. By the time such text is written, the author has typically resolved their uncertainty, leaving the extraction system to map explicit instructions into executable actions. Experimental notebooks violate this assumption. For example, the reading dropped sharply after five minutes states a fact; I am not sure the second read is reliable expresses a judgment under uncertainty; and try a fresh buffer next time proposes a suggestion. Although these statements should induce different downstream behaviors, their surface forms can appear deceptively similar in raw notebook text. Treating them as if they were equally firm fails in two opposing failure modes. Uncertainty laundering 
+
+occurs when a tentative note, such as I am not sure the second read is reliable , is compiled into a firm decision: the agent acts on an interpretation that the author explicitly marked as uncertain, potentially discarding underlying data based on an unresolved judgment. Directive loss captures the reverse failure: a firm directive, such as this part is invalid, truncate it , is placed alongside cautious notes and treated as merely another opinion, causing the agent to retain data that the author intended to exclude. Both failures arise when the compiler strips away the author’s certainty signal: whether a statement is a FACT , a 
+
+JUDGMENT , or a SUGGESTION . For agents performing irreversible operations on scientific data, this signal is the safety boundary. In this work, we focus on single-author experimental notebooks written close to the time of experimentation, where the author’s certainty directly informs decision-making. This regime poses unique challenges absent from published protocols: certainty is entangled with action content within the same sentence, and hedged judgments can be surface-similar to firm observations. To address this, we present Notes2Skills (N2S), motivated by the principle that the author’s certainty should constrain what an agent may do: a FACT may license a strong processing action, a JUDGMENT defaults to conservative, review-preserving handling, and a SUGGESTION is treated as advisory only. In experiments, Stage 1 jointly extracts directives and their certainty labels; Stage 2 compiles them into a MetaSkill , a Markdown skill document where each directive carries its certainty label and a cryptographic link to the author’s claims. We validate Notes2Skills on 461 annotated segments across three corpora spanning a formality spectrum and test downstream skill loading on three real wet-lab sessions, where the compiled skills guide file-level data-handling decisions over instrument traces. On FreeNotes (informal bilingual notebooks), ONS (open notebook entries), and WLP (formal wet-lab protocols), the best of six model–prompt configurations achieves 𝐹 1=0.737 on binary directive detection, up from 0.682 under the strongest zero-shot baseline, and our Stage 2 audit verifies that all 149 fixed directives are carried into source-linked, agent-loadable capsules. Notes2Skills is the only one of seven tested configurations that avoids both observed failures: laundering uncertain readings into firm actions on uncertainty-heavy sessions, and losing firm author-stated actions on a FACT -dominated session. Southern University of Science and Technology 3
+
+Lab Notebook (FreeNotes)        
+
+> read1 @ 200 mV: events rela-tively sparse, baseline slightly drifting.
+> Action: replaced solution with PBS, cleared the pore.
+> read2 @ 200 mV: events un-clear, uncertain whether a sig-nal was detected.
+> Later: current jumped to 100 nA saturation; signal in-valid from this point onward.
+
+Wet Lab Protocol (WLP)           
+
+> Step 7. Centrifuge at 12,000 ×g for 10 min at 4 ℃.
+> Note: A visible pellet should form at the bottom of the tube.
+> DO NOT exceed 15 min — pellet may become too com-pact.
+> OPTIONAL: Supernatant may be kept at −20 ℃for up to 2 weeks.
+
+Open Notebook (ONS)    
+
+> Repeated yesterday’s cou-pling reaction at the lower tem-perature. TLC showed unreacted start-ing material — yield is likely too low to proceed. This batch is unusable as-is; setting it aside.
+> Next time: double the catalyst loading and extend the reac-tion to 24 h.
+
+Figure 2. Three notebook genres carry the same epistemic mixture — factual observation, hedged judgment, and forward-looking suggestion — but express it in distinct surface registers. Blue marks the judgmental hedge; red marks the data-flagging fact; the last line in each panel is the forward-looking suggestion. 
+
+Figure 3. Overview of the Notes2Skills pipeline. Our contributions have been highlighted with the yellow star. 
+
+To our knowledge, we are the first to consider transferring single-author experimental notebooks to agent-loadable skills. Our contributions are threefold. First, we treat notebooks written by scientists as a new kind of procedural text, where author certainty serves as a safety boundary for agents. Second, we annotate 461 segments and audit 149 directives across three corpora with different levels of formality. Finally, we introduce MetaSkill and show, on an aligned instrument-data benchmark, that certainty-preserving skills are needed to match the author’s triage across both uncertain notes and firm facts. 
+
+# 2 Related Work 
+
+Scientific Procedure Extraction from Protocols.. Scientific procedural text extraction has primarily targeted curated, prescriptive documents. The Wet Lab Protocols corpus (Kulkarni et al., 2018) and its executable extension X-WLP (Tamari et al., 2021) established action extraction from published wet-lab protocols. BioPlanner (O’Donoghue et al., 2023) extended this line to LLM-based protocol planning, while NERRE (Dagdelen et al., 2024) broadened extraction to flexible-schema materials-science settings. These works operate on finalized procedural text, where action intent has largely been stabilized by the author, and therefore leave author certainty outside the extraction target. Experimental notebooks constitute a different genre: they interleave observations, interpretations, hesitation, and prospective plans, often with first-person reflection, retrospective hedging, and uneven directive density. Thus, notebook-to-skill compilation differs qualitatively from action extraction over published protocols. Southern University of Science and Technology 4
+
+Compiling Procedural Text into Agent Skills.. The most closely related line of work compiles procedural text into agent-executable skills or workflows. SYNTACT (Giroh et al., 2025) addresses ambiguity in enterprise standard operating procedures through a Clarifier–Planner–Implementor dialogue, while Flow-of-Action (Pei et al., 2025) follows a similar resolve-then-act paradigm. These systems treat ambiguity in prescriptive text as a defect to be eliminated before execution. In contrast, our setting requires a different treatment: when apparent ambiguity encodes the author’s epistemic stance, it should be preserved rather than resolved away. Protocol-to-DSL systems (Shi et al., 2024, Jiang et al., 2024, Mehr et al., 2020) compile published procedures into executable representations, but do not carry author certainty forward as an explicit control signal. The Anthropic SKILL.md standard (Anthropic, 2025) provides a practical skill format targeted by Notes2Skills . More broadly, skill-induction and autonomous-science systems construct agent capabilities from rollouts, demonstrations, literature, or tools (Wang et al., 2024, Majumder et al., 2023, Wang et al., 2025, Boiko et al., 2023, Bran et al., 2024, Szymanski et al., 2023). Related evaluation work also probes open-ended model capabilities, including creative code generation under self-evolving challenges (Wang et al., 2026). These systems and evaluations are important antecedents, but they either assume prescriptive inputs or evaluate generated artifacts rather than notebooks whose uncertainty must constrain later action; our comparisons therefore use controlled ablations of one notebook-to-decision interface. 
+
+Uncertainty and Factuality in Text.. Author uncertainty and factuality have a long history in NLP, from span-level hedge and speculation detection in BioScope (Vincze et al., 2008) and the CoNLL-2010 shared task (Farkas et al., 2010), to multi-axis factuality and modality schemas (Thompson et al., 2008, Saurí and Pustejovsky, 2009, de Waard and Schneider, 2012). In clinical NLP, assertion classification (Uzuner et al., 2011) and the CMED schema (Mahajan et al., 2023) associate events with multi-dimensional labels capturing uncertainty, temporality, and related contextual attributes. Our directive schema builds on this tradition but differs in objective: certainty is an operational signal that constrains downstream agent behavior. 
+
+# 3 Task Formalization 
+
+We present Notes2Skills (N2S), a two-stage framework that keeps the author’s certainty visible from notebook text to agent decision, as shown in Figure 3. Stage 1 identifies notebook statements that may guide subsequent analysis and labels each statement as FACT , JUDGMENT , or SUGGESTION . Stage 2 compiles these labeled statements into a MetaSkill : an agent-loadable Markdown skill in which every action remains explicitly linked to its source excerpt and certainty label. We call Stage 1 Epistemic Directive Extraction (EDE): each extracted statement is a directive (it should guide a downstream pipeline action) paired with its epistemic status — the author’s certainty about that statement, which travels with it through the rest of the pipeline. 
+
+3.1 Stage 1: Epistemic Directive Extraction 
+
+Given a sequence of notebook segments from one experimental unit, EDE emits per segment: (i) whether the segment is a directive to be preserved, (ii) which of five directive types it is (Table 1), and (iii) its certainty label. The formal tuple notation and type-specific attributes are in Appendix E. The certainty label controls what an agent may do: FACT can support a strong action when policy and signal evidence agree; JUDGMENT defaults to review-preserving handling; SUGGESTION is advisory. Labels are assigned following a guideline of linguistic cues (Appendix D). 
+
+3.2 Stage 2: MetaSkill Compilation 
+
+Stage 2 bridges the human scientist generating the notes and the autonomous agent processing them. To ensure robust integration, the compiled artifact is strictly constrained by four principles: it must accurately reflect the author’s epistemic certainty (faithfulness), guarantee machine-readability (actionability), support transparent verification against the source (auditability), and enforce a conservative fallback to human review when ambiguity arises (conservatism). Southern University of Science and Technology 5                                   
+
+> Type Corpora Meaning
+> FLAG_DATA All Mark data that needs review, threshold change, or truncation.
+> CONDITION_CHANGE FreeNotes Mark a phase or condition boundary.
+> ANALYSIS_SUGGESTION All Suggest an analysis step.
+> PROTOCOL_CHANGE All Record a procedure change.
+> PARAMETER_SHIFT All Record a changed reference value.
+> Table 1. The five Stage 1 directive types, each marking a different way a notebook statement can affect later analysis.
+> CONDITION_CHANGE appears only in FreeNotes; the other four span all three corpora.
+> Corpus 𝑛 Formality Audience Role
+> FreeNotes 201 Low, bilingual Self-only In-regime; Exp 1–3 ONS 155 Intermediate Small group Boundary case; Exp 1–2 WLP 105 High, prescriptive Anonymous Protocol control; Exp 1–2
+> Table 2. The three corpora used in this study. 𝑛 is the number of annotated segments; Audience is the author– audience proxy from our formality measurements (Appendix C). FreeNotes is the only corpus used for downstream evaluation because it is the only one with aligned raw instrument data and expert-adjudicated file labels.
+
+Auditability and conservatism force the compiler to be entirely deterministic: each capsule field is either inherited from the Stage 1 EDE record or fixed by the domain configuration. The Stage 2 audit (§6.2) thus checks data provenance rather than model quality. An LLM-based compiler would forfeit this transparency and risk collapsing authorial uncertainty into a single unverified action. To operationalize faithfulness, the certainty label 𝑐 𝑖 travels with the capsule as an action commitment level —an upper bound on the action severity the directive can authorize. FACT licenses strong, potentially irreversible operations; JUDGMENT licenses only review-preserving actions; SUGGESTION carries no file-level commitment. At runtime, the executor (§5.5) authorizes a strong action only when the capsule’s commitment level and the file’s signal evidence agree—the conservative logic of Bayesian decision theory : withhold irreversible commitment unless both prior belief and observed evidence support it. Formally, let D = {( 𝑠 𝑖 , 𝑡 𝑖 , 𝑐 𝑖 )} | D |  
+
+> 𝑖 =1
+
+denote the Stage 1 directives, with 𝑠 𝑖 the source segment, 𝑡 𝑖 
+
+the directive type, and 𝑐 𝑖 ∈ { Fact , Judgment , Suggestion } the certainty label. Stage 2 executes a deterministic mapping: 
+
+𝑀 = Compile (D , Π), (1) where Π is the domain action vocabulary and 𝑀 stores one capsule per directive, exposing the commitment level for the runtime gate. §6.3 provides the empirical separation: when the action-only schema discards commitment information, the gate has nothing to condition on and collapses. The full schema is described in Appendix E. 
+
+# 4 Datasets 
+
+We validate Notes2Skills on three corpora chosen to span a formality spectrum, summarized in Table 2. 
+
+FreeNotes contains 201 segments from experimental notebooks written by two senior researchers at two institutions, predating Notes2Skills ’s development. Each session is authored by one researcher, in Chinese-English code-switched text written close to the time of experimentation. Three FreeNotes sessions, totaling 48 downstream files, are used for downstream validation because they are the only setting where each file aligns three evidence sources: notebook directives, raw instrument records, and expert-adjudicated file-level decisions. The sessions cover three distinct uncertainty regimes, introduced in §6.3. 
+
+ONS contains 155 segments from 9 entries on openlabnotebooks.org (CC BY 4.0), included as a semi-formal boundary case between private notes and polished protocols. WLP contains 105 prescriptive Southern University of Science and Technology 6
+
+segments from the Wet Lab Protocols corpus (Kulkarni et al., 2018), included as a high-formality protocol control whose procedural segments can be expressed under the same schema. 
+
+Formality and inter-annotator agreement.. Formality is measured with three proxies: surface regularity, code-switching rate, and author-audience distance. The ordering WLP > ONS > FreeNotes holds on at least two of three proxies (Appendix C). Two annotators independently labeled stratified subsamples (60 FreeNotes, 60 ONS, 90 WLP) using the shared guideline and no LLM assistance. Inter-annotator agreement is strong: directive-detection 𝜅 ≥ 0.709 , ordinal certainty QWK ≥ 0.732 . For Exp 3, FreeNotes file-level gold labels were adjudicated from notebook directives, signal findings, and session metadata before any agent outputs were observed; gold actions and adjudication rationales never enter prompts, capsules, or executor inputs (Appendix D). 
+
+# 5 Experimental Setup 
+
+We report two experiments and a compilation audit under one unified setup. Exp 1 evaluates Stage 1 directive extraction across the three corpora. Exp 2 audits whether Stage 2 preserves Stage 1 outputs into the MetaSkill capsules. Exp 3 evaluates downstream skill loading on three FreeNotes sessions, with a stress test that replaces adjudicated Stage 1 outputs with model-predicted ones. 
+
+5.1 Stage 1: Models, Splits, and Metrics 
+
+We evaluate three LLMs: GPT-4o 1, Claude Sonnet 4.5 2, and Qwen-Max 3, under zero-shot and few-shot prompting at temperature 0. We use document-stratified 80/20 splits. Split details, exemplar counts, and empty-response handling are in Appendix A and Appendix B. Since certainty labels are ordinal, we measure certainty agreement with Quadratic Weighted Kappa 
+
+(Cohen, 1968): 
+
+𝜅 𝑄 = 1 −
+
+Í𝑖, 𝑗 𝑤 𝑖 𝑗 𝑂 𝑖 𝑗 
+
+Í𝑖, 𝑗 𝑤 𝑖 𝑗 𝐸 𝑖 𝑗 
+
+, 𝑤 𝑖 𝑗 = (𝑖 − 𝑗 )2
+
+(𝐶 − 1)2 , (2) where 𝐶 =3, 𝑂 is the observed confusion matrix, 𝐸 the expected matrix under independence, and 𝑤 𝑖 𝑗 
+
+penalizes FACT ↔SUGGESTION confusions more than FACT ↔JUDGMENT . 𝜅 𝑄 →1 means perfect agreement, 
+
+0 means chance. We report five Stage 1 metrics. 𝐹 hd  
+
+> 1
+
+is binary 𝐹 1 on has_directive . 𝐹 dt ∗ 
+
+> 1
+
+and 𝐹 ep ∗ 
+
+> 1
+
+are macro-𝐹 1 on 
+
+directive_type and epistemic_status , computed on the both-positive subset (segments where both gold and prediction carry a directive). QWK ep is the ordinal agreement defined in Eq. 2. Joint is the fraction of segments where all three predictions match the gold exactly. 
+
+5.2 Stage 2: Preservation Audit 
+
+Stage 2 is deterministic, so we audit preservation rather than prediction. Given fixed EDE inputs, every directive should appear in the compiled skill with the same directive identity, certainty label, valid schema fields, and source link. For FreeNotes, we also check the optional action-policy layer. 
+
+5.3 Downstream Pipeline 
+
+The downstream pipeline has three layers: a signal processor (Layer 1) that converts each instrument trace into a fixed SignalFindings summary, a Claude Sonnet 4.5 agent loop (Layer 2) that proposes a processing decision, and a deterministic executor (Layer 3) that gates the proposal against the capsule and signal evidence. Conditions below differ only in the loaded skill and whether the executor is enabled. 
+
+5.4 Sessions, Action Set, Conditions 
+
+Sessions.. We evaluate three FreeNotes downstream sessions containing 17, 22, and 9 files. Each session pairs notebook directives with raw instrument records and expert-adjudicated file-level labels; the                            
+
+> 1https://openai.com/index/hello-gpt-4o/
+> 2https://www.anthropic.com/news/claude-sonnet-4-5
+> 3https://www.alibabacloud.com/help/en/model-studio/models Southern University of Science and Technology 7
+> Condition Skill input Executor
+> External LLM (no skill) Raw notebook + findings Off Action-only skill Action fields only Off + executor Action fields only On Raw notes Source excerpts Off
+> Notes2Skills skill Full MetaSkill Off + verify Full MetaSkill Authorize + Veto
+> + verify+elevate Full MetaSkill Authorize + Veto + Substitute Table 3. Seven downstream configurations: an external-LLM baseline (first row) and six Notes2Skills ablations. The bold row is the proposed configuration. verify enables the Authorize and Veto licenses; verify+elevate
+> additionally enables Substitute (full executor specification in Appendix K.3).
+
+domain-specific regimes are introduced in §6.3. Each (condition, file) pair is sampled 𝑁 =5 times under independent API calls. 
+
+Action set.. The downstream action vocabulary contains five actions: KEEP_FULL , FLAG_FOR_REVIEW ,
+
+RAISE_THRESHOLD , TRUNCATE_AT , and SKIP_FILE . Where applicable, an action carries a structured parameter (e.g., TRUNCATE_AT requires a truncation time). 
+
+Conditions.. Table 3 lists the seven configurations. The same agent loop and per-file evidence summary run in every condition; only the loaded skill and the executor setting differ. As a stress test of the full Stage 1 to Stage 2 to agent stack, we additionally evaluate the proposed configuration with adjudicated Stage 1 outputs replaced by Claude Sonnet 4.5 few-shot predictions (77 segments). 
+
+External LLM baseline.. As a diagnostic raw-prompting baseline, an external LLM receives the raw notebook text and per-file SignalFindings but no compiled skill; the prompt asks the model to weigh the author’s certainty without specifying how. This isolates what the same agent loop achieves without 
+
+Notes2Skills ’s extraction or compilation. 
+
+Downstream metrics.. For each (condition, file) pair, we take the majority vote over 𝑁 =5 repeats and report five metrics. File-majority accuracy (Acc ) is the fraction of files whose majority vote matches gold. Balanced accuracy (bAcc ) is the mean per-class recall, robust to class imbalance. Macro 𝐹 1 is the unweighted mean of per-class 𝐹 1. Unweighted Cohen’s 𝜅 measures agreement above chance; we use unweighted because the five actions dispatch to discrete pipelines, not an ordinal severity scale (Appendix J reports QWK as sensitivity). FLAG_FOR_REVIEW recall (FR) is the fraction of true FLAG_FOR_REVIEW 
+
+files correctly identified; this class is most vulnerable to uncertainty laundering and we track it separately. 
+
+5.5 The Executor 
+
+The executor implements the dual-evidence gate introduced in §3.2: a deterministic alignment check between the LLM’s proposal and the matched capsule. It applies its rules only because the capsule exposes the author’s certainty, explicit authorization, and candidate actions. A strong action ( RAISE_THRESHOLD ,
+
+TRUNCATE_AT , SKIP_FILE ) is passed through only when the capsule explicitly authorizes it ( Authorize )and the file’s signal evidence supports its parameter; otherwise the proposal is downgraded to a review-preserving action ( Veto ). Conversely, when the LLM defaults to a cautious action but the capsule carries a fact-grade candidate that aligns with signal evidence, the executor upgrades it ( Substitute ); otherwise it abstains ( Abstain ). Here, the LLM proposes an action, but the executor decides whether the evidence permits it, so hedged notes cannot quietly become interventions. We label the Authorize/Veto pass verify 
+
+and the Substitute step elevate (Table 3). Concretely, the executor is a deterministic function over three structured inputs: the LLM’s proposal (an action with an optional parameter), the matched directive’s skill capsule (carrying 
+
+explicit_authorization and candidate_actions ), and the file’s SignalFindings (step drops, satu-ration onsets, and calibration-derived tolerances). The function emits exactly one of four outcomes per Southern University of Science and Technology 8                                                             
+
+> Model Cond. 𝐹 hd
+> 1𝐹 dt ∗
+> 1𝐹 ep ∗
+> 1QWK ep joint 𝑛 bp
+> Claude Sonnet 4.5 zero-shot 0.682 0.320 0.838 0.781 0.470 30 few-shot 0.737 0.500 0.830 0.761 0.523 35 GPT-4o zero-shot 0.632 0.272 0.891 0.946 0.471 24 few-shot 0.706 0.392 0.791 0.720 0.494 30 Qwen-Max zero-shot 0.597 0.376 0.764 0.755 0.471 23 few-shot 0.711 0.500 0.813 0.834 0.494 32
+> Table 4. Exp 1 pooled metrics across the 87 test segments. 𝐹 hd
+> 1is binary 𝐹 1on has_directive ;𝐹 dt ∗
+> 1and 𝐹 ep ∗
+> 1are observed-labels macro-𝐹 1on the both-positive subset of size 𝑛 bp (segments where both gold and prediction carry a directive); joint is the 3-tuple exact-match rate. Bold marks the best per column. Full per-corpus breakdown in Appendix A.
+
+call: Authorize , Veto , Substitute , or Abstain . The pseudocode below specifies the Nanopore-domain instantiation. The tier guard and the strong/cautious action partition follow the Nanopore action vocabulary. Tier-less corpora (WLP and ONS in this paper) do not invoke the executor in the present validation. 
+
+Notation.. STRONG_ACTIONS = {RAISE_THRESHOLD , TRUNCATE_AT , SKIP_FILE } and CAUTIOUS_ACTIONS =
+
+{KEEP_FULL , FLAG_FOR_REVIEW }, ordered by the severity scale in §5.4. parameter_supported checks that a proposed timestamp falls within signal_findings ’s calibration-derived tolerance of a detected 
+
+step_drop or saturation onset. Tolerance and signal-magnitude thresholds are computed from per-file statistics and carried inside signal_findings , with calibration provenance embedded by SHA-256 hash. 
+
+downgrade maps each strong action to the next-weaker action in the severity ordering. 
+
+Determinism and bounded behavior.. The function depends only on the three inputs. Given fixed Layer 2 outputs, results are bit-exact across re-runs. It never reads the gold, never introduces an action absent from the skill, and never fabricates a parameter. The four outcome labels and their counts are emitted alongside each per-file decision record (the elevate-event counts in Table 6 are read from these records). 
+
+# 6 Results 
+
+6.1 Exp 1: Stage 1 Extraction 
+
+Table 4 reports pooled metrics across the 87-segment test set. Stage 1 extraction is feasible across the three corpora but is not a solved problem. Few-shot prompting consistently lifts macro-𝐹 1 on directive_type 
+
+(Claude +0.18 , GPT-4o +0.12 , Qwen-Max +0.12 ), suggesting that a small exemplar set helps models apply the directive schema more consistently. On the certainty label, the three backbones split: GPT-4o zero-shot attains the highest QWK ( 0.946 ), Claude few-shot leads on joint structural accuracy ( 0.523 ), and Qwen-Max few-shot ties Claude on type-level macro-𝐹 1 (0.500 ). Per-corpus difficulty (Appendix A) localizes the remaining gaps. WLP is the most stable corpus. FreeNotes shows the largest few-shot gains, consistent with bilingual code-switched text benefiting from exemplar grounding. ONS exposes a Qwen-Max zero-shot calibration mode that a single per-class exemplar fully remediates ( 𝐹 hd  
+
+> 1
+
+0.154 → 0.727 ). The remaining error mass on the certainty label concentrates on the FACT –JUDGMENT boundary – a single, well-localized target for future Stage 1 calibration. 
+
+6.2 Exp2: Stage 2 Preservation Audit 
+
+Because Stage 2 is deterministic, Table 5 is a preservation audit rather than a prediction result. It checks whether one compiler can carry the same EDE structure across three writing regimes without dropping directives, altering certainty labels, or breaking source links. Across all three corpora, the compiler emits all 149 fixed EDE directives (FreeNotes 48, WLP 70, ONS 31) as agent-visible capsules with their directive key, certainty label, schema fields, and source link intact. Southern University of Science and Technology 9                                            
+
+> Stage 1 →Stage 2 Universal invariants Corpus EDE Caps. Pres. Cert. Prov. Schema Policy
+> FreeNotes 48 48 48/48 48/48 48/48 48/48 48/48 WLP 70 70 70/70 70/70 70/70 70/70 –ONS 31 31 31/31 31/31 31/31 31/31 –
+> Table 5. Cross-corpus Stage 2 preservation audit. The compiler is deterministic, so we audit that every EDE directive (Stage 1 output) becomes a skill capsule (Stage 2 output, 1:1) and satisfies four universal invariants: Pres. —directive preservation (1:1 mapping, no merge/drop); Cert. —certainty agreement (capsule epistemic_status equals source); Prov. —provenance integrity (SHA-anchored source-link chain); Schema —schema validity (valid JSON, closed-vocabulary fields). Policy is the optional FreeNotes-only action-policy check (§3.2); “–” marks corpora without an action-policy layer. 𝑥 /𝑥 means every capsule satisfies the check.
+> Figure 4. Downstream validation setting. Notebook context links past experiments to later data-handling decisions.
+
+The same pipeline handles bilingual FreeNotes, semi-formal ONS, and prescriptive WLP, producing capsules whose certainty label and source link can be independently inspected before the agent acts. Appendix H reports a FreeNotes diagnostic against an earlier action-first representation. 
+
+6.3 Exp 3: Downstream Skill Loading 
+
+Stage 2 (§6.2) preserves the directive list and the author’s certainty labels. We now ask whether the resulting artifact actually helps an agent make file-level data handling decisions: when a MetaSkill is loaded by an agent that must decide how to process instrument traces, do the resulting decisions align with the author’s intent? We close the loop by evaluating against three aligned sources per file: the author’s notebook directives, the raw instrument trace, and expert-adjudicated processing decisions. We construct this benchmark in the FreeNotes nanopore setting, developed with two senior biophysicists from two institutions. The resulting three-session benchmark covers uncertainty-heavy ambiguity ( Saturation-A ), terminal saturation (Saturation-B ), and FACT -dominated step-drop truncation ( Step-drop ); we refer to it as the Nanopore downstream benchmark .Table 6 reports the seven-condition ablation across the three sessions; the FR column gives file-majority recall on FLAG_FOR_REVIEW – the class most vulnerable to uncertainty laundering. The tentative segments – those where the author’s hedge disagrees with what a post-hoc signal processor would conclude – are what make this a test of certainty preservation rather than feature engineering. Southern University of Science and Technology 10 
+
+Condition Acc bAcc 𝐹 1 𝜅 FR 
+
+Saturation-A (𝑛 =17 ; uncertainty-heavy ambiguity) External LLM (no skill) 0.0 0.0 0.0 −0.05 0.0 Action-only skill 29.4 55.4 39.4 0.14 21.4 + executor 88.2 50.0 48.3 0.47 –Raw notes 47.1 37.5 33.3 0.17 50.0 
+
+Notes2Skills skill 17.6 75.0 53.1 0.13 0.0 + executor (verify) 88.2 96.4 85.6 0.71 85.7 
+
++ executor (verify + elevate) 88.2 96.4 85.6 0.71 85.7 
+
+Trivial: Always-FLAG 82.4 25.0 22.6 0.00 100.0 
+
+Stress test: predicted EDE 82.4 71.4 59.7 0.51 –
+
+Saturation-B (𝑛 =22 ; terminal saturation) External LLM (no skill) 9.1 66.7 66.7 0.09 0.0 Action-only skill 9.1 66.7 66.7 0.09 0.0 + executor 90.9 33.3 31.7 0.00 –Raw notes 9.1 66.7 66.7 0.09 0.0 
+
+Notes2Skills skill 36.4 76.7 65.4 0.14 30.0 + executor (verify) 100.0 100.0 100.0 1.00 100.0 
+
++ executor (verify + elevate) 100.0 100.0 100.0 1.00 100.0 
+
+Trivial: Always-FLAG 90.9 33.3 31.7 0.00 100.0 
+
+Stress test: predicted EDE 68.2 25.0 27.0 −0.07 –
+
+Step-drop (𝑛 =9; FACT -dominated) External LLM (no skill) 88.9 66.7 63.0 0.80 100.0 Action-only skill 88.9 66.7 63.0 0.80 100.0 + executor 44.4 33.3 20.5 0.00 –Raw notes 77.8 58.3 58.2 0.63 75.0 
+
+Notes2Skills skill 44.4 33.3 24.2 0.15 100.0 + executor (verify) 44.4 33.3 24.2 0.15 100.0 
+
++ executor (verify + elevate) 77.8 58.3 58.2 0.63 100.0 
+
+Trivial: Always-FLAG 44.4 33.3 20.5 0.00 100.0 
+
+Stress test: predicted EDE 22.2 16.7 14.8 −0.03 –
+
+Table 6. Main downstream ablation on three Nanopore sessions. Bold marks the proposed configuration—the only one that avoids both observed failure modes: laundering uncertain readings into firm actions on the two saturation sessions, and losing firm author-stated actions on Step-drop . Metrics: file-majority Acc, bAcc, macro 
+
+𝐹 1, unweighted 𝜅 , and FR ( FLAG_FOR_REVIEW recall, %), over 𝑁 =5 repeats per file; verify = Authorize+Veto, 
+
+verify+elevate adds Substitute. Trivial: Always-FLAG (italic) emits FLAG_FOR_REVIEW for every file—FR =100 by construction, while bAcc, 𝐹 1, and 𝜅 collapse to chance, confirming the proposed row’s FR is not a majority-class artifact. Stress test: predicted EDE (italic) substitutes Claude few-shot Stage 1 predictions. “–” = FR not used. Wilson 95% CIs for Acc in Appendix F. 
+
+Raw LLMs still launder uncertainty.. The external-LLM baseline (External LLM row in Table 6) reproduces laundering in its purest form: on the two saturation sessions, FLAG recall is 0% and 𝜅 collapses to chance ( −0.05 , +0.09 ) as every FLAG_FOR_REVIEW gold file is routed to KEEP_FULL or TRUNCATE_AT .On Step-drop , where firm step-drop facts map directly onto the strong action vocabulary, the same baseline matches the Action-only skill ( 𝜅 = + 0.80 , FLAG recall 100% ). 
+
+The executor needs a certainty-preserving schema.. The executor is not a standalone safety net: it consumes capsule fields for certainty, authorization, and candidate actions. A raw-notes+executor condition is therefore not well-defined, because there is no capsule for the executor to inspect. The Action-only skill + executor row provides the empirical separation that §3.2’s design argument predicts: when the schema discards certainty information, the executor has nothing to gate on and degenerates into Southern University of Science and Technology 11 
+
+a blanket downgrade filter. On Saturation-B and Step-drop , the Action-only skill + executor produces the same file-level labels as a trivial Always-FLAG_FOR_REVIEW baseline (Appendix G). The most striking case is Step-drop : the Action-only skill alone reaches the study-highest 𝜅 = + 0.80 , and switching on the executor collapses accuracy from 88 .9% to 44 .4% and 𝜅 to 0.00 . The mechanism is that the action-only schema lacks the authorization field that the executor’s Veto rule reads, so the executor downgrades the great majority of strong LLM proposals (call counts in Appendix G). The same executor therefore acts as a granular adjudicator on the MetaSkill schema and as a blanket safety filter on the Action-only schema – behavior mode is set by the schema, not by the executor’s code. 
+
+Uncertainty laundering and its mitigation.. On the two saturation sessions, where the author’s uncertainty dominates the gold ( 14 /17 and 20 /22 files), the Action-only schema’s weakness shows. File-majority FLAG recall is 21 .4% on Saturation-A and 0% on Saturation-B . When the compiled skill commits to an action vocabulary up front, the agent has no representational anchor for hesitation, regardless of the directive’s certainty label. Raw notes are not enough either ( 50 .0% on Sat-A, 0% on Sat-B), and compiling the full MetaSkill without the executor still leaves FLAG recall at 0% and 30 .0% . The executor raises FLAG recall to 85 .7–100% across all three sessions. A trivial Always-FLAG_FOR_REVIEW 
+
+baseline (Appendix G) confirms this is not a majority-class artifact: bAcc, 𝐹 1, and 𝜅 all collapse to chance under the trivial predictor. 
+
+Robustness across regimes.. The Action-only skill attains the highest 𝜅 on Step-drop (+0.80 ), where firm step-drop facts already align with the action vocabulary. This is the regime where a simple action-first representation is expected to work. The same shortcut fails on the two saturation sessions, where its 𝜅 
+
+collapses to +0.14 and +0.09 and FLAG recall drops to 21 .4% and 0% . The proposed configuration – 
+
+MetaSkill + executor (verify + elevate) – does not top every session; it is the only one that avoids both observed failures: laundering hedged judgments into firm actions on saturation sessions and losing firm author-stated actions on Step-drop . On Step-drop it matches Raw notes cell-for-cell ( 77 .8% accuracy, 
+
+𝜅 =0.63 ), but reaches that decision through explicit alignment between capsule and signal rather than through the LLM’s unconstrained judgment on raw text. The verify and verify + elevate variants differ only where the data demand it: identical on the saturation sessions ( 0/85 and 0/110 elevate events), with Substitute active only on Step-drop (14 /45 ), where it recovers +33 .4 pp accuracy and +0.48 𝜅 over verify alone. 
+
+Stress test with model-extracted EDE.. Replacing adjudicated Stage 1 outputs with Claude Sonnet 4.5 few-shot predictions asks where the pipeline degrades when Stage 1 is predicted. Stage 1 recall is high (Sat-A 87 .5% , Sat-B 100% , Step-drop 92 .3% ) but precision is lower in directive-dense regimes ( 87 .5% ,
+
+34 .8% , 47 .9% ), driven by over-detection. On Saturation-A (precision = recall = 87 .5% ), the proposed configuration degrades modestly ( 𝜅 +0.71 → + 0.51 ); on Saturation-B the executor still recovers +54 .6 pp accuracy over the raw LLM proposal on the same predicted input; on Step-drop predicted EDE routes many files to conservative review in a small, low-density session (Appendix F). Stage 1 precision is therefore the main bottleneck, but the intended safety property holds: unsupported strong actions are not emitted. 
+
+# 7 Conclusion 
+
+Lab notebooks carry a triage signal current pipelines rarely preserve: the author’s distinction between fact, judgment, and suggestion. Notes2Skills closes the loop from notebook to agent decision: an experimental note compiles into a MetaSkill artifact and survives extraction, skill loading, signal matching, and executor checking without losing the author’s certainty (Figure 5). Stage 2 preserves all 149 fixed directives across FreeNotes, ONS, and WLP, and on the downstream benchmark (§6.3), a 
+
+Notes2Skills skill with an evidence-aligned executor is the only tested configuration that avoids both observed failure modes across uncertainty-heavy and FACT -dominated sessions. Lab notebooks become verifiable skill sources for AI-for-Science when author certainty is preserved rather than flattened into actions. Southern University of Science and Technology 12  
+
+> Figure 5. Closing the loop: a case study on the wet experiment. A notebook note is compiled into a source-linked MetaSkill capsule, checked against signal evidence, and turned into a final decision through executor-side evidence alignment.
+
+# Limitations 
+
+This work studies lab notebooks with strong supporting context: the notes were written close to data collection, the raw records were preserved, and expert collaborators could judge how textual triage should affect later processing. This makes the evaluation more faithful than a standard crowd-sourced text task, but also harder to scale. Building FreeNotes required sustained collaboration with senior experimental researchers across two institutions, along with annotator training and repeated adjudication. Future work can broaden the scientific domains and operator backgrounds as more laboratories make notebooks, raw records, and expert judgments available under suitable data-sharing agreements. 
+
+# Ethics Statement 
+
+Notes2Skills extracts structured directives from lab notebook text. The FreeNotes corpus was contributed by two senior experimental researchers under a formal inter-institutional data-sharing agreement. The notebooks were authored independently of the Notes2Skills framework and used with the contributors’ consent. No third-party personal or sensitive data is present. ONS entries are drawn from openlabnotebooks.org under their open-content license with author attribution preserved. WLP segments are drawn from the Wet Lab Protocols corpus (Kulkarni et al., 2018) under its distribution terms. The epistemic-grading mechanism preserves author uncertainty rather than replacing human judgment. Downstream agent systems loading MetaSkill s should treat epistemic labels and provenance anchors as inputs to review-preserving decision policies, not as authorizations to bypass human oversight. Compiled skills are intended to support review-preserving scientific workflows, especially when downstream decisions affect experimental data inclusion or exclusion. LLMs were used for Stage 1 extraction and downstream agent evaluation. Stage 2 preservation artifacts are produced by deterministic compilers from fixed EDE inputs. Any LLM-assisted annotation or drafting during dataset preparation was human-reviewed before inclusion. Where raw ABF traces cannot be redistributed under the data-sharing agreement, we release the anonymized FreeNotes segments, EDE labels, gold file-level decisions, derived SignalFindings , prompts, model outputs, human-review deltas, and artifact hashes needed to audit the reported decisions. Southern University of Science and Technology 13 
+
+# References 
+
+Anthropic. Introducing agent skills. Online; https://www.anthropic.com/news/skills and https: //github.com/anthropics/skills , 2025. Open standard; specification at SKILL.md with YAML 
+
+frontmatter and progressive disclosure. Daniil A. Boiko, Robert MacKnight, Ben Kline, and Gabe Gomes. Autonomous chemical research with large language models. Nature , 624(7992):570–578, 2023. doi: 10.1038/s41586-023-06792-0. Andres M. Bran, Sam Cox, Oliver Schilter, Carlo Baldassari, Andrew D. White, and Philippe Schwaller. Augmenting large language models with chemistry tools. Nature Machine Intelligence , 6(5):525–535, 2024. doi: 10.1038/s42256-024-00832-8. Jacob Cohen. Weighted kappa: Nominal scale agreement provision for scaled disagreement or partial credit. Psychological Bulletin , 70(4):213–220, 1968. doi: 10.1037/h0026256. John Dagdelen, Alexander Dunn, Sanghoon Lee, Nicholas Walker, Andrew S. Rosen, Gerbrand Ceder, Kristin A. Persson, and Anubhav Jain. Structured information extraction from scientific text with large language models. Nature Communications , 15(1):1418, 2024. doi: 10.1038/s41467-024-45563-x. Anita de Waard and Jodi Schneider. Formalising uncertainty: An ontology of reasoning, certainty and attribution (ORCA). In Joint Workshop on Semantic Technologies Applied to Biomedical Informatics and Individualized Medicine (SATBI+SWIM 2012) at ISWC 2012 , volume 930 of CEUR Workshop Proceedings , pages 8–15, 2012. Richárd Farkas, Veronika Vincze, György Móra, János Csirik, and György Szarvas. The CoNLL-2010 shared task: Learning to detect hedges and their scope in natural language text. In Proceedings of the Fourteenth Conference on Computational Natural Language Learning – Shared Task , pages 1–12, Uppsala, Sweden, 2010. Association for Computational Linguistics. URL https://aclanthology. org/W10-3001/ .Sachin Kumar Giroh, Pushpendu Ghosh, Aryan Jain, Harshal Giridhari Paunikar, Aditi Rastogi, Promod Yenigalla, and Anish Nediyanchath. SYNTACT: Structuring your natural language SOPs into tailored ambiguity-resolved code templates. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: Industry Track , pages 2367–2376, Suzhou, China, 2025. Association for Computational Linguistics. URL https://aclanthology.org/2025.emnlp-industry.163/ .Juraj Gottweis, Wei-Hung Weng, Alexander Daryin, Tao Tu, Petar Sirkovic, Artiom Myaskovsky, and Grzegorz Glowaty. Accelerating scientific discovery with Co-Scientist. Nature , 2026. doi: 10.1038/s41586-026-10644-y. Accelerated Article Preview; additional authors omitted. Shuo Jiang, Daniel Evans-Yamamoto, Dennis Bersenev, Sucheendra K. Palaniappan, and Ayako Yachie-Kinoshita. ProtoCode: Leveraging large language models (LLMs) for automated generation of machine-readable PCR protocols from scientific publications. SLAS Technology , 29(3):100134, 2024. doi: 10.1016/j.slast.2024.100134. Chaitanya Kulkarni, Wei Xu, Alan Ritter, and Raghu Machiraju. An annotated corpus for machine reading of instructions in wet lab protocols. In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 2 (Short Papers) , pages 97–106, New Orleans, Louisiana, 2018. Association for Computational Linguistics. doi: 10.18653/v1/N18-2016. URL https://aclanthology.org/N18-2016/ .Diwakar Mahajan, Jennifer J. Liang, Ching-Huei Tsou, and Özlem Uzuner. Overview of the 2022 n2c2 shared task on contextualized medication event extraction in clinical notes. Journal of Biomedical Informatics , 144:104432, 2023. doi: 10.1016/j.jbi.2023.104432. Bodhisattwa Prasad Majumder, Bhavana Dalvi Mishra, Peter Jansen, Oyvind Tafjord, Niket Tandon, Li Zhang, Chris Callison-Burch, and Peter Clark. CLIN: A continually learning language agent for rapid task adaptation and generalization. arXiv preprint arXiv:2310.10134 , 2023. S. Hessam M. Mehr, Matthew Craven, Artem I. Leonov, Graham Keenan, and Leroy Cronin. A universal Southern University of Science and Technology 14 
+
+system for digitization and automatic execution of the chemical synthesis literature. Science , 370(6512): 101–108, 2020. doi: 10.1126/science.abc2986. Shinsuke Mori, Hirokuni Maeta, Yoko Yamakata, and Tetsuro Sasada. Flow graph corpus from recipe texts. In Proceedings of the Ninth International Conference on Language Resources and Evaluation (LREC’14) , pages 2370–2377, Reykjavik, Iceland, 2014. European Language Resources Association (ELRA). Odhran O’Donoghue, Aleksandar Shtedritski, John Ginger, Ralph Abboud, Ali Ghareeb, and Samuel Rodriques. BioPlanner: Automatic evaluation of LLMs on protocol planning in biology. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pages 2676–2694, Singapore, December 2023. Association for Computational Linguistics. doi: 10.18653/v1/2023. emnlp-main.162. URL https://aclanthology.org/2023.emnlp-main.162/ .Changhua Pei, Zexin Wang, Fengrui Liu, Zeyan Li, Yang Liu, Xiao He, Rong Kang, Tieying Zhang, Jianjun Chen, Jianhui Li, Gaogang Xie, and Dan Pei. Flow-of-action: SOP enhanced LLM-based multi-agent system for root cause analysis. In Companion Proceedings of the ACM Web Conference 2025 , pages 422–431, Sydney, NSW, Australia, 2025. Association for Computing Machinery. doi: 10.1145/3701716.3715225. Roser Saurí and James Pustejovsky. FactBank: a corpus annotated with event factuality. Language Resources and Evaluation , 43(3):227–268, 2009. doi: 10.1007/s10579-009-9089-9. Yu-Zhe Shi, Fanxu Meng, Haofei Hou, Zhangqian Bi, Qiao Xu, Lecheng Ruan, and Qining Wang. Expert-level protocol translation for self-driving labs. In Advances in Neural Information Processing Systems 37 (NeurIPS 2024) , 2024. URL https://openreview.net/forum?id=qXidsICaja .Nathan J. Szymanski, Bernardus Rendy, Yuxing Fei, Rishi E. Kumar, Tanjin He, David Milsted, Matthew J. McDermott, Max Gallant, Ekin Dogus Cubuk, Amil Merchant, Haegyeom Kim, Anubhav Jain, Christopher J. Bartel, Kristin Persson, Yan Zeng, and Gerbrand Ceder. An autonomous laboratory for the accelerated synthesis of inorganic materials. Nature , 624(7990):86–91, 2023. doi: 10.1038/s41586-023-06734-w. Author correction published as Nature 650 E1 (2026), DOI: 10.1038/s41586-025-09992-y. Ronen Tamari, Fan Bai, Alan Ritter, and Gabriel Stanovsky. Process-level representation of scientific protocols with interactive annotation. In Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume . Association for Computational Linguistics, 2021. URL https://aclanthology.org/2021.eacl-main.187/ .Paul Thompson, Giulia Venturi, John McNaught, Simonetta Montemagni, and Sophia Ananiadou. Categorising modality in biomedical texts. In Proceedings of the LREC 2008 Workshop on Building and Evaluating Resources for Biomedical Text Mining , pages 27–34, Marrakech, Morocco, May 2008. Özlem Uzuner, Brett R. South, Shuying Shen, and Scott L. DuVall. 2010 i2b2/VA challenge on concepts, assertions, and relations in clinical text. Journal of the American Medical Informatics Association , 18 (5):552–556, 2011. doi: 10.1136/amiajnl-2011-000203. Veronika Vincze, György Szarvas, Richárd Farkas, György Móra, and János Csirik. The BioScope corpus: biomedical texts annotated for uncertainty, negation and their scopes. BMC Bioinformatics , 9(Suppl 11):S9, 2008. doi: 10.1186/1471-2105-9-S11-S9. Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu, Linxi Fan, and Anima Anandkumar. Voyager: An open-ended embodied agent with large language models. Transactions on Machine Learning Research , 2024. arXiv:2305.16291; openreview.net/forum?id=ehfRiF0R3a. Zi-Han Wang, Lam Nguyen, Zhengyang Zhao, Mengyue Yang, Chengwei Qin, Yujiu Yang, and Linyi Yang. CreativeBench: Benchmarking and enhancing machine creativity via self-evolving challenges, 2026. URL https://arxiv.org/abs/2603.11863 . arXiv:2603.11863 [cs.AI]. Zora Zhiruo Wang, Jiayuan Mao, Daniel Fried, and Graham Neubig. Agent workflow memory. In Proceedings of the 42nd International Conference on Machine Learning (ICML 2025) , 2025. arXiv:2409.07429. Southern University of Science and Technology 15 
+
+Corpus Model / Cond. 𝐹 hd  
+
+> 1
+
+↑ 𝐹 dt ∗ 
+
+> 1
+
+↑ 𝐹 ep ∗ 
+
+> 1
+
+↑ QWK ep ↑ joint ↑ both-pos 𝑛 Num. Skills FreeNotes Claude Sonnet 4.5 / zs 0.611 0.242 0.861 0.788 0.267 11 30/31 Claude Sonnet 4.5 / fs 0.714 0.500 0.930 0.953 0.419 15 31/31 GPT-4o / zs 0.562 0.114 0.915 0.880 0.323 9 31/31 GPT-4o / fs 0.667 0.345 0.709 0.719 0.355 12 31/31 Qwen-Max / zs 0.588 0.367 0.444 0.444 0.323 10 31/31 Qwen-Max / fs 0.667 0.583 0.852 0.914 0.452 12 31/31 WLP Claude Sonnet 4.5 / zs 0.727 0.390 1.000 † 1.000 † 0.333 12 21/21 Claude Sonnet 4.5 / fs 0.750 0.328 1.000 † 1.000 † 0.333 12 21/21 GPT-4o / zs 0.800 0.320 1.000 † 1.000 † 0.333 12 21/21 GPT-4o / fs 0.774 0.380 0.916 0.833 0.333 12 21/21 Qwen-Max / zs 0.800 0.413 0.916 0.833 0.381 12 21/21 Qwen-Max / fs 0.750 0.306 0.916 0.833 0.238 12 21/21 ONS Claude Sonnet 4.5 / zs 0.737 0.339 0.650 0.364 0.750 7 32/35 Claude Sonnet 4.5 / fs 0.762 0.563 0.333 0.071 0.735 8 34/35 GPT-4o / zs 0.429 0.000 ‡ 0.556 ‡ 0.800 ‡ 0.686 3 35/35 GPT-4o / fs 0.667 0.190 0.667 0.400 0.714 6 35/35 Qwen-Max / zs 0.154 0.000 ‡ 1.000 ‡ 1.000 ‡ 0.657 1 35/35 Qwen-Max / fs 0.727 0.409 0.556 0.739 0.686 8 35/35 Overall Claude Sonnet 4.5 / zs 0.682 0.320 0.838 0.781 0.470 30 83/87 Claude Sonnet 4.5 / fs 0.737 0.500 0.830 0.761 0.523 35 86/87 GPT-4o / zs 0.632 0.272 0.891 0.946 0.471 24 87/87 GPT-4o / fs 0.706 0.392 0.791 0.720 0.494 30 87/87 Qwen-Max / zs 0.597 0.376 0.764 0.755 0.471 23 87/87 Qwen-Max / fs 0.711 0.500 0.813 0.834 0.494 32 87/87 
+
+Table 7. Exp 1 complete per-cell results (18 cells plus 6 pooled). Arrows ( ↑) mark metrics where higher is better. “both-pos 𝑛 ” is the subset where both gold and prediction have has_directive =1 (sample size, not a performance metric). “Num. Skills” = successfully parsed responses / total API calls. †: WLP epistemic_status metrics on a 2-class subset (no JUDGMENT in WLP test). ‡: both-pos 𝑛 ≤3, not statistically meaningful. fs: few-shot; zs: zero-shot. 
+
+# A Exp 1: Full Per-Cell Results and Parse Rates 
+
+Table 4 reports pooled metrics across the three corpora. This appendix reports the complete 18-cell breakdown plus parse statistics, together with the per-corpus difficulty, few-shot calibration, and error-pattern analyses summarized in §6.1. 
+
+Per-corpus difficulty.. WLP is the most stable corpus: 𝐹 hd  
+
+> 1
+
+falls in [0.727 , 0.800 ] across all six cells. FreeNotes shows the largest few-shot gains (Claude 𝐹 dt ∗ 
+
+> 1
+
+0.242 → 0.500 , Qwen-Max 0.367 → 0.583 ), consistent with bilingual code-switched text benefiting from exemplar grounding. ONS is the most variable. Qwen-Max zero-shot collapses to 𝐹 hd  
+
+> 1
+
+=0.154 (predicting has_directive =1 for only 2 of 35 segments) and recovers to 0.727 under few-shot. The collapse is a calibration failure on reflective-narrative text, corrected by exemplars rather than by underlying capability. 
+
+Few-shot as calibration.. Per-cell FN/FP counts on has_directive clarify the few-shot effect. GPT-4o and Qwen-Max are conservative-biased under zero-shot (FN >FP: GPT-4o 17/11, Qwen-Max 18/13) and shift to aggressive bias under few-shot (GPT-4o 11/14, Qwen-Max 9/17). Claude is aggressively biased in both conditions. Few-shot rebalances the FN/FP decision boundary in the direction set by the model’s zero-shot bias rather than uniformly increasing accuracy. Southern University of Science and Technology 16 
+
+Error patterns on directive_type . Aggregated across 18 (model, condition, corpus) cells, the most frequent confusions on the both-positive subset are FLAG_DATA → PROTOCOL_CHANGE (20 errors, where flag-data segments mentioning remedial action are read as deliberate procedure changes), PROTOCOL_CHANGE 
+
+→ CONDITION_CHANGE (17 errors), and a tied third-place pair PROTOCOL_CHANGE → PARAMETER_SHIFT 
+
+and PARAMETER_SHIFT → FLAG_DATA (13 errors each). On epistemic_status , the largest error flow is across the FACT –JUDGMENT boundary ( FACT → JUDGMENT 8 errors, reverse 5 errors). Gold JUDGMENT is never predicted as SUGGESTION , suggesting JUDGMENT acts as an over-attracting class for hedged language. 
+
+Full-vocabulary sensitivity.. Replacing observed-labels macro-𝐹 1 on directive_type with the full DT5 vocabulary coincides exactly at the pooled Overall level (all 5 classes appear in both gold and prediction). Divergence appears only at the per-corpus level on ONS, whose test fold contains gold-positive segments in just 2 of 5 DT classes. Full-vocabulary ONS 𝐹 dt  
+
+> 1
+
+runs 0.000 –0.338 vs 0.000 –0.563 under observed-labels. The model ranking is unchanged. 
+
+# B API Access and Response Filtering 
+
+All Stage 1 API calls were issued through OpenAI-compatible chat-completion endpoints with the prompts and decoding parameters reported in Appendix K. A small number of calls returned empty responses under provider-side filtering. We retried these calls through an independent endpoint and retained successful retries. The remaining empty responses account for 5/522 calls and are excluded from primary scoring; the affected cells are recorded in the released prompt-response logs. 
+
+# C Operational Formality Measurements 
+
+We measure corpus formality along three proxies: surface regularity (density of advisory prefixes such as “Note:” and “Warning:”, capitalized imperatives, and template sentences), code-switching rate (proportion of segments with tokens in a non-dominant language), and author-audience distance (categorical per corpus: self-only, small-known, or anonymous-reader). Surface regularity is high in WLP and near zero in FreeNotes. Code-switching rate is high in FreeNotes (Chinese-English mixing is the norm) and near zero in WLP and ONS. Author-audience is self-only for FreeNotes, small-known for ONS, and anonymous-reader for WLP. On at least two of three proxies, the ordering WLP > ONS > FreeNotes holds. We report all three measurements rather than collapsing to a single formality score, so cross-formality results remain interpretable at the proxy level. 
+
+# D Annotation Guideline and Gold Construction 
+
+Stage 1 annotation follows a three-part guideline (Part I covering the framework, applicable to all corpora; Part II covering corpus-specific operational rules). The guideline defines the pipeline-behavior test for directive detection, a type-selection flowchart, and a deterministic epistemic-status assignment procedure. A companion document specifies boundary cases and worked examples from pilot annotation. Two annotators independently labeled stratified subsamples (60 FreeNotes, 60 ONS, 90 WLP). The second annotator received only raw segment text, the shared guideline, and a fixed exemplar set, with no access to the primary annotator’s labels or to LLM assistance. Marker vocabularies are curated per language (Chinese-English for FreeNotes, English for WLP, and ONS). For the three FreeNotes sessions used in Exp 3, file-level golds were constructed from three evidence sources: the relevant notebook directives, the raw signal findings produced by Layer 1, and session metadata such as voltage phase and solution-change history. Two annotators independently cross-checked the file-level action labels under the five-action vocabulary, and disagreements were adjudicated before any agent outputs were evaluated. The downstream gold is thus an adjudicated operational label set grounded in notebook and signal evidence, not a copy of a single annotator’s post-experiment preference or of the agent’s output vocabulary. Stage 2 artifacts are generated from adjudicated EDE JSONL files by a deterministic compiler. FreeNotes is compiled per session (each session encodes its own voltage stepping, solution-change history, Southern University of Science and Technology 17 
+
+and instrument condition). WLP and ONS are compiled at the corpus level, yielding a single 70-capsule 
+
+MetaSkill spanning the 20 directive-bearing WLP documents and a single 31-capsule MetaSkill 
+
+spanning all 9 ONS entries. Per-document compilation is a configuration choice the compiler supports but does not enforce, and the present corpus-level compilation for WLP/ONS keeps capsule counts canonical for the cross-corpus audit. 
+
+# E MetaSkill Capsule Schema 
+
+This appendix specifies the agent-readable JSON capsule embedded with each directive in the compiled 
+
+MetaSkill Markdown document (§3.2). The capsule is the contract between Notes2Skills and downstream agents: every field below is required unless marked optional, and the compiler emits identical universal structure regardless of corpus. 
+
+Universal capsule.. Every directive in every compiled skill (FreeNotes, WLP, ONS) carries the following fields:         
+
+> {"directive_id": "Session A_s020", "source_segment_id": "SessionA_s020", "display_id": "D04", "directive_type": "FLAG_DATA", "epistemic_status": "JUDGMENT", "uncertainty_markers": ["uncertain"], "flag_scope": "REMAINDER", "carries_from": ["D03"], "provenance_ref": { "segment_id": "SessionA_s020", "source_ede_jsonl": "SessionA_ede.jsonl", "raw_excerpt_sha256": "a3f2c1...e9" }}
+
+Field Type / values Role 
+
+directive_id string <doc>_<seg> Canonical identity 
+
+source_segment_id string Source anchor 
+
+display_id D<n> / C<n> Human-facing label 
+
+directive_type 5-way enum (§3.1) Action category 
+
+epistemic_status FACT / JUDGMENT / SUGGESTION Certainty label 
+
+uncertainty_markers list[string] Verbatim hedge spans 
+
+flag_scope SEGMENT / REMAINDER / FULL / null FLAG_DATA scope 
+
+carries_from list[display_id] Cross-directive link 
+
+provenance_ref object (3 sub-fields) SHA-anchored source link 
+
+Domain policy layer (FreeNotes only).. For corpora that carry a tiered action policy (§3.2), the capsule additionally exposes:        
+
+> {... "default_action": "FLAG_FOR_REVIEW", "default_action_tier": "conservative", "explicit_authorization": { "authorized": false, "category": null, "matched_evidence": [] }, Southern University of Science and Technology 18
+> "candidate_actions": [ {"action": "TRUNCATE_AT", "source": "original_EDE_action", "candidate_parameters": {"truncate_at_s": 32.0}, "parameter_status": "compiler_inferred_requires_review", "status": "candidate_not_default", "reason_not_default": "non-FACT epistemic status", "requires_review": true }]}
+
+Field Type / values Role 
+
+default_action action name (closed vocab) Compiler’s default 
+
+default_action_tier strong / mid / conservative / context Authorization gate 
+
+explicit_authorization object Authorization evidence 
+
+.authorized bool Strong-action license 
+
+.category enum or null Authorization pattern 
+
+.matched_evidence list[[pattern, match]] Source phrases 
+
+candidate_actions list[object] Non-default candidates 
+
+For directives with default_action = TRUNCATE_AT , the capsule includes an additional truncate_boundary 
+
+sub-object carrying the coordinate-system disambiguation ( boundary_value_s , boundary_coordinate_system ,
+
+requires_file_context_conversion , boundary_evidence_amplitude_nA , boundary_extracted_from ,
+
+conversion_note ) required by the Layer 3 executor (§5.5). 
+
+Schema validity invariants.. The Exp 2 audit (§6.2) verifies the following count-based invariants for every compiled MetaSkill :1. Directive preservation : the set of EDE segments with has_directive = 1 equals the set of compiled capsules (1:1, no merging, no dropping). 2. Certainty agreement : each capsule’s epistemic_status equals the source EDE epistemic_status .3. Source-link chain : each capsule’s provenance_ref.raw_excerpt_sha256 equals sha256( corresponding Markdown blockquote ), and the blockquote is a verbatim substring of the source segment’s 
+
+raw_text .4. Schema validity : every capsule parses as JSON; every default_action appears in the domain’s Action Vocabulary section; every flag_scope matches the source EDE field; every TRUNCATE_AT 
+
+default carries a truncate_boundary sub-object. 
+
+# F Downstream Accuracy Confidence Intervals 
+
+Table 8 reports Wilson 95% confidence intervals for file-majority accuracy in Table 6. Intervals are computed over the file-majority outcome for each session, so they reflect the small number of evaluated files rather than the five API repeats per file. We report them as uncertainty checks on the decision-level point estimates. Confidence intervals for bAcc, macro 𝐹 1, and 𝜅 require class-specific resampling and are not inferred from aggregate table cells. Southern University of Science and Technology 19 
+
+Condition Saturation-A Saturation-B Step-drop 
+
+𝑛 /𝑁 95% CI 𝑛 /𝑁 95% CI 𝑛 /𝑁 95% CI External LLM (no skill) 0/17 [0.0, 18.4] 2/22 [2.5, 27.8] 8/9 [56.5, 98.0] Action-only skill 5/17 [13.3, 53.1] 2/22 [2.5, 27.8] 8/9 [56.5, 98.0] + executor 15/17 [65.7, 96.7] 20/22 [72.2, 97.5] 4/9 [18.9, 73.3] Raw notes 8/17 [26.2, 69.0] 2/22 [2.5, 27.8] 7/9 [45.3, 93.7] 
+
+Notes2Skills skill 3/17 [6.2, 41.0] 8/22 [19.7, 57.0] 4/9 [18.9, 73.3] + executor (verify) 15/17 [65.7, 96.7] 22/22 [85.1, 100.0] 4/9 [18.9, 73.3] 
+
++ executor (verify + elevate) 15/17 [65.7, 96.7] 22/22 [85.1, 100.0] 7/9 [45.3, 93.7] 
+
+Stress test: predicted EDE 14/17 [59.0, 93.8] 15/22 [47.3, 83.6] 2/9 [6.3, 54.7] 
+
+Table 8. File-majority accuracy counts and Wilson 95% confidence intervals corresponding to Table 6. Each cell shows successes/files and the [lower, upper] bound in percentage points. 
+
+# G Trivial Always-FLAG Baseline 
+
+Table 9 reports the file-majority metrics for a trivial predictor that emits FLAG_FOR_REVIEW for every file in each session. The accuracy column is high on the saturation sessions only because of class imbalance; the bAcc, macro 𝐹 1, and 𝜅 columns collapse to chance, confirming that the executor-driven FLAG recovery (§6.3) is not a majority-class artifact. 
+
+Session Acc bAcc Macro 𝐹 1 𝜅 
+
+Saturation-A 82.4 25.0 22.6 0.000 Saturation-B 90.9 33.3 31.7 0.000 Step-drop 44.4 33.3 20.5 0.000 
+
+Table 9. Always-FLAG_FOR_REVIEW trivial baseline under the same file-majority evaluation as Table 6. High raw accuracy on the saturation sessions does not imply good downstream behavior; balanced accuracy, macro 𝐹 1, and 𝜅 
+
+collapse because rare strong actions are never recovered. 
+
+# H FreeNotes Legacy-Action Diagnostic (Exp 2-B) 
+
+For FreeNotes alone we additionally compare the final MetaSkill compiler against an earlier action-first representation. This diagnostic is reported for FreeNotes because it is the corpus with both the final 
+
+MetaSkill artifacts and earlier action-first artifacts, allowing a direct mechanism comparison. It asks whether operational actions from the earlier representation are preserved as default actions, preserved as candidate actions, or rejected by the final compiler’s type discipline. 
+
+Regime Rec. Def. Cand. Reject 
+
+Step-drop 0.90 0.50 0.40 0.10 Saturation-A 1.00 0.25 0.75 0.00 Saturation-B 1.00 0.25 0.75 0.00 
+
+Table 10. FreeNotes legacy-action diagnostic. Rec. is total preservation recall (fraction of legacy operational actions retained either as default or as candidate). Def. is retained as default; Cand. is retained as candidate only; 
+
+Reject is rejected by directive-type discipline (e.g., a legacy file-level action attached to a context-tier directive). Rejection is intended behavior, not a preservation failure. 
+
+The final compiler does not mechanically copy action-first decisions. It preserves operational traces when they remain licensed, downgrades many strong actions to candidates, and rejects actions that violate directive-type discipline. This is the intended behavior of a Notes2Skills skill: it carries operational memory forward without silently converting every prior strong action into a default commitment. Southern University of Science and Technology 20 
+
+# I Cross-Channel Sanity Check Details 
+
+Three encodings are available per file on the Step-drop session: (i) Author judgment , a 1–5 ordinal intensity score derived from the verbatim source excerpt of directives anchored to the file (e.g., score 5 = “events observable, suggested as cross-read anchor”; score 1 = “cannot judge whether events exist”); (ii) 
+
+Filename marker , the substring the author chose at recording time ( Better , Not Sure , After Flushing ); (iii) Signal density , translocation events per 100 s computed by Layer 1. Across the nine files, Spearman’s 𝜌 (intensity, density) = 0.726 (𝑝 = 0.027 ). Within-300 mV ordering across the three files marked Not Sure , Second Read Not Sure , and Better yields 𝜌 = 1.000 across translocation counts of 38, 128, and 1002, a 26-fold spread that the filename marker alone predicts monotonically. Pre-flush versus post-flush translocation totals at the same voltage yield 17 .6× at 100 mV and 39 .1× at 200 mV in favor of the pre-flush phase. Filename markers are used only for this diagnostic and are not present in the agent prompt, the skill capsule, or the SignalFindings record consumed by Layer 2 or Layer 3. The decision pipeline uses opaque file identifiers rather than filename-marker text. 
+
+Bootstrap CI for Step-drop predicted-EDE.. We resample with replacement from the 9 file-majority outcomes (1, 1, 0, 0, 0, 0, 0, 0, 0) for 2000 iterations under numpy.random.seed(42) , then take the 2.5% and 97.5% percentiles. The result is [0.000 , 0.556 ].
+
+# J Sensitivity to 𝜅 Weighting 
+
+The downstream evaluation (Table 6) reports unweighted Cohen’s 𝜅 . The methodological motivation (five-action discrete pipeline dispatch rather than continuous severity) is given in §5.4. Table 11 reports quadratic-weighted Cohen’s 𝜅 on the same per-file gold labels and majority-vote predictions as a sensitivity check, computed with sklearn.metrics.cohen_kappa_score using weights="quadratic" .Three properties of §6.3 are preserved under QWK: (i) the proposed configuration dominates the Action-only skill on both saturation sessions, by a wider margin than under unweighted 𝜅 (0.857 vs 0.250 on 
+
+Saturation-A ; 1.000 vs 0.543 on Saturation-B ); (ii) the Action-only skill retains its vocabulary-alignment advantage on the FACT -dominated Step-drop session ( 0.941 vs 0.500 for the proposed configuration); (iii) the elevate license is necessary on Step-drop : it elevates the proposed configuration’s 𝜅 QWK from −0.174 
+
+(ordinally anti-correlated with the gold) to 0.500 , a swing of +0.674 that is more pronounced than the corresponding +0.48 swing under unweighted 𝜅 . QWK’s reduced penalty for adjacent-class confusion widens the Action-only lead on Step-drop (from +0.17 under unweighted 𝜅 to +0.44 under QWK) and amplifies the negative-to-positive swing on the proposed configuration. The qualitative paradigm contrasts of §6.3 are unchanged.                          
+
+> Condition Sat-A Sat-B Step-drop
+> Action-only skill 0.250 0.543 0.941 Raw notes 0.362 0.423 0.500
+> Notes2Skills skill 0.514 0.362 −0.174
+> + executor (verify) 0.857 1.000 −0.174
+> + executor (verify + elevate) 0.857 1.000 0.500 Table 11. Quadratic-weighted Cohen’s 𝜅 on file-majority decisions, corresponding to Table 6. Computed under
+> weights="quadratic" on the same per-file gold labels and majority-vote predictions. The “Action-only skill + executor” and stress test rows are not included in the audited subset; their QWK values follow the same formula from the per-file decision records, and the qualitative pattern documented in §6.3 is unaffected.
+
+# K Prompt Templates 
+
+This appendix reports the prompt templates used in Stage 1 directive extraction (Exp 1, §6.1) and in the Layer 2 agent loop (Exp 3, §6.3). Stage 2 is deterministic and uses no LLM in the loop (§5.2). Southern University of Science and Technology 21 
+
+K.1 Stage 1: EDE prompt 
+
+Stage 1 uses a shared core system message plus a per-corpus framing paragraph. All three backbones (GPT-4o, Claude Sonnet 4.5, Qwen-Max) receive identical text under both zero-shot and few-shot conditions; decoding is greedy (temperature 0). 
+
+System message – shared core.. 
+
+You are an annotation assistant for the Epistemic Directive Extraction (EDE) task. Given a single segment of scientific text, predict three labels. # Task overview For each segment, decide: 1. has_directive (binary, 0 or 1) - 1 if the segment carries an actionable directive that should influence downstream pipeline behavior (changes a parameter, flags data quality, suggests an analysis, modifies the protocol, or changes a condition). - 0 if the segment is purely descriptive, a passing observation, an introduction, or a generic procedural step with no decision-changing content. 2. directive_type (5 classes, only when has_directive=1; otherwise null) - FLAG_DATA: a warning about data validity, contamination, exclusion, or quality concerns affecting downstream interpretation. - CONDITION_CHANGE: changing experimental conditions, sample types, reagent versions, or environmental setup. - ANALYSIS_SUGGESTION: a recommendation about how to analyze, measure, or examine data/samples. - PROTOCOL_CHANGE: modifying a procedural step (skip, repeat, add, reorder). - PARAMETER_SHIFT: changing a numerical parameter (time, temperature, volume, concentration, voltage). 3. epistemic_status (3 classes, only when has_directive=1; otherwise null) - FACT: the writer states the directive as a definite outcome. No hedging. - JUDGMENT: the writer expresses uncertainty, qualitative assessment, or a tentative interpretation ("seems", "may", "looks like"; bilingual hedge markers also listed for FreeNotes; see released code for exact UTF-8 strings). - SUGGESTION: the writer offers an optional or recommended action with user discretion ("recommend", "optional", "if desired", "should consider"; bilingual equivalents in released code). # Output format Respond with ONLY a single JSON object on one Southern University of Science and Technology 22 
+
+line, no preamble, no markdown, no explanation: {"has_directive": 0, "directive_type": null, "epistemic_status": null} or {"has_directive": 1, "directive_type": "FLAG_DATA", "epistemic_status": "JUDGMENT"} # Constraint If has_directive=0, both directive_type and epistemic_status MUST be null. If has_directive=1, both directive_type and epistemic_status MUST be non-null. 
+
+System message – per-corpus framing.. The core message is concatenated with one of the following framing paragraphs. 
+
+FreeNotes: 
+
+# Corpus context Segments come from informal bilingual (Chinese/English) nanopore electrophysiology lab notebooks. Text is short, often colloquial, may mix Chinese and English in one segment. Authors frequently use bilingual hedge phrases (English: "looks like", "unclear", "don 't know", "may", "seem"; Chinese equivalents in released code). 
+
+ONS: 
+
+# Corpus context Segments come from semi-formal Open Notebook Science (ONS) entries written in English. Style is reflective and narrative, with the author describing their day 's work or plans. Many segments are introductory or summary sentences without actionable directives. 
+
+WLP: 
+
+# Corpus context Segments come from published Wet Lab Protocols (WLP) on protocols.io. Text is formal English in imperative style. Common markers: "Note:", "Tip:", "Optional:", "OPTIONAL:", "Safe Stopping Point:", "DO NOT" (all-caps), "may be kept for [duration]" (storage spec), "should be X" (procedure or parameter). 
+
+User message – zero-shot.. 
+
+Segment: """ {raw_text} """ Predict the JSON tuple. Southern University of Science and Technology 23 
+
+User message – few-shot.. The few-shot user message prepends 𝑘 stratified exemplars to the zero-shot template ( 𝑘 =6 for FreeNotes, 𝑘 =5 for WLP and ONS; §5.1): 
+
+> Here are {k} examples, then your target segment. # Example 1 Segment: """ {exemplar_text_1} """ Answer: {"has_directive": 1, "directive_type": "FLAG_DATA", "epistemic_status": "JUDGMENT"} # Example 2 ... # Target Segment: """ {raw_text} """ Answer:
+
+Exemplars are sampled once per corpus from the document-stratified train fold (seed 42), with one exemplar per directive_type class observed in the train fold plus one has_directive =0 negative. The same exemplar set is reused for every test segment. CONDITION_CHANGE appears only in the FreeNotes train fold, which is why 𝑘 =6 for FreeNotes and 𝑘 =5 for the other two corpora. 
+
+K.2 Exp 3: Layer 2 agent prompt 
+
+The Layer 2 prompt has two forms. The external-LLM baseline uses a self-contained system and user prompt described in the next paragraph; it does not share structure with the other six conditions. For the remaining six conditions, the system prompt is assembled at runtime as BASE + SUFFIX + (loaded skill body, when applicable) + (conservative execution rules, when the executor is enabled; §K.3 below). The base prompt and the user message are identical across these six conditions; only the suffix and the loaded skill body differ. 
+
+External-LLM baseline (no skill) – full prompt.. This condition uses a standalone prompt unrelated to the shared base above. The complete system prompt is: 
+
+You are an assistant helping a scientist decide how to process nanopore single-molecule sensing recording files. For each file, choose exactly one of these five actions: - KEEP_FULL: keep the full recording for downstream analysis as-is. - FLAG_FOR_REVIEW: keep the file but mark it for human review before analysis. - RAISE_THRESHOLD: keep the file but raise the event-detection threshold. - TRUNCATE_AT: truncate the recording at a specific timestamp. - SKIP_FILE: exclude the file from downstream analysis. The notebook below was written by the scientist during the experiment. It may contain firm observations, tentative interpretations the scientist was unsure about, and forward-looking Southern University of Science and Technology 24 
+
+suggestions for follow-up. Please consider the author 's level of certainty when choosing an action: act on firm observations, treat tentative interpretations conservatively, and treat forward-looking suggestions as advisory only. Emit your decision by calling the `emit_decision `
+
+tool. Provide a brief rationale. 
+
+The user message template is: 
+
+Notebook for this experimental session: {RAW_NOTEBOOK_TEXT} --Signal findings for the current file (`{FILE_ID} `): {SIGNAL_FINDINGS_JSON} --Based on the notebook and the signal findings above, choose one action for this file by calling `emit_decision `.
+
+{RAW_NOTEBOOK_TEXT} is the full session notebook extracted from the source DOCX as body-order paragraph and table text; {FILE_ID} is the file’s on-disk identifier; {SIGNAL_FINDINGS_JSON} is the canonical JSON serialization of the same Layer 1 record consumed by the other six conditions. 
+
+Shared base.. 
+
+You are a nanopore signal-processing decision agent. Your task: given signal findings extracted from one ABF (Axon Binary Format) current-trace file, decide the appropriate ProcessingDecision for that file by calling the `emit_decision ` tool exactly once. # Available actions - KEEP_FULL: use the entire trace as-is. - TRUNCATE_AT: trim the trace at a timestamp; provide `truncate_at_s `.- RAISE_THRESHOLD: use elevated event-detection threshold; provide `threshold_multiplier `.- FLAG_FOR_REVIEW: include in analysis but flag the file for human review. - SKIP_FILE: exclude the file entirely from analysis. The five actions form an ordered severity scale: KEEP_FULL < FLAG_FOR_REVIEW < RAISE_THRESHOLD < TRUNCATE_AT < SKIP_FILE. 
+
+Suffix – Action-only skill.. Identifier: flat_directive_list_v1 .
+
+# Reasoning protocol -- flat directive list A flat list of author directives is loaded below. There are NO decision_points, NO Southern University of Science and Technology 25 
+
+recovery_strategies, NO parameter_space, NO trigger_conditions. Each directive has: - `action ` and `action_parameters `
+
+- `epistemic_status ` in {FACT, JUDGMENT, SUGGESTION} - `confidence_weight ` in {1.0, 0.6, 0.3} - `uncertainty_markers ` (verbatim hedges) - `raw_excerpt ` (verbatim source text) - `source_segment ` (provenance label) Examine each directive against signal_findings to determine whether it applies to the current file. Apply matching directives weighted by their confidence. The author 's epistemic confidence should inform how decisively you act. # Executable action mapping - `truncate_at_step_drop ` -> TRUNCATE_AT - `flag_full_file_uncertain ` -> FLAG_FOR_REVIEW - `flag_remainder_uncertain ` -> RAISE_THRESHOLD - `raise_threshold_in_window ` -> RAISE_THRESHOLD - `confirm_events_observable ` -> ADVISORY - `cross_read_comparison ` -> ADVISORY - `split_processing_phases ` -> ADVISORY When multiple directives apply, the most severe action wins. # Directives (loaded for this run) 
+
+Suffix – Raw notes.. Identifier: markdown_evidence_only_v1 .
+
+# Reasoning protocol -- notebook excerpts A Markdown document containing curated notebook excerpts is included below. Each excerpt has a 
+
+`source_segment ` label and the original text. You have no other information about the author 'sintent. Infer cautiously by reading the excerpts together with the numerical signal findings. Do not assume that any excerpt is an executable instruction; treat each as a piece of evidence from the lab record. Decide which excerpts (if any) apply to the current file by matching language cues (voltage values, time references, descriptive judgments) against signal_findings. When you call `emit_decision `, list the relevant 
+
+`source_segment ` labels (e.g., `SessionA_s020 `) in 
+
+`contributing_directives `. If no excerpt clearly applies, leave `contributing_directives ` empty. # Excerpts (loaded for this run) 
+
+Suffix – Notes2Skills skill.. Identifier: markdown_skill_v1 . This is the proposed configuration. The agent receives the compiled MetaSkill Markdown body (§3.2; capsule schema in Appendix E) preceded by the protocol below. The YAML frontmatter and the ## Provenance section of the on-disk SKILL.md 
+
+are stripped before insertion to avoid leaking build metadata, audit identifiers, and source-jsonl filenames into the agent’s prompt; the on-disk file is never mutated. 
+
+# Reasoning protocol -- Markdown skill A Markdown skill document is included below. Read it as natural-language guidance for handling the Southern University of Science and Technology 26 
+
+current `.abf ` file. The document defines: - the action vocabulary used in this domain; - the core decision principle; - per-directive guidance with the author 'sverbatim notebook excerpts, an epistemic interpretation, a `default_action `, and optionally `candidate_action `(s) that require human review; - a decision policy and a list of known failure modes. # Tool action mapping The `emit_decision ` tool accepts these five actions: KEEP_FULL, TRUNCATE_AT, RAISE_THRESHOLD, FLAG_FOR_REVIEW, SKIP_FILE. The Markdown skill also uses `KEEP_FULL_WITH_NOTE `
+
+as the default action for context directives. When the appropriate decision is 
+
+`KEEP_FULL_WITH_NOTE `, emit `KEEP_FULL ` and place the contextual note content in the `rationale `
+
+field of `emit_decision `.# Directive identifiers Each directive has a `display_id ` of the form 
+
+`D01..Dn ` (file-level) or `C01..Cm ` (context). Use these IDs in the `contributing_directives `
+
+field of `emit_decision `.# Skill (loaded for this run) 
+
+User message.. The user message is identical across all conditions and carries the per-file SignalFindings 
+
+JSON (Layer 1 output, §5.3): 
+
+signal_findings for the current ABF file: 
+
+``` json {findings_json} 
+
+``` 
+
+Please reason briefly about which directive(s) (if any) apply to this file and what the appropriate ProcessingDecision is. Then call 
+
+`emit_decision ` exactly once with your final answer. 
+
+K.3 Conservative execution rules 
+
+For the executor-enabled conditions in Table 3 ( Action-only + executor , Notes2Skills + verify ,
+
+Notes2Skills + verify + elevate ), the following rules text is loaded from a single file on disk and appended verbatim to the system prompt as a final block. The text below reproduces that file (conservative_execution_rules.md v1.0). The same byte content is used across all three condi-tions; the commit hash of the source file anchors the audit chain. 
+
+Purpose.. These rules govern how the Layer 2 agent translates notebook-derived skill content into a single downstream processing action. They are designed to prevent the conversion of epistemic uncertainty into automated intervention while preserving the agent’s ability to follow explicit operational directives. They are not designed to maximize ordinary classification accuracy on any particular session. 
+
+Action vocabulary.. The agent must select exactly one action from { KEEP_FULL , FLAG_FOR_REVIEW ,
+
+RAISE_THRESHOLD , TRUNCATE_AT , SKIP_FILE }. When TRUNCATE_AT is selected, the agent must report Southern University of Science and Technology 27 
+
+the most specific time point or event boundary supported by the skill content or signal findings; it must not invent a boundary not present in the input. 
+
+Core principle.. The agent distinguishes two categories of skill content: 
+
+• Epistemic uncertainty : the skill or notebook indicates that the evidence is weak, tentative, ambiguous, low-confidence, unresolved, questionable, or otherwise uncertain. 
+
+• Explicit operational directive : the skill or notebook provides a concrete processing instruction, identified by at least one of a specific time point or event boundary, a specific threshold value or adjustment magnitude, a clearly localized window for intervention, or an explicit non-target file designation. 
+
+Critical rule : epistemic uncertainty alone does not authorize TRUNCATE_AT , RAISE_THRESHOLD , or 
+
+SKIP_FILE . These actions require an explicit operational directive. When the skill expresses uncertainty without an accompanying operational directive, the agent must select FLAG_FOR_REVIEW .
+
+Binding rules.. Rule 1 – SKIP_FILE . Select SKIP_FILE only when the file is identified as outside the scope of downstream experimental processing: a reference, control, calibration, or blank recording; a procedural or auxiliary role (system preparation, cleaning, flushing); explicitly marked as not part of the experimental target set; or described as serving a different experimental role rather than as an uncertain experimental result. Do not select SKIP_FILE when the signal is weak or noisy, the evidence is uncertain, the notebook expresses hesitation or recommends human inspection, or the signal quality is imperfect but the file remains potentially informative. Route such cases to 
+
+FLAG_FOR_REVIEW .
+
+Rule 2 – TRUNCATE_AT . Select TRUNCATE_AT only when the skill provides an explicit truncation basis, requiring all of: (i) a specific time point, event boundary, or before/after transition; (ii) a concrete reason localized to the post-boundary region (contamination, saturation, artifact, post-event failure); (iii) the skill identifies truncation as a needed processing step, not a tentative possibility. Do not 
+
+select TRUNCATE_AT when later signal is described as uncertain without an identified boundary, the notebook describes general degradation without specifying when it begins, or hedged language is present without an accompanying explicit boundary and concrete operational reason. 
+
+Rule 3 – RAISE_THRESHOLD . Select RAISE_THRESHOLD only when the skill provides at least one of a specific threshold value, a specific adjustment magnitude, a clearly localized window for stricter thresholding, or a direct operational instruction to filter weak or noisy events. Conditional formulations such as “consider raising threshold” or “may need a stricter cutoff” without a specific value, magnitude, or localized window route to FLAG_FOR_REVIEW .
+
+Rule 4 – FLAG_FOR_REVIEW . The default conservative action when the skill expresses epistemic uncer-tainty and none of Rules 1–3 are satisfied by an explicit operational directive. Valid reasons include weak evidence, tentative interpretation, ambiguous signal quality, low-confidence event identification, unresolved disagreement between signal evidence and notebook interpretation, insufficient evidence for automatic exclusion, truncation, or threshold adjustment, a notebook recommendation that human inspection is needed, or hedged language without a concrete directive. Selecting FLAG_FOR_REVIEW preserves the file for human or downstream expert inspection. 
+
+Rule 5 – KEEP_FULL . Select KEEP_FULL only when the file appears usable as a complete recording, no unresolved uncertainty is expressed in the skill for this file, no explicit intervention is specified by Rules 1–3, and the file is not identified as a non-target recording. 
+
+Hedged language.. The terms below indicate epistemic uncertainty. The list is illustrative; the agent treats any natural-language expression of epistemic uncertainty as covered, not only the listed terms.          
+
+> Modal/conditional Evaluative Limiting
+> may, might, could weak, tentative, questionable not sure, unclear consider, possibly, maybe ambiguous, low confidence needs checking, need to inspect if needed, if appropriate seems, appears uncertain, unresolved Southern University of Science and Technology 28
+
+When such language is present without an accompanying explicit operational directive (a specific timestamp, threshold value, adjustment magnitude, localized window, or non-target file designation), the agent must not select TRUNCATE_AT , RAISE_THRESHOLD , or SKIP_FILE ; the correct selection is 
+
+FLAG_FOR_REVIEW .
+
+Prohibited decision patterns.. 
+
+1. Uncertainty-to-intervention escalation : selecting TRUNCATE_AT , RAISE_THRESHOLD , or SKIP_FILE 
+
+solely because evidence is weak or uncertain. 2. Hedge-as-command interpretation : treating phrases such as “might raise threshold” or “consider truncating” as mandatory operational instructions. 3. Review-to-discard conversion : treating “needs review” or “requires inspection” as a reason to skip, truncate, or raise threshold. 4. Boundary invention : selecting TRUNCATE_AT without a specific time point or event boundary present in the skill or findings. 5. Threshold invention : selecting RAISE_THRESHOLD without a concrete threshold value, adjustment magnitude, localized window, or explicit thresholding directive present in the skill or findings. 6. Always-FLAG collapse : selecting FLAG_FOR_REVIEW for every file, including files for which an explicit SKIP_FILE , TRUNCATE_AT , or RAISE_THRESHOLD directive is present in the skill content. 
+
+Scope.. These rules govern action selection for files whose skill content can be evaluated against a single, internally consistent epistemic state. The document does not specify behavior for files whose skill content is internally contradictory between two operational directives, for files for which signal findings and skill directives point to incompatible actions, or for files for which the skill content is empty or absent. In such cases the agent defaults to FLAG_FOR_REVIEW ; the basis is unresolved skill content rather than evaluated epistemic uncertainty.

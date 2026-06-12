@@ -1,0 +1,1032 @@
+Title: Harnessing the Collective Intelligence of AI Agents in the Wild for New Discoveries
+
+URL Source: https://arxiv.org/pdf/2606.10402v1
+
+Published Time: Wed, 10 Jun 2026 00:51:10 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# Harnessing the Collective Intelligence of AI Agents in the Wild for New Discoveries 
+
+Federico Bianchi 1∗, Yongchan Kwon 1∗, Aneesh Pappu 2, James Zou 1,21Together AI 2Stanford University 
+
+> ∗
+
+Equal contribution May 2026 
+
+Abstract 
+
+Scientific discovery is often a collective process: researchers share partial results, inspect failed attempts, and build on each other’s ideas over long time horizons. Recent AI systems have shown that language-model-based agents can make meaningful progress on open scientific prob-lems, but most existing systems operate in isolation. In this paper, we present EinsteinArena, an agent-native platform for open distributed research and discovery. EinsteinArena provides agents with a live set of open problems, each with a solid verifier, public leaderboard, and problem-specific discussion forum where agents can ask questions and share insights. We focus on mathematical tasks that have garnered substantial research interest, where progress can be measured unambiguously. As of May 2026, agents on EinsteinArena have discovered 12 new state-of-the-art results better than any previous human or AI solutions. One notable example is the kissing number problem in dimension 11, where the platform improved the best known lower bound from 593 to 604. This advance did not come from a single agent or isolated run. Rather it arose through a sequence of submissions, public discussion, verifier refinement, and subsequent agent-to-agent borrowing of ideas. These results provide evidence that decentralized scientific discovery can emerge from open interaction among autonomous agents in the wild, demonstrating a new paradigm for collective AI-driven research. 
+
+# 1 Introduction 
+
+The history of scientific discovery is a history of collective work. Individual breakthroughs depend on a substrate of shared knowledge: prior failed attempts that narrowed the search space, partial constructions that pointed in the right direction, and public records that let later researchers avoid known dead ends. This social infrastructure — seminars, preprints, open repositories, and scientific forums — is what has made complex problems tractable. As AI systems take on a larger role in scientific discovery, a natural question is whether they can benefit from similar infrastructure. Current AI discovery systems are powerful but isolated: each run explores a problem independently and produces results that are seldom incorporated into a shared body of knowledge that other agents can readily reuse. This mirrors an earlier era of human research: before preprints, before open datasets, before norms that make science cumulative. The question is not only whether a single agent can improve upon the best known result, but whether a community of agents, operating on shared state and building on one another’s partial discoveries, can make substantially faster progress. This pattern is especially visible in mathematics and theoretical computer science, where progress toward a new bound or construction is frequently incremental and distributed. A candidate 1
+
+> arXiv:2606.10402v1 [cs.CL] 9 Jun 2026
+
+may be nearly correct but numerically unstable; a proof sketch may require a different parameteri-zation; a construction may only become valid after multiple rounds of refinement. Recent work on AI for scientific discovery has shown that language-model-based systems can improve known solu-tions to open problems. Systems such as AlphaEvolve [17], Virtual Lab [24], and TTT-Discover [35] indicate that search with modern models can already produce nontrivial progress. However, these systems are usually organized around isolated runs or tightly controlled pipelines. They do not ex-pose the social structure that makes human research effective: public traces, shared partial results, and the ability for one solver to continue from where another left off. Interestingly, a parallel line of work has begun studying AI agents as collective systems rather than isolated solvers. Moltbook, a Reddit-style platform exclusively populated by AI agents, showed that large agent populations exhibit emergent social dynamics mirroring human online communities, even without a shared task. In this work, we ask whether agents can make progress when they operate on a common platform with shared state, public leaderboard, and problem-specific discussion. We also ask whether open traces extend the effective time horizon of search by allowing later agents to inherit promising directions instead of restarting from scratch. We present EinsteinArena, a platform designed to study these questions on scientific problems with exact or near-exact verification. EinsteinArena enables agents to access shared research ar-tifacts, build on prior solutions, and receive continuous feedback through automated evaluation. More fundamentally, rather than baking knowledge into a task-specific harness that vanishes when a run ends, EinsteinArena treats the platform as a persistent shared memory: prior solutions, failed attempts, and partial insights become a substrate that any agent can build on, letting progress accu-mulate across agents and over time. Our initial focus is mathematics, where the problem statements are precise, the optimization objective is clear, and verification can often be made deterministic and efficient. Notably, agents on EinsteinArena improved the lower bound for the kissing number in dimension 11 from 593 to 604 — one of the largest improvements since Best’s 1980 construction [1] breakthrough. 1
+
+Our main contributions are three-fold: 1. We present EinsteinArena, an open platform for multiple agents to organically collaborate on scientific problems, with public problem specifications, automatic verification, real-time leaderboards, and discussion threads. 2. We document that the platform has already produced new state-of-the-art results on 12 open mathematical problems. 3. We provide a linguistic analysis of collaborative agent search in the wild, showing how public traces, iterative submission, and shared debugging can produce new state-of-the-art solutions that no single agent found alone. 
+
+# 2 EinsteinArena 
+
+2.1 Overview and design principles 
+
+EinsteinArena is an open, agent-native platform where AI agents compete and collaborate on unsolved research problems. The platform is built around three core components: (i) a curated collection of open problems with public verifiers, (ii) a live leaderboard that tracks the best known solution for each problem, and (iii) a public discussion board where agents can share intermediate 
+
+> 1As described in [3].
+
+2findings, document failed approaches, and build upon one another’s discoveries. Figure 1 presents the EinsteinArena web interface. Problem 
+
+> Description
+> Acti ve
+> Leaderboard
+> Disc ussion
+> Board
+
+Figure 1: The EinsteinArena web interface. Each problem page includes a problem description, an active leaderboard with agent scores, and a discussion board where agents can share findings, ask questions, and propose hypotheses. All three components are updated in real time as new submissions are evaluated or new threads are published. A central design principle of EinsteinArena is transparency: all core artifacts required for participation are publicly accessible. Problem statements, verifier source code, leaderboard scores, best submitted solutions, and discussion threads can be accessed by any agents through either the web interface or the API. In this way, the platform functions as a shared research environment where the current frontier is visible to all participants, enabling agents to inspect, reuse, and extend the best work produced by others. Instructions for interacting with the platform are also publicly available through a markdown file skill.md 2, which specifies the API endpoints and submission procedures. The source code for the EinsteinArena platform, along with the analysis code used in our experiments, is available at https://github.com/vinid/einstein-arena .
+
+2.2 Problem curation and current frontier 
+
+We curate a collection of open mathematical optimization problems from AlphaEvolve [17]. We selected problems with objective and computationally efficient evaluation procedures to enable    
+
+> 2The skill.md file is accessible via https://einsteinarena.com/skill.md .
+
+3rapid feedback and iterative improvement. We also prioritized problems with established research interest, including tasks on which previous studies have reported strong AI-agent results (e.g., the three autocorrelation problems) as well as tasks for which substantially better human-derived solutions are known, leaving significant room for improvement (e.g., the prime number theorem problem) 3.Table 1 summarizes the problems active on EinsteinArena as of May 2026, together with their current best scores. For problems on which EinsteinArena participants achieved a new state-of-the-art result, we additionally report the previous best known result and the current best result obtained on the platform. Since the launch of EinsteinArena on March 19, 2026, agents have discovered new state-of-the-art results for 12 problems, and most of these findings emerged through collaborative effort, with agents iteratively building on prior solutions and feedback from the community. 4 We present representative case studies of these collaborative discoveries in Sections 3 and 4. 
+
+Problem Scoring Prior best Source EinsteinArena best 
+
+Kissing number ( d = 11) max 593 AlphaEvolve 604 
+
+Erd˝ os minimum overlap min 0.380876 TTT-Discover 0.380871 
+
+1st autocorrelation inequality min 1.5028629 TTT-Discover 1.5028609 
+
+2nd autocorrelation inequality max 0.9610 AlphaEvolve 0.9626 
+
+3rd autocorrelation inequality min 1.4556 AlphaEvolve 1.4523 
+
+Flat polynomials (degree 69) min 1.34093 AlphaEvolve 1.28093 
+
+Max/min distance ratio ( n = 16) min 12.889266 AlphaEvolve 12.889230 
+
+Prime number theorem max 0.92129 AlphaEvolve 0.99490 
+
+Circles packing in a square ( n = 26) max 2.635983085 AlphaEvolve 2.635983095 
+
+Circles in rectangle ( n = 21) max 2.365832133 AlphaEvolve 2.365832385 
+
+Tammes problem ( n = 50) max 0.5134719 AlphaEvolve 0.5134721 
+
+Edges vs. triangles max -0.71249 AlphaEvolve -0.71171 
+
+Difference bases min 2.63902747 AlphaEvolve -Heilbronn problem for triangles ( n = 11) max 0.03652989 AlphaEvolve -Thomson problem ( n = 282) min 37147.29442 AlphaEvolve -Table 1: Problems on EinsteinArena as of May 2026. Bold entries indicate improved scores where EinsteinArena agents achieved new state-of-the-art results. The previous best scores are sourced from AlphaEvolve [17], TTT-Discover [35], and references therein. A detailed description of the problems is provided in Appendix A. 
+
+2.3 Problem specification and verifier 
+
+Each problem on EinsteinArena is specified by four components: a natural-language description of the mathematical task; a solutionSchema that defines the exact JSON structure a valid submission must have; a scoring field indicating whether lower or higher scores are better; and a verifier ,which is executable Python code that maps a submitted solution to a scalar score. The verifier is the central artifact. Many verifiers follow the reference implementations used in prior work such as AlphaEvolve [17], but we add additional checks for invalid submissions. Verifiers are manually audited and updated when agents expose numerical or validity edge cases. They are      
+
+> 3The README.md file of the GitHub repository https://github.com/google-deepmind/alphaevolve_repository_ of_problems includes a figure illustrating which problems have best known results relative to AI solutions.
+> 4We note that SimpleTES [34] identified a new state-of-the-art construction with a score of 0 .380868 for the Erd˝ os minimum overlap problem. This construction is better than the current EinsteinArena result, but this score was achieved after we had already obtained a score of 0 .380871 that is superior to that of TTT-Discover [35].
+
+4also public: agents can download and run them locally without making API calls. This means that server-side evaluation is reproducible, and local runs are intended to be semantically identical to server-side ones. Agents do not need to guess the scoring function or submit solutions blindly; they can iterate offline and submit only when they have a credible improvement. Transparency here is the main feature that is only possible on this type of open problem. Problems vary in verifier complexity. Some verifiers apply a closed-form formula to the submis-sion directly (e.g., computing the overlap integral for Erd˝ os or the autoconvolution ratio for the autocorrelation problems). Others require heavier computation, such as checking pairwise distance conditions over hundreds of vectors (e.g., kissing number) or drawing 10 7 samples (e.g., prime num-ber theorem). All verifiers share the same interface: they accept a Python dict and return a single 
+
+float representing the optimization variable of interest. 
+
+2.4 Agent registration, interaction and evaluation pipeline 
+
+To participate in EinsteinArena, agents must first register on the platform. During registration, the server generates a random 32-byte value called challenge and a difficulty parameter k. The agent must then find a value n such that SHA256(challenge + n) begins with k leading zero bits. This proof-of-work computation is inexpensive while making large-scale registration attempts computationally expensive, thereby discouraging spam. Upon successfully completing this registra-tion process, the agent is issued a Bearer token that can be used to authenticate subsequent API requests, including solution submissions and other write operations. Once registered, agents can list problems, fetch problem specifications, submit solutions, down-load verifier codes, and poll results asynchronously. Since EinsteinArena does not provide a human-friendly interface for submissions or other write operations, participation is intended to occur through agents rather than direct human interaction. This design helps ensure that leaderboard results reflect genuine agent capabilities. To further encourage broad participation and experi-mentation, EinsteinArena does not require disclosure or registration of the humans who create or operate these agents. As for the evaluation pipeline, all submissions are checked in isolated execution environments (E2B sandboxes), where the problem verifier is executed against the submission data. After eval-uation, each result is written back to the database and the leaderboard is updated according to the platform’s acceptance rules. For problems that require high numerical precision – such as the kissing number, where the difference between a valid and an invalid configuration can be smaller than machine epsilon – verifiers use Python’s decimal.Decimal arithmetic at 30–80 significant digits for the overlap loss computation and exact arithmetic for integer-valued submissions. 
+
+2.5 Leaderboard and acceptance rules 
+
+The leaderboard shows at most one solution per agent for each problem, corresponding to the agent’s best submission. A new submission appears on the leaderboard only if it improves the agent’s current best score; rejected or lower-scoring submissions are not added to the leaderboard and not stored in our database. When an agent achieves a new personal best, the leaderboard is updated to reflect the improved score. While only the best-performing solution is shown publicly, all personal-best submissions are retained in the database to enable reconstruction of the agent’s progress over time. To claim the top position, a submission must pass a stricter acceptance pipeline: it is required to exceed the current best score by a problem-specific minimum improvement threshold δ. Because the leaderboard score ranges vary substantially across problems, we carefully select δ for each problem 5Kissing n umber in dimension 11 — best kno wn lo wer bo unds          
+
+> Major impro vements, 1964– 202 6
+> 440
+> 460
+> 480
+> 500
+> 520
+> 540
+> 560
+> 580
+> 600
+> Best kno wn lo wer bo und
+> 1960 1970 1980 1990 2000 2010 2022 2026
+> ~4 2-year platea u
+> at 58 2
+> 44 0
+> older lattice-era bo und (1964)
+> 58 2
+> Best (198 0)
+> 59 2Gan zhino v(2022 )
+> 593 AlphaE vol ve ( 202 5)
+> 604 EinsteinArena ( 202 6)
+
+Figure 2: Best known lower bounds for the kissing number in dimension 11. The record stood at 582 for roughly 40 years before a burst of recent progress. Note that canonical citation for Ganzhinov’s result is [6], even if the result first appeared in the 2022 preprint. with two goals in mind: (i) keeping the threshold low enough to encourage iterative improvements by agents, and (ii) keeping it high enough to prevent leaderboard changes caused solely by non-significant modifications or floating-point discrepancies between evaluators. 
+
+2.6 Discussion threads 
+
+Every problem has an associated discussion board. Agents can open threads and post replies, which pass through a Llama-Guard-based moderation step before becoming publicly visible [9]. The thread structure mirrors how researchers share working notes: an agent can post a construction that is not yet valid but contains a promising direction, explain why a particular coordinate family was explored, or flag a numerical failure mode that others should avoid. This record accumulates over time and can be queried through the API. Unlike a leaderboard, which stores only the current frontier, the discussion board stores the path to the frontier. These partial contributions have no natural home in a system that only records final scores. Agents often use the platform to discuss approaches, ask questions, and summarize progress. Figures 3a and 3b show agents asking and answering questions, and agents updating each other on solution progress, for the kissing number and second autocorrelation inequality problems, respectively. 
+
+# 3 Case Study I: kissing number in dimension 11 
+
+Having described the platform, we now examine the kissing number problem in depth and present how open multi-agent search produces progress through large-scale exploration and iterative refine-6ment. 
+
+Problem Overview. The kissing number in dimension d ∈ N asks the maximum number of non-overlapping unit spheres in Rd that can simultaneously touch a central unit sphere. A detailed description of the problem is provided in Appendix A.1. Exact kissing numbers are known only for the dimension d ∈ { 1, 2, 3, 4, 8, 24 }, while for most other dimensions only upper and lower bounds have been established. We consider the lower bound for d = 11. The best known lower bound has progressed from 582 to 592 in [6] 5, then to 593 in [17]. In EinsteinArena, a collaborative effort among AI agents improved this lower bound to 594, after which we had agents build on their result to further extend it to 604. To understand how this improvement emerged, we divide the process into two stages: first, the construction of a valid configuration with n = 594, and second, the extension from 595 to 604. 
+
+Constructing the 594-Sphere Configuration. The construction for n = 594 relies on three main components: a strong initial construction by alpha omega agents [13], an optimization pro-cedure that produces a near-valid construction, and a final post-processing to obtain a valid con-struction. Both alpha omega agents and JSAgent [23] iterated on the solution. One AI agent, 
+
+KawaiiCorgi , observed that the leaderboard score was nonlinear and instead optimized a linearized surrogate obtained via a Taylor expansion. In particular, the agent constructed a least-squares ob-jective function of the form X
+
+> i<j
+
+(c⊤ 
+
+> i
+
+cj − 2) 2
+
+and optimized it using both the strong initial construction that was available in EinsteinArena and the LSQR algorithm [19]. This resulted in a smooth quadratic objective that enables efficient optimization. Empirical experiments done by the agent showed it to be significantly more effective, leading the agent to adopt this approach. As a result, the loss decreased from approximately 10 −10 
+
+to 10 −50 , which means the average overlap between two overlapped spheres is much less than 10 −50 .After LSQR refinement, the agent observed that most inner products x⊤ 
+
+> i
+
+xj are close to simple integer values such as −2, 0 or 1, though not exactly equal. This indicates the presence of an underlying discrete structure, so the agent applied a final integer-snapping post-processing step to make these values exact, resulting in a provably valid construction. In effect, the agents first found a numerically near-valid configuration and then converted it into an exact discrete structure that the verifier could certify. 
+
+Extending the Construction to 604 Spheres. After establishing the construction for n = 594, agents extended this approach to larger numbers n ≥ 595. The combination of the surrogate loss function, and more critically, the integer-snapping technique allowed us to push the construction to n = 600 with relative ease. To understand this limitation, the agent analyzed all constructions for 594 ≤ n ≤ 600 and found that they share a common set of 496 vectors. These vectors form a highly structured backbone. This observation reveals a strong underlying geometric structure and suggests that further improvements may be achievable within integral constructions. Motivated by this, the agent explored extensions in a larger algebraic space, leading to the discovery of a new construction with n = 604. The mathematical details of this construction are provided in Appendix B. 
+
+> 5The arXiv version of [6] was released in 2022.
+
+7K(11) cont ac t graph di scuss ion                                                                                                   
+
+> Alp ha Omega Age nts reply 823 ·Apr 918 :04 UT C
+> Quest ions for the commun ity :(1) Hasany age nt foun dacon fig ur ation withacont ac tcount diffe rent from 17,088? (2) Hasany age nt
+> att empt ed the BV3-po int SDP for d=11? (3) Doesthe cont ac tgraphad mitalgeb raic stru ctur etha tcoul dguide anint ege rrea lization ?
+> Chronos reply 824 ·Apr 918 :12 UT C
+> Onyour three qu est ions :(1) Weha venot foun dalt ern ativecont ac t
+> counts .Every pertur ba tion varia nt conv erge sto the same17,088-
+> cont ac ttopolo gy.(2) Weha venot att empt ed BV3-po int SDP ;itisthe highe st -valu enext st ep.(3) Int ege rrea lization app ea rs to requ irestru ctur every diffe rent from +/-1 coor di nates.
+> A
+> C
+
+(a) Discussion between Alpha Omega Agents [13] and Chronos on the kissing number problem. Cross -resolut ion ba sin tr ans fe r                                                                              
+
+> JSA ge nt thread 180 ·Apr 14
+> The ke yrea lization :100 kand1.6 Msolut ions liveinstru ctur ally diffe rent
+> ba sins .The break throu gh isaverage -pool tr anspl ant :extr ac tthe ac tive
+> regi on ofthe 1.6 Msolut ion ,bi n-average into 100,000 bi ns ,andrefi ne
+> withDinke lbach opt imization atn=100,000.
+> Claude Explor erreply 838 ·Apr 16
+> Nice wor kon the cross -resolut ion ba sintr ans fe r.Wetoo kyour 100 k
+> solut ion (C=0.96221) andpus hed itfurt he rwithsp ec tr alpertur ba tions inFour ie rsp ace ,the nre-pol ished withDinke lbach .
+> After30+ roun dsofsp ec tr alSA on your ba sinwereached
+> C=0.96226 at100 k.
+> J
+> C
+
+(b) Discussion between JSAgent [23] and 
+
+ClaudeExplorer [10] on the second autocorre-lation problem. 
+
+Figure 3: Discussions on the EinsteinArena platform exemplify how agents ask questions and build off each other’s ideas. 
+
+Collaborative Reasoning and Discussion Patterns. Agents on the platform engage in a wide variety of discussions, ranging from methodological analysis to synthesizing and revisiting previous approaches. Figure 3a shows agents asking each other questions about problem-solving approaches for the kissing number in dimension 11 problem, focused on improving the geometry of the current best solution. In addition, Figure 4 shows the breakdown of discussion topics for the kissing number in dimension 11. A plurality of conversations focus on problem-specific reasoning strategies; specifically, agents frequently discuss structural/lattice decoding (34%), which refers to interpreting a numerical kissing-number configuration as a geometric object. Instead of solely treating the submission as hundreds of floating-point vectors, these posts look for hidden structure: repeated distance patterns, contact graphs, symmetry, integer-like coordinates, shells, or resemblance to known lattice constructions. Other discussion topics broadly reflect communicating and organizing progress, e.g., broadcasting discoveries of new solution basins/optima and revisiting whether older approaches may be relevant in light of newer discoveries. The details of how the taxonomy of topics was created and how topic distribution statistics were calculated are provided in Appendix D. 
+
+Search Dynamics and Solution Lineages. Figure 5 summarizes the progression of solution submissions to the kissing number problem as a sequence of search regimes. Early submissions by 
+
+CHRONOS agent incrementally refine early submissions by reducing the overlap penalty but remain far from feasibility. The Gradient agent discovers a new basin that is long-lived (0.156 overlap penalty) with multiple agents including CHRONOS contributing small improvements within the same broad geometry. The major transition is the alpha omega agents submission that jumps to a new basin with score 0.0119, breaking the plateau rather than simply polishing it. Subsequent CHRONOS ,
+
+alpha omega agents , and KawaiiCorgi submissions preserve the shared (17,088)-pair active-set topology of this new basin while driving the residual violation down by many orders of magnitude. The final KawaiiCorgi submission reduces the penalty to zero; the details regarding this and a solution to n = 604 are described at the beginning of this section. Details on lineage construction and interpretation are provided in Appendix C. 80% 10% 20 % 30% 40% 50%                 
+
+> Str uct ural / lattice decoding 34% (30)
+> Best-score anno uncement 26% (23)
+> Ne w-basin disco ver y10% (9)
+> Generic brainstorming 8% (7)
+> Micro-pert urbation refinement 7% (6)
+> Exact-certificate disc ussion 6% (5)
+> Summar y/ s ynthesis 5% (4)
+> Old-approach re visit 5% (4)
+
+Figure 4: Conversation topic distribution in the kissing number problem. Agents discuss a wide variety of topics on the platform, from specific methodological approaches (e.g., structural/lattice decoding and micro-perturbation refinement) to announcing best scores and summarizing previous approaches. Numbers indicate the percentage of all posts in each category, with absolute counts shown in parentheses. 
+
+# 4 Case Study II: the second autocorrelation inequality 
+
+Our second case study focuses on the second autocorrelation inequality, a critical problem at the intersection of additive combinatorics and harmonic analysis. 
+
+Problem Overview. The autocorrelation measures the overlap between a set or function and a shifted copy of itself, often revealing structure that is not apparent from the original object alone. In particular, autocorrelations can encode the distribution of pairwise differences in a set and are also closely connected to Fourier magnitudes of a function [25, 11]. It plays a central role in many areas of mathematics and the sciences [17, 2], and the second autocorrelation inequality is part of a broader sequence of extremal autocorrelation problems that study the limits of how concentrated or dispersed an autocorrelation can be [17]. The second autocorrelation inequality asks for determining the optimal constant C > 0 such that every non-negative function f : R → R≥0 satisfies 
+
+∥f ⋆ f ∥22 ≤ C∥f ⋆ f ∥1∥f ⋆ f ∥∞
+
+where f ⋆ f denotes the autoconvolution of f . Since optimization over all integrable functions is not feasible, we focus on a set of step functions and consider a discretized formulation, as suggested in previous studies of autocorrelation inequalities [17, 35]. This discretization transforms the problem into an optimization problem over a finite-dimensional vector. Throughout this section, we use ‘interval’ to denote the dimensionality of a vector. A detailed description is provided in Appendix A.4. AlphaEvolve showed that C ≥ 0.9610, and EinsteinArena agents improved the best known lower bound to 0 .9626. 9Kissing N umber K(11) Lineage 
+
+> Impro vement stages from initial refinement thro ugh e xact-zero endpoint · Parent lineage across stages
+> parent lineage
+> Initial
+> refinement
+> 0.156 basin
+> and platea u
+> Ne w-basin
+> jump
+> 17, 088-pair
+> acti ve-set
+> topolog y
+> Exact-zero
+> endpoint
+> CHRONOS
+> s=0.1837
+> CHRONOS
+> s=0.1819
+> Gradient
+> s=0.1604
+> Gradient
+> s=0.1561
+> CHRONOS
+> s=0.1561
+> alpha _omega
+> s=0.0119
+> CHRONOS
+> s=2.3e-5
+> alpha _omega
+> s=1.4e-8
+> alpha _omega
+> s=8.0e-13
+> Ka waiiCorgi
+> s=4.2e-15
+> Ka waiiCorgi
+> s = 0
+> TIME
+
+Figure 5: Solution lineage of the kissing number problem. Arrows denote parental lineage, which is determined by computing similarity between feature vectors representing solution submissions. Details on methodologies are provided in Appendix C. 
+
+Collaborative Reasoning and Methodological Development. Similar to the kissing number problem, agents working on the second autocorrelation inequality built on one another’s solutions and synthesized prior approaches. In particular, Dinkelbach optimization—which iteratively maxi-mizes ∥f ⋆f ∥22 −λ∥f ⋆f ∥1∥f ⋆f ∥∞ while updating the hyperparameter λ at each step [4]—emerged as a key methodology, with multiple agents reporting improved results (See Figure 3b). In addition, complementary techniques such as simulated annealing contributed to the best-performing solu-tions on the platform [10, 23]. Rather than arising from a single breakthrough, progress emerged through the collective refinement of these techniques, with agents identifying their limitations, adapting them to new settings, and combining them with complementary ideas. 
+
+Search Dynamics and Solution Lineages. Figure 6 summarizes the progression of solution submissions to the second autocorrelation problem as a sequence of increasing discretization reso-lution (i.e., the number of intervals used to represent the step function) and local-refinement. The initial family consists of previous SOTA results from AlphaEvolve [17] and TTT-Discover [35], both represented using 5 × 10 4 intervals. Together-AI agent first improved upon these solu-tions by doubling the resolution to 10 5 intervals. Subsequent submissions by OpusMathAgent ,
+
+CHRONOS , ClaudeExplorer , and JSAgent refined this high-performing solution family. In partic-ular, JSAgent achieved the strongest 10 5-interval solution at 0 .962214. The final breakthrough came from ClaudeExplorer , which increased the resolution to 4 × 10 5 intervals and refined the previous solution to the best score of 0.962643. Details on lineage construction and interpretation are provided in Appendix C. 10 Algorithm Lineage   
+
+> Str uct ural parent relationships across refinement stages · Color-coded b yagent · Final winner emphasi zed
+> parent lineage
+> Initial
+> famil y
+> 100 k
+> refinement
+> Best 1 00 k
+> 400 k
+> refinement
+> AlphaE vol ve
+> C=0.961021
+> TTT-Disco ver
+> C=0.959180
+> Together-AI
+> C=0.961206
+> Op usMath
+> C=0.961306
+> CHRONOS
+> C=0.961575
+> Cla udeE xplorer
+> C=0.961844
+> Cla udeE xplorer
+> C=0.961986
+> JSAgent
+> C=0.962214
+> Cla udeE xplorer
+> C=0.962643
+> TIME
+
+Figure 6: Solution lineage for the second autocorrelation inequality problem. Arrows denote parental lineage, which is determined by computing similarity between feature vectors representing solution submissions. Details on methodologies are provided in Appendix C. 
+
+# 5 Related Work 
+
+AI for scientific discovery. A growing body of work applies language models and evolutionary search to open research problems [14, 17, 35, 24, 12, 32, 16]. AlphaEvolve [17] uses a Gemini-based agent to evolve programs that improve known solutions in mathematics and algorithm design, producing new results on problems including matrix multiplication and the kissing number. TTT-Discover [35] extends this by performing reinforcement learning at test time, allowing the model to continue training on a single target problem rather than using a frozen policy. Virtual Lab [24] organizes multiple agents into a simulated research group to address biology problems. These systems share a common structure: a single run, orchestrated by a fixed pipeline, produces a candidate that is evaluated privately. EinsteinArena differs in that the platform itself is shared state: any agent can observe the current frontier, download prior solutions, and continue where others left off. 
+
+Multi-agent collaboration. Many prior multi-agent works focus on homogeneous teams where each agent is a copy of the same underlying base model [5, 24, 37], require specifying fixed work-flow/agent interaction patterns in advance (including fixed role decomposition) [7, 24, 28, 27, 15, 20], and/or view agents as independent execution units without deliberative dynamics [33, 38, 36]. Generally, these prior works also typically involve a small number of agents in a closed loop within a single session. In EinsteinArena, all of these axes are flexible. Specifically, by allowing users to specify their own agents, the platform enables teams of heterogeneous agents powered by varied underlying base models to collaborate, allowing for model-specific knowledge or capabilities to contribute to problem solving. By enabling agents to choose when/how they interact with the platform (e.g. some 11 agents may choose to only submit solutions, whereas other agents may choose to actively engage in discussion), EinsteinArena allows for emergent coordination mechanisms. This alleviates the problem of specifying a fixed agent collaboration pattern for a discovery problem, where an optimal collaboration structure is usually unknown a-priori. Finally, agents can engage in deliberation with other agents to refine existing problem-solving approaches or generate new ideas, as shown in Figure 3. A few recent works have moved further in this direction. CORAL [21] deploys multiple agents through shared persistent memory, but within a single orchestrated run rather than a shared public platform, in addition to using homogeneous agent teams. AgentRxiv [22] allows independent agents to share research reports through a centralized preprint server, showing possible improvements on benchmarks. EinsteinArena similarly studies collaboration at platform scale with verifiable artifacts: many independent agents, operating asynchronously over days, with a shared record of prior attempts. Platforms like ClawdLab [30] show that multi-agent scientific collaboration can extend beyond domains with exact verification; EinsteinArena instead grounds coordination in a shared, deterministic verifier. 
+
+# 6 Discussion 
+
+EinsteinArena shows that agents, given the right infrastructure, can autonomously make progress on open problems. Effective collaboration, as in human research, requires exposing intermediate artifacts. Partial constructions, failed attempts, verifier issues, and short explanations can all become useful starting points for later agents. Verification is a critical component and requires ongoing maintenance. We frequently found it essential to keep strengthening our verifier to prevent invalid solutions, numerical instabilities, and overflow issues. For example, the verifier for the kissing number problem had to be revised after its launch because the required numerical precision exceeded the limits of a standard double-precision pipeline. We ultimately upgraded it to 80-digit precision using Python’s Decimal module. In addition to this, agents are optimizing aggressively against the scoring function, so verifiers must be public and reproducible to ensure transparency. Our focus so far is on mathematical problems with objective and relatively easy-to-compute verifiers. This choice lets us study collaboration under controlled evaluation, but it does not yet establish how well the same platform design will transfer to domains such as formal proof, algorithm design, or computational biology [8, 31]. There are also open questions about incentives. A public leaderboard may improve coordination, but it may also bias agents toward short-horizon score chasing rather than pursuing directions that are promising but slow to yield verified improvements. Likewise, open discussion is useful only if the traces are informative enough to reuse — a thread full of failed attempts without explanation is noise rather than signal. These are empirical questions, and EinsteinArena is intended to make them evident rather than speculative. A subtler question concerns the relationship between competition and collaboration. The plat-form rewards agents for beating one another’s scores, but the kissing number result required agents to share information that helped competitors. This tension is not unique to AI systems — it mirrors incentive structures in human research communities — but it may manifest differently when the agents are optimizing explicitly for leaderboard position. Even with these limitations, the EinsteinArena results suggest that open multi-agent work should be studied directly rather than approximated through isolated benchmarks. The platform produced new mathematical advances within a short period, and the largest gains emerged from 12 interaction between agents rather than from a single unusually strong run. More broadly, our work demonstrates a vision of the platform-as-harness: while prior research on AI agents has focused on creating customized, task-specific harnesses [29, 26, 18], we argue that a shared platform is a more flexible substrate that allows multiple heterogeneous agents to collaborate, compete, and build on each other’s work without requiring bespoke scaffolding for each new problem. 
+
+# References 
+
+[1] Marc R. Best. Binary codes with a minimum distance of four (corresp.). IEEE Trans. Inf. Theory , 26:738–742, 1980. URL: https://api.semanticscholar.org/CorpusID:40030299 .[2] Christopher Boyer and Zane Kun Li. An improved example for an autoconvolution inequality. 
+
+Experimental Mathematics , pages 1–7, 2026. [3] J. H. Conway and N. J. A. Sloane. Sphere Packings and Kissing Numbers , pages 1–30. Springer New York, New York, NY, 1988. doi:10.1007/978-1-4757-2016-7_1 .[4] Werner Dinkelbach. On nonlinear fractional programming. Management science , 13(7):492– 498, 1967. [5] Yilun Du, Shuang Li, Antonio Torralba, Joshua B Tenenbaum, and Igor Mordatch. Improv-ing factuality and reasoning in language models through multiagent debate. In Forty-first international conference on machine learning , 2024. [6] Mikhail Ganzhinov. Highly symmetric lines. Linear Algebra and its Applications , 722:12–37, 2025. [7] Sirui Hong, Mingchen Zhuge, Jiaqi Chen, Xiawu Zheng, Yuheng Cheng, Ceyao Zhang, Jinlin Wang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, Liyang Zhou, Chenyu Ran, Lingfeng Xiao, Chenglin Wu, and J¨ urgen Schmidhuber. Metagpt: Meta programming for a multi-agent collaborative framework, 2024. URL: https://arxiv.org/abs/2308.00352 , arXiv: 2308.00352 .[8] Thomas Hubert, Rishi Mehta, Laurent Sartran, Mikl´ os Z Horv´ ath, Goran ˇZuˇ zi´ c, Eric Wieser, Aja Huang, Julian Schrittwieser, Yannick Schroecker, Hussain Masoom, et al. Olympiad-level formal mathematical reasoning with reinforcement learning. Nature , 2025. [9] Hakan Inan, Kartikeya Upasani, Jianfeng Chi, Rashi Rungta, Krithika Iyer, Yuning Mao, Michael Tontchev, Qing Hu, Brian Fuller, Davide Testuggine, et al. Llama guard: Llm-based input-output safeguard for human-ai conversations. arXiv preprint arXiv:2312.06674 , 2023. [10] Justin Kang and ClaudeExplorer. State-of-the-art solutions for the second autocorre-lation inequality. Einstein Arena, 2026. URL: https://github.com/justinkang221/ second-autocorrelation-inequality .[11] Yitzhak Katznelson. An introduction to harmonic analysis . Cambridge University Press, 2004. [12] Robert Tjarko Lange, Yuki Imajuku, and Edoardo Cetin. Shinkaevolve: Towards open-ended and sample-efficient program evolution. arXiv preprint arXiv:2509.19349 , 2025. [13] Woosang Lim. Alpha omega agents, 2026. URL: https://github.com/quasar17/Alpha_ Omega_Agents .13 [14] Chris Lu, Cong Lu, Robert Tjarko Lange, Jakob Foerster, Jeff Clune, and David Ha. The ai scientist: Towards fully automated open-ended scientific discovery. arXiv preprint arXiv:2408.06292 , 2024. [15] Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, et al. Self-refine: Iterative refine-ment with self-feedback. Advances in neural information processing systems , 36:46534–46594, 2023. [16] Ludovico Mitchener, Angela Yiu, Benjamin Chang, Mathieu Bourdenx, Tyler Nadolski, Arvis Sulovari, Eric C Landsness, Daniel L Barabasi, Siddharth Narayanan, Nicky Evans, et al. Kosmos: An ai scientist for autonomous discovery. arXiv preprint arXiv:2511.02824 , 2025. [17] Alexander Novikov, Ngˆ an V˜ u, Marvin Eisenberger, Emilien Dupont, Po-Sen Huang, Adam Zsolt Wagner, Sergey Shirobokov, Borislav Kozlovskii, Francisco J. R. Ruiz, Abbas Mehrabian, M. Pawan Kumar, Abigail See, Swarat Chaudhuri, George Holland, Alex Davies, Sebastian Nowozin, Pushmeet Kohli, and Matej Balog. Alphaevolve: A coding agent for scientific and algorithmic discovery. arXiv preprint arXiv:2506.13131 , 2025. [18] Azim Ospanov, Farzan Farnia, and Roozbeh Yousefzadeh. APOLLO: Automated LLM and lean collaboration for advanced formal reasoning. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2026. [19] Christopher C Paige and Michael A Saunders. Lsqr: An algorithm for sparse linear equations and sparse least squares. ACM Transactions on Mathematical Software (TOMS) , 8(1):43–71, 1982. [20] Chen Qian, Wei Liu, Hongzhang Liu, Nuo Chen, Yufan Dang, Jiahao Li, Cheng Yang, Weize Chen, Yusheng Su, Xin Cong, Juyuan Xu, Dahai Li, Zhiyuan Liu, and Maosong Sun. ChatDev: Communicative agents for software development. In Lun-Wei Ku, An-dre Martins, and Vivek Srikumar, editors, Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 15174–15186, Bangkok, Thailand, August 2024. Association for Computational Linguistics. URL: https: //aclanthology.org/2024.acl-long.810/ , doi:10.18653/v1/2024.acl-long.810 .[21] Ao Qu, Han Zheng, Zijian Zhou, Yihao Yan, Yihong Tang, Shao Yong Ong, Fenglu Hong, Kaichen Zhou, Chonghe Jiang, Minwei Kong, et al. Coral: Towards autonomous multi-agent evolution for open-ended discovery. arXiv preprint arXiv:2604.01658 , 2026. [22] Samuel Schmidgall and Michael Moor. Agentrxiv: Towards collaborative autonomous research. 
+
+arXiv preprint arXiv:2503.18102 , 2025. [23] Jongmin Sung. Jsagent: An ai agent for hard mathematical optimization, 2026. URL: https: //github.com/jmsung/einstein .[24] Kyle Swanson, Wesley Wu, Nash L. Bulaong, John E. Pak, and James Y. Zou. The virtual lab of AI agents designs new SARS-CoV-2 nanobodies. Nature , 646:716–723, 2025. doi: 10.1038/s41586-025-09442-9 .[25] Terence Tao and Van H Vu. Additive combinatorics , volume 105. Cambridge University Press, 2006. 14 [26] Edan Toledo, Karen Hambardzumyan, Martin Josifoski, Rishi Hazra, Nicolas Baldwin, Alexis Audran-Reiss, Michael Kuchnik, Despoina Magka, Minqi Jiang, Alisia Maria Lupidi, An-drei Lupu, Roberta Raileanu, Tatiana Shavrina, Kelvin Niu, Jean-Christophe Gagnon-Audet, Michael Shvartsman, Shagun Sodhani, Alexander H Miller, Abhishek Charnalia, Derek Dun-field, Carole-Jean Wu, Pontus Stenetorp, Nicola Cancedda, Jakob Nicolaus Foerster, and Yoram Bachrach. AI research agents for machine learning: Search, exploration, and gen-eralization in MLE-bench. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2026. [27] Khanh-Tung Tran, Dung Dao, Minh-Duong Nguyen, Quoc-Viet Pham, Barry O’Sullivan, and Hoang D Nguyen. Multi-agent collaboration mechanisms: A survey of llms. arXiv preprint arXiv:2501.06322 , 2025. [28] Junlin Wang, Jue Wang, Ben Athiwaratkun, Ce Zhang, and James Y Zou. Mixture-of-agents enhances large language model capabilities. In International Conference on Learning Repre-sentations , 2025. [29] Anjiang Wei, Tianran Sun, Yogesh Seenichamy, Hang Song, Anne Ouyang, Azalia Mirho-seini, Ke Wang, and Alex Aiken. Astra: A multi-agent system for gpu kernel performance optimization. arXiv preprint arXiv:2509.07506 , 2025. [30] Lukas Weidener, Marko Brki´ c, Phillip Lee, Martin Karlsson, Kevin Noessler, and Paul Kohlhaas. From agent-only social networks to autonomous scientific research: Lessons from openclaw and moltbook, and the architecture of clawdlab and beach. science. arXiv preprint arXiv:2602.19810 , 2026. [31] Sheng Xu, Qiantai Feng, Lifeng Qiao, Hao Wu, Tao Shen, Yu Cheng, Shuangjia Zheng, and Siqi Sun. Benchmarking all-atom biomolecular structure prediction with FoldBench. Nature Communications , December 2025. doi:10.1038/s41467-025-67127-3 .[32] Yutaro Yamada, Robert Tjarko Lange, Cong Lu, Shengran Hu, Chris Lu, Jakob Foerster, Jeff Clune, and David Ha. The ai scientist-v2: Workshop-level automated scientific discovery via agentic tree search. arXiv preprint arXiv:2504.08066 , 2025. [33] Yingxuan Yang, Huacan Chai, Shuai Shao, Yuanyi Song, Siyuan Qi, Renting Rui, and Weinan Zhang. Agentnet: Decentralized evolutionary coordination for llm-based multi-agent systems, 2025. URL: https://arxiv.org/abs/2504.00587 , arXiv:2504.00587 .[34] Haotian Ye, Haowei Lin, Jingyi Tang, Yizhen Luo, Caiyin Yang, Chang Su, Rahul Thapa, Rui Yang, Ruihua Liu, Zeyu Li, et al. Evaluation-driven scaling for scientific discovery. arXiv preprint arXiv:2604.19341 , 2026. [35] Mert Yuksekgonul, Daniel Koceja, Xinhao Li, Federico Bianchi, Jed McCaleb, Xiaolong Wang, Jan Kautz, Yejin Choi, James Zou, Carlos Guestrin, and Yu Sun. Learning to discover at test time. ICML , 2026. [36] Jiayi Zhang, Jinyu Xiang, Zhaoyang Yu, Fengwei Teng, Xionghui Chen, Jiaqi Chen, Mingchen Zhuge, Xin Cheng, Sirui Hong, Jinlin Wang, Bingnan Zheng, Bang Liu, Yuyu Luo, and Chenglin Wu. Aflow: Automating agentic workflow generation, 2025. URL: https://arxiv. org/abs/2410.10762 , arXiv:2410.10762 .15 [37] Wanjia Zhao, Mert Yuksekgonul, Shirley Wu, and James Zou. Sirius: Self-improving multi-agent systems via bootstrapped reasoning, 2025. URL: https://arxiv.org/abs/2502.04780 ,
+
+arXiv:2502.04780 .[38] Mingchen Zhuge, Wenyi Wang, Louis Kirsch, Francesco Faccio, Dmitrii Khizbullin, and J¨ urgen Schmidhuber. Language agents as optimizable graphs, 2024. URL: https://arxiv.org/abs/ 2402.16823 , arXiv:2402.16823 .
+
+# A Detailed Descriptions of Problems 
+
+A.1 Kissing Number ( d = 11 )
+
+The kissing number in dimension d ∈ N asks the maximum number of non-overlapping unit spheres in Rd that can simultaneously touch a central unit sphere. This can be formalized as the maximum cardinality of a set of points {x1, . . . , x N } ⊂ 2Sd−1 := {x ∈ Rd : ∥x∥ = 2 } such that 
+
+∥xi − xj ∥ ≥ 2 for all i̸ = j. 
+
+Since this condition is binary ( i.e. , a construction is either valid or invalid), we instead use a continuous proxy to assess agents’ submissions, as suggested by AlphaEvolve [17]. In particular, for n ∈ N, we compute the score C(x) of a submission x = ( x1, . . . , x n) ∈ (Sd−1)n by 
+
+C(x) = X
+
+> i<j
+
+max 
+
+
+
+0, 2 − 2xi
+
+∥xi∥ − 2xj
+
+∥xj ∥
+
+
+
+.
+
+In EinsteinArena, we initially considered n = 594 and extened it to n = 604. Smaller values of C(x)correspond to better constructions, so the objective is to minimize C(x). The valid construction 
+
+x∗ satisfies C(x∗) = 0. 
+
+A.2 Erd˝ os Minimum Overlap 
+
+Let H =
+
+n
+
+h : [0 , 2] → [0 , 1] : R 20 h(x) dx = 1 
+
+o
+
+and we define the zero extensions of h ∈ H 
+
+eh(x) = h(x)1[0 ,2] (x), ]1 − h(x) = (1 − h(x)) 1[0 ,2] (x).
+
+Then, the problem asks to find inf h∈H C(h) where 
+
+C(h) = sup 
+
+> s∈R
+
+Z
+
+> R
+
+eh(x) ]1 − h(x + s)dx. 
+
+In EinsteinArena, we consider its discretized formulation. Let h be a n-dimensional vector h =(h0, . . . , h n−1) ∈ [0 , 1] n satisfying the normalization condition Pn−1 
+
+> i=0
+
+hi = n/ 2 with dx = 2 /n . We define the score of h by 
+
+Cdis (h) = dx × max 
+
+> −(n−1) ≤s≤n−1
+
+X
+
+> 0≤i<n
+> 0≤i+s<n
+
+hi(1 − hi+s).
+
+The score Cdis (h) is an upper bound of inf h∈H C(h), and smaller values of Cdis (h) yield better solutions. Thus, the objective is to minimize Cdis (h). 16 A.3 First Autocorrelation Inequality 
+
+Let F be the set of all nonnegative integrable functions f : R → R≥0 whose support is contained in [ −1/4, 1/4]. The problem asks to find the largest constant C satisfying sup 
+
+> −1/2≤t≤1/2
+
+Z
+
+> R
+
+f (t − x)f (x)dx ≥ C
+
+Z 1/4
+
+> −1/4
+
+f (x)dx 
+
+!2
+
+for all f ∈ F . In EinsteinArena, we consider its discretized formulation. Let v = ( v0, . . . , v n−1) be a nonnegative vector representing a function f ∈ F with dx = 0.5 
+
+> n
+
+. We define the score of v by 
+
+C(v) = max j (v ∗ v)j × dx 
+
+Pn−1 
+
+> i=0
+
+vi × dx 
+
+2 ,
+
+where ( v ∗ v)j := Pmin( j,n −1)  
+
+> k=max(0 ,j −n+1)
+
+vk vj−k. The score C(v) is an upper bound of C, and smaller values of C(v) yield better solutions. Thus, the objective is to minimize C(v). 
+
+A.4 Second Autocorrelation Inequality 
+
+Let F denote the set of all nonnegative integrable functions f : R → R≥0. For f ∈ F , define its autoconvolution by ( f ⋆ f )( t) := R 
+
+> R
+
+f (t − x)f (x)dx . The problem asks to determine the optimal constant 
+
+C = sup   
+
+> f≥0, f ⋆f ̸=0
+
+∥f ⋆ f ∥22
+
+∥f ⋆ f ∥1 ∥f ⋆ f ∥∞
+
+.
+
+In EinsteinArena, we consider a discretized formulation. Let v = ( v0, . . . , v n−1) be a nonnegative vector and let ( v ∗ v) denote its discrete autoconvolution ( v ∗ v)j := Pmin( j,n −1)  
+
+> k=max(0 ,j −n+1)
+
+vk vj−k, as in Appendix A.3. We define the score of v by 
+
+C(v) = ∥v ∗ v∥22
+
+∥v ∗ v∥1 ∥v ∗ v∥∞
+
+.
+
+The score C(v) is a lower bound of C, and larger values of C(v) yield better solutions. Thus, the objective is to maximize C(v). 
+
+A.5 Third Autocorrelation Inequality 
+
+Let F be the set of all integrable functions f : R → R whose support is contained in [ −1/4, 1/4]. The problem asks to find the constant 
+
+C = inf R 1/4  
+
+> −1/4f(x)dx ̸=0
+
+sup −1/2≤t≤1/2
+
+R 
+
+> R
+
+f (t − x)f (x)dx 
+
+R 1/4 
+
+> −1/4
+
+f (x)dx 
+
+2 .
+
+In EinsteinArena, we consider a discretized formulation as other autocorrelation problems. Let 
+
+v = ( v0, . . . , v n−1) be a real vector representing f on [ −1/4, 1/4] with dx = 0.5 
+
+> n
+
+. We define the score by 
+
+C(v) = |max j (v ∗ v)j × dx |
+
+Pn−1 
+
+> i=0
+
+vi dx 
+
+2 .
+
+The score C(v) is an upper bound of C, and smaller values of C(v) yield better solutions. Thus, the objective is to minimize C(v). 17 A.6 Flat Polynomials 
+
+For a coefficient vector c = ( c0, . . . , c 69 ) ∈ {− 1, +1 }70 , we define 
+
+gc(z) = c0z69 + c1z68 + · · · + c68 z + c69 ,
+
+and its flatness score as follows. 
+
+C(c) = max |z|=1 |gc(z)|√71 .
+
+The problem asks to find inf c∈{− 1,+1 }70 C(c). In EinsteinArena, we approximate the optimal value inf c∈{− 1,+1 }70 C(c) by evaluating the maximum over |z| = 1 on 10 6 equally spaced points on the unit circle, instead of the entire set {− 1, +1 }70 . That is, we compute 
+
+CS (c) = max z∈S |gc(z)|√71 ,
+
+where S = {ei 2πj  
+
+> 10 6−1
+
+: j ∈ { 0, . . . , 10 6−1}} . The score CS (c) is an upper bound of inf c∈{− 1,+1 }70 C(c), and smaller values of CS (c) yield better solutions. Thus, the objective is to minimize CS (c). 
+
+A.7 Maximum/Minimum Distance Ratio ( n = 16 )
+
+For a list of 16 points P = ( p1, . . . , p 16 ) ∈ R16 ×2, we let 
+
+dmin (P ) = min  
+
+> 1≤i<j ≤16
+
+∥pi − pj ∥2, dmax (P ) = max  
+
+> 1≤i<j ≤16
+
+∥pi − pj ∥2.
+
+The problem asks to find inf P ∈R16 ×2 dmax (P )  
+
+> dmin (P)
+
+. In EinsteinArena, we define the score R(P ) = 
+
+ dmax (P ) 
+
+> dmin (P)
+
+2
+
+and seek a point set P that minimizes R(P ). 
+
+A.8 The Prime Number Theorem 
+
+Let F ⊂ N be a finite set and let f : F → R be a finitely supported partial function such that P  
+
+> k∈Ff(k)
+> k
+
+= 0 and Φ f (x) ≤ 1 for all x ≥ 1 where Φ f (x) = P 
+
+> k∈F
+
+f (k)  xk
+
+. The score functional is 
+
+S(f ) = − X
+
+> k∈F
+
+f (k) log kk .
+
+In EinsteinArena, |F | ≤ 2000, values are clipped to [ −10 , 10], f (1) is adjusted to enforce the normalization P  
+
+> k∈Ff(k)
+> k
+
+= 0, and the constraint Φ f (x) ≤ 1 is checked by randomly drawing 10 7
+
+samples over 
+
+x ∈
+
+
+
+1, 10 × max  
+
+> k∈F
+
+k
+
+
+
+.
+
+Let π(x) be the number of primes less than or equal to x ∈ N. Then, the approximation in EinsteinArena can be seen as a lower bound of lim x→∞ π(x)   
+
+> x/ log x
+
+, and thus the objective is to maximize 
+
+S(f ). 18 A.9 Circles Packing in a Square ( n = 26 )
+
+For i ∈ { 1, . . . , 26 }, we let ci := ( xi, y i) be the center of i-th circle on [0 , 1] × [0 , 1] and ri is its radius. The problem asks to find a list of 26 triples {(xi, y i, r i) ∈ R3}26  
+
+> i=1
+
+that maximizes 
+
+> 26
+
+X
+
+> i=1
+
+ri
+
+such that for all i ∈ { 1, . . . , 26 }, (i) ri ≤ xi ≤ 1 − ri, (ii) ri ≤ yi ≤ 1 − ri, (iii) ri > 0, and (iv) 
+
+∥ci − cj ∥2 ≥ ri + rj for all 1 ≤ i < j ≤ 26. That is, no circles should overlap with one another in a square. 
+
+A.10 Circles Packing in a Rectangle ( n = 21 )
+
+For i ∈ { 1, . . . , 21 }, we let ci := ( xi, y i) be the center of i-th circle on R2 and ri is its radius. The problem asks to find a list of 21 triples {(xi, y i, r i) ∈ R3}21  
+
+> i=1
+
+that maximizes 
+
+> 21
+
+X
+
+> i=1
+
+ri
+
+such that for all i ∈ { 1, . . . , 21 }, (i) ri > 0, (ii) ∥ci − cj ∥2 ≥ ri + rj for all 1 ≤ i < j ≤ 21, and (iii) (max i(xi + ri) − min i(xi − ri)) + (max i(yi + ri) − min i(yi − ri)) ≤ 2. That is, no circles should overlap with one another in a rectangle. 
+
+A.11 Tammes Problem ( n = 50 )
+
+We denote a list of 50 points on a sphere by P , i.e. , P = ( p1, . . . , p 50 ) and pi ∈ S2 := {x ∈ R3 :
+
+∥x∥2 = 1 }. The problem asks to maximize the minimum pairwise Euclidean distance max P dmin (P ), where 
+
+dmin (P ) := min  
+
+> 1≤i<j ≤50
+
+∥pi − pj ∥2.
+
+In EinsteinArena, we seek to construct a lower bound of max P dmin (P ). 
+
+A.12 Edges vs. Triangles 
+
+For 0 ≤ ρ ≤ 1, let C(ρ) denote the largest quantity such that any graph on n vertices and (ρ + o(1))  n
+
+> 2
+
+ edges will have at least ( C(ρ) − o(1))  n
+
+> 3
+
+ triangles. The problem asks the value of 
+
+C(ρ). In EinsteinArena, we implemented this problem as follows. We consider a matrix W ∈ Rm×20 
+
+> ≥0
+
+such that P20  
+
+> j=1
+
+Wij = 1 for all i ∈ { 1, . . . , m }. For each row, we define its edge-density and triangle-density coordinates by 
+
+ρ(Wi) = 
+
+
+
+> 20
+
+X
+
+> j=1
+
+Wij 
+
+
+
+> 2
+
+−
+
+> 20
+
+X
+
+> j=1
+
+W 2 
+
+> ij
+
+= 1 −
+
+> 20
+
+X
+
+> j=1
+
+W 2 
+
+> ij
+
+,τ (Wi) = 
+
+
+
+> 20
+
+X
+
+> j=1
+
+Wij 
+
+
+
+> 3
+
+− 3
+
+
+
+> 20
+
+X
+
+> j=1
+
+Wij 
+
+
+
+> 20
+
+X
+
+> j=1
+
+W 2
+
+> ij
+
+ + 2 
+
+> 20
+
+X
+
+> j=1
+
+W 3 
+
+> ij
+
+= 6 X
+
+> 1≤j1<j 2<j 3≤20
+
+Wij 1 Wij 2 Wij 3 .
+
+19 Let ( x0, y 0), . . . , (xq, y q) be the sorted unique list obtained from (0 , 0) , (1 , 1) , {(ρ(Wi), τ (Wi)) : 1 ≤ i ≤ m},
+
+sorted by increasing x. For each interval [ xj , x j+1 ], put ∆ j = xj+1 − xj . Define the verifier segment area Aj by 
+
+Aj =
+
+
+
+yj ∆j , yj > y j+1 ,
+
+(yj + yj + 3∆ j )∆ j
+
+2 , yj ≤ yj+1 and yj + 3∆ j ≤ yj+1 ,
+
+(yj + yj+1 )wj
+
+2 + yj+1 (∆ j − wj ), yj ≤ yj+1 and yj + 3∆ j > y j+1 ,
+
+where wj = ( yj+1 − yj )/3 in the last case. Let 
+
+A =
+
+> q−1
+
+X
+
+> j=0
+
+Aj , G = max  
+
+> 0≤j<q
+
+∆j .
+
+Then, we define the score S = −(A + 10 G), and the objective is to maximize this score. 
+
+A.13 Difference Bases 
+
+Let B ⊂ Z≥0 be a finite set of non-negative integers. Define the positive difference set 
+
+D(B) = {b − b′ : b, b ′ ∈ B, b > b ′}.
+
+For such a set B, define 
+
+v(B) = max {v ∈ Z≥1 : {1, . . . , v } ⊆ D(B)},
+
+whenever this set is nonempty. The problem asks to minimize 
+
+|B|2
+
+v(B)over finite sets B ⊂ Z≥0 for which v(B) is defined. In EinsteinArena, a submission is a list L of at most 2000 non-negative integers. It is converted into the deduplicated set 
+
+B = {x : x ∈ L} ∪ { 0}.
+
+If |B| > 2000, the score is + ∞. Otherwise, define D(B) as above. If D(B) = ∅ or 1 /∈ D(B), the score is + ∞. Otherwise, let 
+
+vEA (B) = max {v ∈ Z≥1 : {1, . . . , v } ⊆ D(B)}.
+
+The EinsteinArena score is 
+
+SEA (B) = |B|2
+
+vEA (B) .
+
+Lower values of SEA (B) yield better solutions. Thus, the objective is to minimize SEA (B). 20 A.14 Heilbronn Problem for Triangles ( n = 11 )
+
+We place n = 11 points on or inside an equilateral triangle of side length 1. For a point set 
+
+P = ( p1, . . . , p 11 ), the problem asks to maximize the area C(P ) of the smallest triangle formed by any triple of the placed points, normalized by the bounding area: 
+
+C(P ) = min 1≤i<j<k ≤11 area( pi, p j , p k)
+
+√3/4 .
+
+Here, area( pi, p j , p k) denotes the area of a triangle formed by pi, pj , and pk. The bounding equilat-eral triangle has vertices A = (0 , 0), B = (1 , 0), C = (1 /2, √3/2), and the area √3/4, which is used in denominator. All points P must lie on or inside this triangle. In EinsteinArena, a construction gives a lower bound of max P C(P ), so the objective is to maximize C(P ). 
+
+A.15 Thomson Problem ( n = 282 )
+
+Let S2 = {x ∈ R3 : ∥x∥2 = 1 }. For a point configuration Q = ( q1, . . . , q 282 ) ∈ (S2)282 , define the Coulomb energy 
+
+E(Q) = X
+
+> 1≤i<j ≤282
+
+1
+
+∥qi − qj ∥2
+
+.
+
+The problem asks to find inf  
+
+> Q∈(S2)282
+
+E(Q).
+
+In EinsteinArena, a submission is a list of vectors P = ( p1, . . . , p 282 ) ∈ (S2)282 . Each submitted vector pi is normalized by epi = pi 
+
+> ∥pi∥2
+
+. The EinsteinArena score is 
+
+EEA (P ) = X
+
+> 1≤i<j ≤282
+
+1
+
+∥epi − epj ∥2
+
+,
+
+which can be seen as an upper bound of inf Q∈(S2)282 E(Q). So, lower values of EEA (P ) yield better solutions, and the objective is to minimize EEA (P ). 
+
+# B Kissing number construction ( n = 604 )
+
+B.1 The common backbone 
+
+Let B denote the common backbone shared by the constructions for 594 ≤ n ≤ 600. It consists of 
+
+B = {± 2ei : i = 0 , . . . , 7} ∪ 
+
+(X
+
+> i∈S
+
+ϵiei : S ∈ S , ϵ i ∈ {± 1}
+
+)
+
+.
+
+Here, the collection S consists of 30 supports of size 4, constructed as follows: 
+
+• S contains 6 supports given by unions of two pairs: 
+
+Pi ∪ Pj , 0 ≤ i < j ≤ 3,
+
+where P0 = (0 , 6) , P 1 = (1 , 4) , P 2 = (2 , 5), and P3 = (3 , 7). 21 • The remaining 24 supports are arranged in three layers corresponding to coordinates 8 , 9, 10. Each layer consists of 8 supports of the form 
+
+T ∪ { k}, k ∈ { 8, 9, 10 },
+
+where T ⊂ { 0, . . . , 7} is a triple that contains at most one element from each pair P0, . . . , P 3.Then, each support contributes 2 4 = 16 vectors, and together with the 16 axis vectors, we obtain 
+
+|B| = 16 + 30 · 24 = 496 .
+
+This backbone exhibits a strong combinatorial and geometric structure and is shared across all constructions up to n = 600. 
+
+B.2 Extension to n = 604 
+
+To extend beyond n = 600, we introduce additional vectors that go beyond the integral lattice structure. In the last three coordinates (8 , 9, 10), define 
+
+u1 = 13 (2 , 1, 2) , u2 = 13 (2 , −2, −1) , u3 = 13 (1 , 2, −2) ,
+
+which form an orthonormal frame. The 604 construction consists of the backbone B ⊂ D11 together with 108 additional vectors: 
+
+E1 =
+
+n
+
+±ea ± eb ± √2 uj : ( a, b ) ∈ { P0, P 1, P 2, P 3}, j ∈ { 1, 2, 3}
+
+o
+
+,
+
+and 
+
+E2 =
+
+n√2( ±ui ± uj ) : 1 ≤ i < j ≤ 3
+
+o
+
+.
+
+Here each uj is embedded in coordinates (8 , 9, 10). Thus, 
+
+|E 1| = 4 · 4 · 6 = 96 , |E 2| = 3 · 4 = 12 ,
+
+and the total number of vectors is 
+
+|B| + |E 1| + |E 2| = 496 + 96 + 12 = 604 .
+
+# C Lineage and Fingerprint Construction 
+
+For each submission, we construct a fingerprint consisting of problem-specific and manually specified features. Concretely, the fingerprint for the kissing number problem comprises 140 scalar features (Table 2), while the fingerprint for the second autocorrelation problem comprises 823 scalar features (Table 3). These features combine summary features (robust to small coordinate perturbations and resolution differences) with fixed-grid profile features (preserving coarse shape information lost in histogram-based summaries). The fingerprints are then used to calculate pairwise similarities between submissions, and lineage edges are introduced between submissions with sufficiently large similarity. Further details are provided below. 22 Table 2: Kissing number ( d = 11) fingerprint features. 
+
+Feature group Count Description Pairwise cosine distribution 66 Quantiles, histogram bins, anchor masses near geometrically meaningful cosine levels, and tail summaries of normalized pairwise dot products. Gram spectrum 14 Leading eigenvalue summaries and global spectral summaries of the normalized Gram matrix. Shell and integer-structure proxies 33 Norm-shell summaries, coordinate magnitude bins, support-size summaries, and residuals to nearby integer or half-integer coordinate structure after problem-specific normalization. These are diagnostics for lattice-like organization, not claims of exact lattice construction. Order-sensitive auxiliary features 27 Row-step quantiles and coordinate-wise means and standard deviations in the submitted row order. These features support same-basin continuation checks but are not the primary invariant geometry signal. 
+
+Table 3: The second autocorrelation inequality fingerprint features. 
+
+Feature group Count Description Verifier diagnostics 6 Scalar verifier quantities, including score and normalization diagnostics. Submitted function profile 256 Resampled profile of the submitted nonnegative function f .Submitted function summaries 78 Quantiles, histogram bins, support/run summaries, roughness summaries, and Fourier-spectrum summaries of f .Autoconvolution profile 384 Resampled profile of the verifier-derived autoconvolution 
+
+g = f ∗ f .Autoconvolution summaries 99 Quantiles, histogram bins, support/run summaries, roughness summaries, plateau summaries, and Fourier-spectrum summaries of g.
+
+C.1 Shared Lineage Procedure 
+
+C.1.1 Similarity computation 
+
+After constructing the problem-specific per-submission fingerprints ui ∈ Rp, we standardize feature columns: 
+
+zik = uik − median j (ujk )IQR j (ujk ) ,
+
+where i denotes a particular submission, j indexes across all submissions, and k indexes a specific feature. The denominator is replaced by the empirical standard deviation plus a small constant when the IQR is near zero, and with clipping to prevent any single unstable coordinate from domi-nating distance. We use median/IQR rather than mean/SD because several fingerprint coordinates — and the pairwise distance distribution below — are heavy-tailed: most submissions are near-duplicates or same-basin refinements while a few are structurally unusual. Robust centering and 23 scaling, together with clipping, prevent these extremes from dominating either the standardized features or the similarity scale that follows. We then compute Euclidean distances d(i, j ) = ∥zi − zj ∥2 and from which we calculate similar-ities by 
+
+s(i, j ) = exp 
+
+
+
+− d(i, j )
+
+CMED 
+
+
+
+,
+
+where CMED represents the median across all distinct unordered pairs of submissions, i.e., CMED =median a<b d(a, b ). The median distance over all unordered pairs in the denominator normalizes a specific per-pair distance by the ‘typical’ pairwise submission distance. 
+
+C.1.2 Parent and lineage identification 
+
+A candidate parent must precede the child in time. A prior submission by the same agent (a same-agent prior submission) is eligible if s(i, j ) ≥ 0.42 and a prior submission by a different agent (a cross-agent prior submission) is eligible if s(i, j ) ≥ 0.48; otherwise the submission is treated as a structural root. When at least one candidate clears its threshold, the parent is the prior submission with maximum similarity. The lower same-agent cutoff allows close within-agent refinements to remain connected even when the invariant fingerprint shifts moderately. The 0 .48 cross-agent cutoff was chosen manually: below this level, cross-agent similarities were generally too weak to support a specific parent claim rather than broad within-problem similarity. 
+
+# D Conversation Coding and Motif Analysis 
+
+Conversation motif coding. We coded the discussion corpus separately for each problem. The unit of analysis is a single public forum post or reply. We used a two-stage procedure to construct and apply the motif taxonomy. In the first stage, we used GPT-5.5 to review the public posts for each problem and propose candidate discourse pur-poses, defined as recurring roles that posts played in the collaborative discussions on the platform. These included general purposes, such as score reporting, local refinement, structural explana-tion, verifier or certificate discussion, and synthesis of prior progress, as well as problem-specific purposes, such as lattice decoding for the kissing number problem or cross-resolution transfer for second autocorrelation. For each proposed motif, the LLM generated a motif name, a short def-inition, and representative keyword patterns. We consolidated these LLM-proposed motifs into a fixed codebook by merging categories that captured the same underlying purpose and discarding categories that did not recur across multiple posts or could not be distinguished from a broader category using consistent textual evidence. In the second stage, we applied the frozen codebook deterministically to all posts. Each motif was implemented as a case-insensitive keyword-pattern rule. A post received a motif tag if its text matched the corresponding rule. Motif tags were multi-label, so a post could receive more than one tag; for example, a post could both report a new score and describe a refinement method. For each match, we stored a short evidence snippet around the triggering text for auditability. 
+
+Motif tags and primary categories. Motif tags are multi-label: a single post may, e.g., an-nounce a new score and explain a refinement method. For visualization we also assign one primary category per post using a fixed priority order, keeping the primary label focused on the strongest discourse function when a post matches multiple motifs. In Table 4, motifs are listed in priority order from highest to lowest. 24 D.1 Kissing number ( d = 11 ) conversation motifs 
+
+The kissing number ( d = 11) taxonomy emphasizes the geometric and certificate-oriented structure of the discussion, including local refinement, new-basin discovery, lattice decoding, and exact-feasibility claims (Table 4). 
+
+D.2 Second-Autocorrelation Conversation Motifs 
+
+The second-autocorrelation taxonomy emphasizes the functional-analytic and numerical-optimization structure of the discussion, including fractional programming, packet updates, autoconvolution shape, spectral analysis, and cross-resolution transfer (Table 4). 25 Table 4: Conversation motifs used for discourse analysis, grouped by shared and problem-specific categories. 
+
+Motif label Coding definition 
+
+Shared across both problems 
+
+Best-score announcement Post reports a new or near-best score, record value, or explicit improvement claim. Summary/synthesis Post summarizes prior progress, consolidates methods, credits contributors, or organizes the state of the search. Generic brainstorming Post proposes broad ideas or exploratory directions without enough specific technical content for a narrower motif. 
+
+Kissing number ( d = 11 ) specific 
+
+Micro-perturbation/refinement Post discusses small numerical changes, local perturbations, polishing, hill-climbing, or refinement of an existing configuration. New-basin discovery Post identifies a qualitatively different solution basin, geometry, topology, or active-set pattern rather than a small continuation. Structural/lattice decoding Post interprets the configuration through shells, lattice structure, contact graph patterns, coordinates, symmetries, or geometric invariants. Exact-certificate discussion Post concerns exact feasibility, zero-violation certification, verifier precision, or proof-like evidence that the constraint is satisfied. Old-approach revisit Post returns to an earlier method, basin, parameterization, or hypothesis after newer attempts have appeared. 
+
+Second autocorrelation specific 
+
+Dinkelbach/fractional prog. Post discusses the fractional form of the objective, Dinkelbach-style optimization, ratio updates, or equivalent reformulations. Packet/run-coordinate ascent Post describes block, packet, interval, or run-based coordinate updates to the submitted function f .Autoconvolution flatness Post reasons about the shape, plateau structure, concentration, or flatness of the verifier-derived autoconvolution g = f ∗ f .Spectral/Fourier analysis Post uses Fourier, spectral, convolutional, or frequency-domain reasoning to interpret or improve the construction. Cross-resolution transfer Post discusses transferring a solution across discretization sizes, resampling a profile, or using a coarse solution to initialize a finer search. Verifier/discretization concern Post raises issues about numerical precision, verifier behavior, grid effects, normalization, or discretization artifacts. 
+
+26
