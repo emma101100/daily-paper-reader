@@ -6,79 +6,64 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-13
-- 运行时间：2026-06-13 21:12:41 UTC
+- 最新运行日期：2026-06-14
+- 运行时间：2026-06-14 21:36:51 UTC
 - 运行状态：成功
-- 本次总论文数：19
+- 本次总论文数：14
 - 精读区：9
-- 速读区：10
+- 速读区：5
 
 ### 今日简报（AI）
-1) 精读两篇满分论文，聚焦代理原生科研出版的可验证框架与让 LLM 代理用精简记忆战胜全历史的双时间记忆引擎。
-2) 最值得关注：代理记忆不必靠堆上下文，精检索轻记忆反而更准；代理原生出版框架将科研发表变为可验证的闭环流程。
-3) 下一步你可以尝试在自己使用的 AI 助手中，主动用精简指令代替长篇背景，观察是否提升了回答准确度。
-- 详情：[/202606/13/README](/202606/13/README)
+1) 今日聚焦AI Agent的自主科学发现与长期记忆管理，从环境工程到安全记忆约束均有突破。
+2) 必看《EurekAgent》的高分设计——仅靠环境工程就能驱动自主科学发现，以及《Learning What to Remember》如何让Agent安全地记住该记的事。
+3) 如果你想上手构建更可靠的Agent，可以先从速读《SkillAxe》的方法切入，用评估引导技能自我打磨。
+- 详情：[/202606/14/README](/202606/14/README)
 
 ### 精读区论文标签
-1. [Traxia: A Framework for Verifiable, Agent-Native Scientific Publishing](/202606/13/2606.08256v1-traxia-a-framework-for-verifiable-agent-native-scientific-publishing)  
+1. [EurekAgent: Agent Environment Engineering is All You Need For Autonomous Scientific Discovery](/202606/14/2606.13662v1-eurekagent-agent-environment-engineering-is-all-you-need-for-autonomous-scientific-discovery)  
    标签：评分：10.0/10、query:autoresearch
-   evidence：为AI科研智能体提供带有推理痕迹、声明置信度和不可篡改贡献日志的溯源模型
-2. [Less Context, More Accuracy: A Bi-Temporal Memory Engine for LLM Agents Where a Lean Retrieved Context Beats the Full History](/202606/13/2606.09900v1-less-context-more-accuracy-a-bi-temporal-memory-engine-for-llm-agents-where-a-lean-retrieved-context-beats-the-full-history)  
-   标签：评分：10.0/10、query:agent-memory
-   evidence：提出双时序记忆引擎，异步提取三元组以维护代理人长期记忆，性能优于完整上下文重放
-3. [SciTrace: Trajectory-Aware Safety Reasoning for Scientific Discovery Agents](/202606/13/2606.08234v1-scitrace-trajectory-aware-safety-reasoning-for-scientific-discovery-agents)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：为科学发现智能体集成累积风险状态的安全框架，融入智能体管道各个阶段。
-4. [Experience Makes Skillful: Enabling Generalizable Medical Agent Reasoning via Self-Evolving Skill Memory](/202606/13/2606.09365v1-experience-makes-skillful-enabling-generalizable-medical-agent-reasoning-via-self-evolving-skill-memory)  
+   evidence：直接通过工程化智能体环境来实现自主科学发现，涵盖探索、工件管理和协作。
+2. [Learning What to Remember: Observability-Safe Memory Retention via Constrained Optimization for Long-Horizon Language Agents](/202606/14/2606.10616v2-learning-what-to-remember-observability-safe-memory-retention-via-constrained-optimization-for-long-horizon-language-agents)  
    标签：评分：9.0/10、query:agent-memory
-   evidence：提出SkeMex，一种自进化技能记忆框架，从智能体轨迹中提取技能用于长程医疗推理。
-5. [Learning What to Remember: Observability-Safe Memory Retention via Constrained Optimization for Long-Horizon Language Agents](/202606/13/2606.10616v1-learning-what-to-remember-observability-safe-memory-retention-via-constrained-optimization-for-long-horizon-language-agents)  
+   evidence：将记忆保留构建为考虑未来效用与可观测性的约束优化问题，用于长效语言智能体。
+3. [Arbor: Tree Search as a Cognition Layer for Autonomous Agents](/202606/14/2606.12563v1-arbor-tree-search-as-a-cognition-layer-for-autonomous-agents)  
    标签：评分：9.0/10、query:agent-memory
-   evidence：通过约束优化为长时程智能体进行记忆保留
-6. [Selection Integrity for LLM Graph Memory: An Accumulability Criterion for Information-Flow-Blind Retrieval](/202606/13/2606.12290v1-selection-integrity-for-llm-graph-memory-an-accumulability-criterion-for-information-flow-blind-retrieval)  
+   evidence：多代理框架，以共享搜索树作为工作记忆
+4. [Benchmarking AI Agents for Addressing Scientific Challenges Across Scales](/202606/14/2606.12736v1-benchmarking-ai-agents-for-addressing-scientific-challenges-across-scales)  
+   标签：评分：9.0/10、query:autoresearch
+   evidence：提出SciAgentArena基准，包含约200个真实科研任务的逐步验证，用于评估科学发现AI智能体
+5. [ProPlay: Procedural World Models for Self-Evolving LLM Agents](/202606/14/2606.12780v1-proplay-procedural-world-models-for-self-evolving-llm-agents)  
    标签：评分：9.0/10、query:agent-memory
-   evidence：直接解决智能体图记忆问题，揭示基于溯源的检索存在完整性漏洞，提出可累积性判据。
-7. [ATLAS: Active Theory Learning for Automated Science](/202606/13/2606.12386v1-atlas-active-theory-learning-for-automated-science)  
+   evidence：将成功轨迹抽象为程序，用于预演，实现技能复用与自演化
+6. [SkillCAT: Contrastive Assessment and Topology-Aware Skill Self-Evolution for LLM Agents](/202606/14/2606.13317v1-skillcat-contrastive-assessment-and-topology-aware-skill-self-evolution-for-llm-agents)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：从多重轨迹中对比提取可复用技能并评估效用
+7. [From Passive Generation to Investigation: A Proactive Scientific Peer Review Agent](/202606/14/2606.13349v1-from-passive-generation-to-investigation-a-proactive-scientific-peer-review-agent)  
    标签：评分：9.0/10、query:autoresearch
-   evidence：提出ATLAS，一种主动学习框架，在假设生成与实验设计间迭代，实现自动化科学发现。
-8. [Reconstructing living materials as a computable design space with multi-agent reasoning](/202606/13/biorxiv-10-64898-2026-02-15-705954-v2-reconstructing-living-materials-as-a-computable-design-space-with-multi-agent-reasoning)  
+   evidence：通过结构化调查和证据积累为声明提供基础的主动式同行评审代理。
+8. [Agents-K1: Towards Agent-native Knowledge Orchestration](/202606/14/2606.13669v1-agents-k1-towards-agent-native-knowledge-orchestration)  
    标签：评分：9.0/10、query:autoresearch
-   evidence：LiveMat利用多智能体推理将非结构化文献转化为活体材料的可计算设计空间，支持自动化科学发现。
-9. [Do Larger Models Really Win in Drug Discovery?A Benchmark Assessment of Model Scaling in AI-Driven Molecular Property and Activity Prediction](/202606/13/biorxiv-10-64898-2026-04-29-721568-v3-do-larger-models-really-win-in-drug-discoverya-benchmark-assessment-of-model-scaling-in-ai-driven-molecular-property-and-activity-prediction)  
-   标签：评分：9.0/10、query:autoresearch
-   evidence：评估分子性质预测中模型缩放的基准，直接关联AI用于科学自动发现。
+   evidence：将科学论文转化为包含实体、证据和声明的结构化知识图谱，为研究代理提供溯源和依据。
+9. [EvoArena: Tracking Memory Evolution for Robust LLM Agents in Dynamic Environments](/202606/14/2606.13681v1-evoarena-tracking-memory-evolution-for-robust-llm-agents-in-dynamic-environments)  
+   标签：评分：9.0/10、query:agent-memory
+   evidence：提出EvoMem记忆范式，通过记录记忆更新历史帮助LLM代理在动态环境中维持状态。
 
 ### 速读区论文标签
-1. [Tree-of-Experience: A Structured Experience-Management Solution for Self-Evolving Agents under Low-Repetition and Implicit-Reward Environments](/202606/13/2606.06960v1-tree-of-experience-a-structured-experience-management-solution-for-self-evolving-agents-under-low-repetition-and-implicit-reward-environments)  
+1. [SkillAxe: Sharpening LLM-Authored Agent Skills Through Evaluation-Guided Self-Refinement](/202606/14/2606.10546v1-skillaxe-sharpening-llm-authored-agent-skills-through-evaluation-guided-self-refinement)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：提出经验之树（ToE），一种结构化经验管理方法，为自进化LLM智能体在长程任务中组织、检索和更新经验。
-2. [Contemporary AI lacks the imagination to diverge or negate in science](/202606/13/2606.08251v2-contemporary-ai-lacks-the-imagination-to-diverge-or-negate-in-science)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：大规模评估LLM在科学假设生成中的表现，与研究代理在文献综述和假设生成方面的需求直接相关
-3. [Bayesian-Agent: Posterior-Guided Skill Evolution for LLM Agent Harnesses](/202606/13/2606.08348v1-bayesian-agent-posterior-guided-skill-evolution-for-llm-agent-harnesses)  
+   evidence：迭代诊断并精炼LLM编写的智能体技能
+2. [SkillAxe: Sharpening LLM-Authored Agent Skills Through Evaluation-Guided Self-Refinement](/202606/14/2606.10546v2-skillaxe-sharpening-llm-authored-agent-skills-through-evaluation-guided-self-refinement)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：Bayesian-Agent记录经验证的轨迹证据，维护技能后验分布，实现从成功和失败中稳健演化技能。
-4. [Experience Makes Skillful: Enabling Generalizable Medical Agent Reasoning via Self-Evolving Skill Memory](/202606/13/2606.09365v2-experience-makes-skillful-enabling-generalizable-medical-agent-reasoning-via-self-evolving-skill-memory)  
+   evidence：用于LLM智能体技能自我改进的无监督框架
+3. [Role-Agent: Bootstrapping LLM Agents via Dual-Role Evolution](/202606/14/2606.10917v1-role-agent-bootstrapping-llm-agents-via-dual-role-evolution)  
    标签：评分：8.0/10、query:agent-memory
-   evidence：自演化技能记忆从临床交互中提取可复用技能
-5. [SkillAxe: Sharpening LLM-Authored Agent Skills Through Evaluation-Guided Self-Refinement](/202606/13/2606.10546v2-skillaxe-sharpening-llm-authored-agent-skills-through-evaluation-guided-self-refinement)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：通过评估引导的自我精炼，使LLM能够迭代诊断和改进自身技能，实现技能库自演化
-6. [Can AI Agents Synthesize Scientific Conclusions?](/202606/13/2606.11337v1-can-ai-agents-synthesize-scientific-conclusions)  
-   标签：评分：8.0/10、query:autoresearch
-   evidence：科学AI智能体从证据中综合结论；用于文献综述和假设生成的基准。
-7. [Agent Skill Evaluation and Evolution: Frameworks and Benchmarks](/202606/13/2606.11435v1-agent-skill-evaluation-and-evolution-frameworks-and-benchmarks)  
-   标签：评分：8.0/10、query:agent-memory
-   evidence：关于从轨迹中提取技能的自动技能演化方法综述
-8. [IntentKV: Cross-Turn Intent-Aware KV Cache Pruning for Agent Inference](/202606/13/2606.09916v1-intentkv-cross-turn-intent-aware-kv-cache-pruning-for-agent-inference)  
+   evidence：通过双角色自举和自博弈实现LLM代理的自主演化与改进。
+4. [See What I See, Know What I Think: Dense Latent Communication Across Heterogeneous Agents](/202606/14/2606.13594v1-see-what-i-see-know-what-i-think-dense-latent-communication-across-heterogeneous-agents)  
    标签：评分：7.0/10、query:agent-memory
-   evidence：维护跨轮次意图记忆以高效剪枝KV缓存，辅助长程代理的状态跟踪
-9. [Benchmarking Open-Ended Multi-Agent Coordination in Language Agents](/202606/13/2606.08340v1-benchmarking-open-ended-multi-agent-coordination-in-language-agents)  
+   evidence：异构多代理通过潜在通信共享所见和所想
+5. [Observability for Delegated Execution in Agentic AI Systems](/202606/14/2606.09692v1-observability-for-delegated-execution-in-agentic-ai-systems)  
    标签：评分：6.0/10、query:agent-memory
-   evidence：长时程多智能体协调基准
-10. [SkillJuror: Measuring How Agent Skill Organization Changes Runtime Behavior](/202606/13/2606.11543v1-skilljuror-measuring-how-agent-skill-organization-changes-runtime-behavior)  
-   标签：评分：6.0/10、query:agent-memory
-   evidence：技能组织范式如渐进披露改变智能体运行时行为，与长时程智能体的技能库设计相关。
+   evidence：解决基于LLM的智能体系统中委托范围的可观测性问题，实现溯源与状态跟踪。
 
 
 <div class="dpr-home-promo-card">

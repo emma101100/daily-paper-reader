@@ -1,0 +1,653 @@
+Title: From Passive Generation to Investigation: A Proactive Scientific Peer Review Agent
+
+URL Source: https://arxiv.org/pdf/2606.13349v1
+
+Published Time: Fri, 12 Jun 2026 00:58:44 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+## From Passive Generation to Investigation: A Proactive Scientific Peer Review Agent 
+
+Haishuo Fang 1,2 Yue Feng 3 Iryna Gurevych 1,2 
+
+> 1
+
+Ubiquitous Knowledge Processing Lab (UKP Lab), Technical University of Darmstadt 
+
+> 2
+
+National Research Center for Applied Cybersecurity ATHENE, Germany 
+
+> 3
+
+School of Computer Science, University of Birmingham 
+
+www.ukp.tu-darmstadt.de y.feng.6@bham.ac.uk 
+
+Abstract 
+
+Large language models (LLMs) have shown promise in automating scientific peer review. However, existing approaches often struggle to generate in-depth reviews supported by con-crete evidence. We argue that a key limitation is the lack of flexibility to proactively investigate suspicious parts of a paper based on accumu-lated evidence, as human reviewers do. In this paper, we explore how to enable an LLM-based review agent to perform such proactive investi-gation. We find that this can be naturally formu-lated as a Markov Decision Process (MDP), and propose ProReviewer , a scientific peer review agent that proactively reviews a paper guided by a maintained, structured review log . The structured review log serves as a workspace for the agent to track evidence and intermediate findings collected during review. Experiments show that ProReviewer with an 8B backbone, trained by supervised fine-tuning and optimized by reinforcement learning, achieves the high-est average score across five quality dimen-sions, outperforming prompt-based methods with much larger frontier LLMs by up to 39% and the strongest fine-tuned baseline by 16% relatively. It also attains the highest win rates against baselines in human evaluation 1.
+
+1 Introduction 
+
+Peer review is the main mechanism for the research community to evaluate and improve scholarly work for publication. Recent advancements in Large Lan-guage Models (LLMs) have attracted growing at-tention to leveraging LLMs for automated scientific paper reviewing (Biswas et al., 2026; Idahl and Ah-madi, 2025; Zhuang et al., 2025; Liang et al., 2023). Prior work has explored several strategies for gen-erating reviews from a manuscript, including direct prompting (Robertson, 2023; Liang et al., 2023; Liu and Shah, 2023), multi-stage pipelines (Gao 
+
+> 1https://github.com/UKPLab/arxiv2026-ProReviewer
+
+Figure 1: An illustrative example of ProReviewer . The agent extracts the claim “robustness across domains” in the introduction, navigates to the experiments to ver-ify it, finds it contradicted by the reported results, and records the inconsistency in its review log. 
+
+et al., 2024; Zhu et al., 2025), and multi-agent col-laboration (Jin et al., 2024; Yamada et al., 2025). However, recent studies find that existing meth-ods produce shallow criticism (Li et al., 2025b), give generic comments without concrete evi-dence (Ou et al., 2025), accept authors’ claims as strengths without sufficient investigation (Du et al., 2024; Ye et al., 2024), and fail to detect log-ical inconsistencies across sections (e.g., claims contradicted by experimental results) (Dycke and Gurevych, 2026; Li et al., 2025a). We argue that these limitations arise from a lack of flexibility to proactively investigate suspicious parts of a paper, as human reviewers do. Human expert reviewers connect evidence across sections, revisit earlier claims when inconsistencies surface, and decide what to inspect next based on what they have al-ready found (Willis, 2024). Existing methods, by contrast, treat reviewing as a passive generation task in which the investigation path is fixed in ad-vance rather than adapted to what has been found, limiting this flexibility. For example, when a claim in the introduction is contradicted by results in the experiments, a human reviewer would cross-check and flag the discrepancy (Figure 1), whereas a sys-1
+
+> arXiv:2606.13349v1 [cs.CL] 11 Jun 2026
+
+tem with a fixed investigation path may accept the claim at face value and never revisit it. To bridge this gap, we propose ProReviewer , a review agent that investigates the paper proactively by maintaining a structured review log (§3.2). The log records claims extracted from the manuscript, 
+
+questions raised during reading, and notes captur-ing intermediate findings. As the agent reads new content, it updates the log: verifying earlier claims against later evidence, resolving open questions, or noting new findings, so the log both accumulates evidence and guides what to inspect next. The fi-nal review is derived directly from the log, making each critique traceable to its supporting evidence. Because this process involves sequential decisions about what to inspect and how to update the re-view log, we formalize it as a Markov Decision Process (MDP) (§3.1). Unlike prior systems that rely on hand-designed pipelines, the MDP formu-lation allows the review strategy to be learned via reinforcement learning, enabling the agent to adapt its investigation depth to each paper. We train ProReviewer with supervised fine-tuning on synthesized trajectories followed by Group Relative Policy Optimization (GRPO) (Guo et al., 2025) with a multi-dimensional reward (§3.3). To ensure contamination-free evaluation, we construct a version-matched corpus of 5K ICLR 2025/2026 paper–review pairs, training on 4K ICLR 2025 papers and testing on 1K held-out ICLR 2026 papers, which postdate the base model’s knowledge cutoff, mitigating potential data contamination (§4.1). Experiments show that 
+
+ProReviewer with an 8B backbone ranks first on average across five review quality dimensions, im-proving over frontier LLM-based systems (e.g. Gemini-3.1-flash-lite, Qwen3.5-397B-A17B) by up to 39% relatively and over the best fine-tuned baseline by 16%, with human evaluators also pre-ferring its reviews across all pairwise comparisons (§4.3). Further analyses confirm that ProReviewer 
+
+more effectively detects subtle cross-section incon-sistencies (§5.2) and maintains robust performance as paper length increases (§5.3). Our contributions can be summarized as: 1. An MDP formulation of peer review as proac-tive investigation, instantiated in ProReviewer ,a reinforcement-learning trained review agent. 2. A structured review log that supports traceable, evidence-grounded review generation by main-taining claims, questions, and notes throughout the review process. 3. A curated version-matched corpus of 5k ICLR 2025/2026 paper–review pairs where each re-view is aligned to the manuscript version it as-sessed, enabling contamination-controlled train-ing and evaluation. 4. Empirical results showing that ProReviewer 
+
+outperforms both prompt-based systems with frontier LLMs and fine-tuned baselines across automatic and human evaluation. 
+
+2 Related Work 
+
+LLM-based Review Generation. Early work on automated scientific reviewing used direct prompt-ing to produce a complete review in a single pass (Robertson, 2023; Liu and Shah, 2023; Liang et al., 2023; Weng et al., 2025; Zeng et al., 2025), but such reviews often lack specificity, depth, and reliable grounding (Du et al., 2024; Shin et al., 2025). To introduce more structure, recent methods decompose reviewing into staged subtasks (Gao et al., 2024; Zhu et al., 2025), hierarchical question decomposition (Chang et al., 2025), multi-agent role assignment (Jin et al., 2024; Goyal et al., 2026; Yamada et al., 2025), or modular pipelines (Sahu et al., 2025). All these methods follow a fixed re-view procedure that does not adapt to what it has found in the paper. ProReviewer differs in that (1) its review strategy is learned via RL rather than hand-designed, enabling the agent to proactively investigate the paper based on accumulated evi-dence; and (2) it maintains a structured review log which persists claims, questions, and notes during the review process, supporting cross-section evi-dence tracking and revision. Concurrent to our work, DeepReviewer 2.0 (Weng et al., 2026) also tracks evidence during reviewing, but its represen-tation, a traceable review package with anchored annotations, is designed to assist human review-ers in auditing the final output. In contrast, our review log serves as the working memory for the agent to decide what to investigate next based on its accumulated evidence. 
+
+Agentic Reasoning. LLM-based agents that in-terleave reasoning with actions have achieved strong results across web navigation (Nakano et al., 2021), software engineering (Jimenez et al., 2024), and scientific discovery (Lu et al., 2024). Frame-works such as ReAct (Yao et al., 2023) alternate between thought and action steps, while Reflex-ion (Shinn et al., 2023a) and Self-Refine (Madaan 2et al., 2023) add iterative self-correction loops. Other work augments agents with scratchpads (Nye et al., 2021) or persistent memory to retain infor-mation across long horizons (Shinn et al., 2023b; Hu et al., 2025; Yan et al., 2025). While persistent memory helps retain information, these methods typically accumulate unstructured reasoning traces, making it difficult to selectively revise specific ear-lier findings or trace critiques back to their support-ing evidence. In contrast, ProReviewer maintains a structured review log with typed entries as part of a trainable MDP state, enabling selective revi-sion and evidence tracing without requiring the full reasoning trajectory in context. 
+
+3 Method 
+
+In this section, we present ProReviewer for proac-tive reviewing of scientific papers (Figure 2). We first define the MDP formulation (§3.1), describe the design of the review log (§3.2), then present the multi-dimensional reward function (§3.3), and finally detail the training procedure (§3.4). A con-crete case study illustrating the full review process is provided in Appendix J. 
+
+3.1 Review Generation as a Markov Decision Process 
+
+Rather than following a predetermined pipeline, our method enables the agent to decide at each step which section to read, what evidence to ex-tract, and when to revisit earlier content through a learnable policy. We formalize this as M =(S, A, T , E, R).
+
+State S. The state must capture both what the agent currently observes and what it has learned so far, enabling informed decisions about where to look next. Each state st = ( Ct, Lt, P) represents the agent’s understanding at step t: (1) the current context Ct, containing the most recent action and observation (e.g., a section); (2) the review log 
+
+Lt that records the agent’s accumulated evidence entries (§3.2); and (3) the paper index P, com-prising the title and table of contents, which guides navigation through the paper. 
+
+Action A. The action space reflects two comple-mentary activities: acquiring information from the paper and maintaining the review log. It divides into two categories. Environment actions acquire information: read_section retrieves the full text of a section, look_up searches the paper for spe-cific keywords, and finish terminates the episode. 
+
+Log actions maintain the review log L (§3.2): log 
+
+records new evidence entries (claims, questions, or notes), update revises the status of existing entries as new information emerges, and outline constructs the final review by adding points that cite accumu-lated evidence. In this work, we scope the current action space to the manuscript itself, excluding external retrieval, to evaluate our core design in isolation. Notably, our proposed MDP formulation is modular: actions such as literature search for novelty assessment can be added without chang-ing the core architecture. Full action schemas are provided in Appendix A. 
+
+Transition T and Environment E. The transi-tion T (st, a t) → st+1 is deterministic. Given the agent’s action at at step t: (1) the environment ac-tion aenv t is executed, producing observation Ct+1 
+
+(e.g., section content, keyword match results) from the paper E; (2) log operations alog  
+
+> t
+
+are validated and executed, updating Lt → L t+1 .
+
+Reward R. We define a multi-dimensional re-ward to cover both action validity at each step and the overall quality of the final review, described in §3.3. 
+
+Trajectory. The complete review process forms a trajectory τ = ( s0, a 0, r 0, s 1, . . . , s T ) induced by the policy πθ. At t = 0 , the agent is initialized with the paper index P, an empty review log L0 = ∅,and no prior context ∅:
+
+s0 = ( ∅, ∅, P) (1) At the subsequent step t, the agent samples an ac-tion at ∼ πθ(· | st), which updates its context and augments the review log to produce the next state 
+
+st+1 and a per-step reward rt:
+
+st+1 , r t = T (st, a t),
+
+where st+1 = ( Ct+1 , Lt+1 , P). (2) The episode terminates when the agent issues finish 
+
+or reaches a maximum step limit Tmax . At termi-nation, the outline entries in LT are rendered into the final review. 
+
+3.2 State Design: Review Log 
+
+To enable proactive investigation, the agent needs a mechanism to accumulate evidence entries and use them to guide subsequent inspection. We introduce a review log L, a structured workspace that (1) records these evidence entries with unique identi-fiers, allowing the agent to decide what to examine 3Figure 2: The interaction loop of ProReviewer . At time step t, the agent πθ observes state st (paper index, review log, and context) and samples an action at, consisting of an environment action aenv          
+
+> tand a log action alog
+> t.The policy uses aenv
+> tto fetch content from the paper, while alog
+> tupdates the review log to maintain an evolving understanding and evaluation of the paper. A multi-component reward produces rt, and the system transitions to
+> st+1 until termination.
+
+next based on what it has collected so far, and (2) requires each point in the final review to cite corre-sponding evidence IDs, creating a verifiable chain from critiques back to specific paper content. The log L maintains three types of evidence en-tries: 
+
+• Claims {C1, C 2, . . . }: assertions from the paper, annotated with source section and a verification status (e.g., supported , weak , invalid ). 
+
+• Questions {Q1, Q 2, . . . }: questions raised dur-ing reading, each with a resolution status (e.g., 
+
+open , resolved ). 
+
+• Notes {N1, N 2, . . . }: free-form intermediate findings and thoughts. The agent builds L incrementally via the log 
+
+action and refines earlier entries via update as new evidence emerges (e.g., marking a claim as 
+
+supported after finding corroboration in a later section). To produce the final review, the agent calls outline to write review points, each tagged with the IDs of the evidence entries that support it. For example, a weakness such as "Limited baseline comparison [C1, Q2, N5]" links the critique to the supporting evidence: claim C1, ques-tion Q2, and note N5. Any review point that lacks evidence tags or cites non-existent IDs is rejected to prevent hallucinations. 
+
+3.3 Multi-dimensional Reward 
+
+Training a review agent requires optimizing mul-tiple complementary capabilities: issuing syntac-tically valid actions, producing structurally com-plete reviews, aligning quantitative judgments with human ratings, and demonstrating substantive en-gagement with technical content. We decompose the reward into four components at two granulari-ties: step-level and trajectory-level, each targeting a distinct aspect of review quality. 
+
+3.3.1 Step-level Reward Syntactic Validity. To teach the agent correct ac-tion invocation, the syntactic reward rsyn  
+
+> t
+
+provides immediate feedback on action validity at each step: 
+
+rsyn  
+
+> t
+
+= −1λform ∨λexec ∨λground 
+
+ ∈ {− 1, 0} (3) where formatting errors (λform ) indicate schema vi-olations (e.g., malformed JSON), execution errors 
+
+(λexec ) indicate invalid action names or arguments 4(e.g., querying a non-existent section), and ground-ing errors (λground ) penalize review points that cite evidence not present in the agent’s log. 
+
+3.3.2 Trajectory-level Rewards Review Completeness. We define format com-pliance as rfmt = 14
+
+P4 
+
+> i=1
+
+1[check i satisfied ]. The four checks verify: (1) a summary is present, (2) at least one strength, (3) at least one weakness, and (4) an overall score. 
+
+Review Content Quality. Beyond structural completeness, a high-quality review must demon-strate substantive engagement with the paper’s tech-nical content (Zhu et al., 2025; Garg et al., 2025; Goyal et al., 2026). We measure this through two complementary dimensions: (1) Technical depth (rdepth ) evaluates whether the review en-gages with methodological details and experimen-tal design beyond surface-level observations. (2) 
+
+Grounding (rgrd ) measures whether critiques are grounded in the paper’s concrete content rather than hallucination. Both are scored via rubric-based LLM-as-a-judge evaluation, combined as 
+
+rqual = α · rdepth + (1 − α) · rgrd . In our experi-ments, we treat both equally by setting α = 0 .5.
+
+Score Alignment. Beyond textual feedback, peer reviews typically include a quantitative assessment. We encourage the agent to align its score ˆs with the human reviewer average ¯s:
+
+rscr = max  0, 1 − | ˆs − ¯s|/κ  (4) where κ is the rating scale range (e.g., κ = 9 for a 1–10 scale). 
+
+Total Reward. At each step t, the total reward is 
+
+rt = wsyn · rsyn  
+
+> t
+
++ P 
+
+> k∈K
+
+wk · rk, where trajectory-level rewards are computed at episode termination and broadcast uniformly to all steps. The specific reward weights are provided in Appendix C. 
+
+3.4 Training 
+
+We adopt a two-stage training pipeline to obtain an agent that produces valid actions and explores efficiently within a limited interaction budget. First, we perform supervised fine-tuning (SFT) on inter-action trajectories distilled from a strong teacher model (Qwen3.5-397B-A17B; see Appendix B for dataset construction). Second, starting from the SFT checkpoint, we apply GRPO reinforcement learning with a two-phase curriculum: Phase 1 trains with only deterministic, rule-based rewards (syntactic validity, review completeness, and score alignment). For Phase 2, we additionally include LLM-judge-based content quality rewards while retaining all Phase 1 rewards. 
+
+4 Experiments 
+
+4.1 Experiment Setup Dataset. To facilitate reproducible experiments, following prior work (Zhu et al., 2025; Weng et al., 2025; Goyal et al., 2026), we use peer-review data from the International Conference on Learning Representations (ICLR), which is publicly avail-able and covers a wide range of AI research topics in this fast-paced field. We collected submissions across two ICLR conference cycles (2025–2026), carefully matching each paper’s initial submission with its corresponding reviews and initial scores to ensure version alignment. After filtering for review completeness, the final corpus comprises 5,011 papers: 4,011 ICLR 2025 papers for training and validation, and 1,000 ICLR 2026 papers for evaluation. The temporal separation ensures that test papers were published after base model train-ing, mitigating potential data contamination (see Appendix B for full details). 
+
+Baselines. We compare against three categories of baselines that span different paradigms in auto-mated review generation. (1) For prompt-based methods , we include two representative methods: AgentReview (Jin et al., 2024) and AI-Scientist-v2 (Yamada et al., 2025). We evaluate each method across multiple backbones ranging from 8B to 397B parameters, as well as an advanced commer-cial model, i.e., Gemini-3.1-flash-lite (see Table 1). (2) Supervised fine-tuning. We include CycleRe-viewer (Weng et al., 2025) and DeepReview (Zhu et al., 2025). Both methods fine-tune LLMs on hu-man review data and represent the state-of-the-art in SFT-based review generation. (3) Reinforce-ment learning. We implement a Vanilla RL base-line trained with GRPO on the same reward sig-nals and training stages as ProReviewer but with a single-turn generation. 
+
+Implementation Details. We use both Qwen3-8B (Yang et al., 2025) and Llama3.1-8B (Grattafiori et al., 2024) as the base model for fine-tuned methods to assess generalization across model families. All training is conducted on 8 ×A100 (80 GiB) GPUs. For the LLM-judge-based reward during RL training, we use 5GPT-OSS-120B (OpenAI, 2025) as the judge model. To eliminate confounding factors of different base models and datasets, we implement the above fine-tuned methods on the same base models and training data as ProReviewer (cf. Appendix C). 
+
+Complexity Analysis. While ProReviewer is-sues multiple LLM calls per paper, each call oper-ates on a compact state rather than the full paper, keeping total inference cost comparable to multi-stage pipelines. We provide a detailed theoretical and empirical complexity analysis in Appendix D. 
+
+4.2 Evaluation Protocol 
+
+A useful review should help authors understand what to improve ( actionability ), where the issue arises ( grounding ), why the critique is justified (verifiability ), and how deeply it engages with the technical substance ( depth ) (Sadallah et al., 2025; Garg et al., 2025; Zhu et al., 2025). Following the review utility framework introduced by Sadallah et al. (2025), we score each dimension on a 1–5 rubric and normalize to a [0,1] scale. Beyond re-view content quality, we report Score Alignment 
+
+to measure the calibration of the numerical overall rating, computed as max(0 , 1 − | ˆs − ¯s|/κ ) based on mean absolute error (MAE), where ˆs is the pre-dicted overall rating, ¯s the average human overall rating, and κ the rating scale range. 
+
+Automatic Evaluation. All content quality di-mensions are evaluated via LLM-as-a-judge. Asingle judge risks systematic bias toward particu-lar writing styles or model families (Zheng et al., 2023). To mitigate this risk, we aggregate scores from three diverse judges that are not used as base models in any baseline: two general-purpose fron-tier LLMs, i.e., GPT-5.4 nano 2 and DeepSeek-V4 flash (DeepSeek-AI, 2026), and one domain-specific judge, RevUtil (Sadallah et al., 2025), fine-tuned on human-annotated review quality data. This diversity reduces the likelihood that results are driven by the idiosyncratic preferences of any single judge. Per-judge results in Appendix I fur-ther show that our main findings remain consistent across all three evaluators. For each paper, we generate four independent reviews per method and report both average and best-of-4 scores to cap-ture consistency and peak performance. Evaluation rubrics are provided in Appendix E. 
+
+> 2https://openai.com/index/ introducing-gpt-5-4-mini-and-nano/
+
+Human Evaluation. To validate automatic eval-uation findings, we recruit five human evaluators who have served as reviewers for top-tier AI con-ferences. They evaluate reviews for 50 randomly sampled papers from our test dataset along all qual-ity dimensions with pairwise comparisons. Results are presented in Section 4.3.2, with detailed evalu-ation instructions in Appendix F. 
+
+4.3 Main Results 4.3.1 Automatic Evaluation Results 
+
+Table 1 presents results across four review quality dimensions and score alignment, evaluated by three independent LLM judges. ProReviewer (Qwen3-8B) achieves the highest overall score in both avg-of-4 (0.57) and best-of-4 (0.65), outperform-ing all baselines including those backed by much larger models such as Gemini-3.1-flash-lite and Qwen3.5-397B-A17B. For instance, ProReviewer 
+
+excels in Grounding (0.64) and Technical Depth 
+
+(0.48), where ProReviewer surpasses AI-Scientist-v2 (Qwen3.5-397B-A17B) by 0.20 and 0.02 abso-lute points, respectively, highlighting the benefit of proactive investigation with supported evidence for in-depth reviewing. Moreover, ProReviewer leads on Actionability (0.46) and Verifiability (0.40), which are not directly optimized during training, showing generalization beyond the reward sig-nal. These gains generalize across model families: 
+
+ProReviewer with Llama3.1-8B achieves 0.52 av-erage, also outperforming all baselines. Comparing across training paradigms, RL-based methods substantially outperform SFT-trained base-lines: CycleReviewer and DeepReview reach only 0.36 and 0.35 average on the same 8B backbone, trailing ProReviewer by over 0.2 points. Scaling prompt-based methods from 8B to 397B narrows the gap, yet AI-Scientist-v2 with Qwen3.5-397B-A17B (0.46) still trails ProReviewer (0.57) by 0.11 points, suggesting that model scale alone is insuffi-cient for the multi-faceted demands of peer review. These content quality gains do not come at the ex-pense of calibration: ProReviewer maintains com-petitive score alignment, showing that the agent learns to justify its judgments with evidence while keeping its scores well-calibrated. 
+
+4.3.2 Human Evaluation Results 
+
+We further conduct a human evaluation with five reviewers experienced in reviewing for AI con-ferences, who perform blind pairwise compar-isons between ProReviewer and different base-6Method Model Actionability Grounding Technical Depth Verifiability Score Alignment Avg. 
+
+Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 
+
+Prompt-based methods 
+
+AgentReview Llama3.1-8B 0.13±0.08 0.14±0.09 0.12±0.09 0.13±0.10 0.13±0.10 0.14±0.10 0.06±0.05 0.07±0.06 0.64±0.14 0.66±0.15 0.21±0.09 0.23±0.10 Qwen3-8B 0.30±0.08 0.35±0.08 0.32±0.12 0.40±0.11 0.21±0.09 0.26±0.09 0.13±0.09 0.18±0.10 0.63±0.13 0.66±0.13 0.32±0.10 0.37±0.10 Qwen3-14B 0.19±0.06 0.22±0.07 0.20±0.10 0.26±0.10 0.24±0.10 0.30±0.10 0.11±0.06 0.15±0.07 0.61±0.13 0.63±0.13 0.27±0.09 0.31±0.09 Qwen3-32B 0.20±0.06 0.24±0.07 0.25±0.10 0.32±0.12 0.31±0.11 0.38±0.10 0.16±0.09 0.22±0.10 0.64±0.13 0.69±0.13 0.31±0.10 0.37±0.11 Gemini-3.1-flash-lite 0.29±0.11 0.37±0.12 0.36±0.13 0.46±0.13 0.44±0.12 0.50±0.11 0.25±0.12 0.33±0.12 0.70±0.14 0.77±0.13 0.41±0.13 0.49±0.12 Qwen3.5-397B-A17B 0.28±0.11 0.35±0.12 0.46±0.15 0.57±0.14 0.45±0.13 0.52±0.12 0.23±0.10 0.29±0.10 0.78±0.13 0.79±0.13 0.44±0.12 0.50±0.12 AI-Scientist-v2 Llama3.1-8B 0.17±0.11 0.25±0.11 0.16±0.13 0.26±0.16 0.14±0.10 0.20±0.10 0.07±0.05 0.09±0.06 0.74±0.14 0.81±0.13 0.25±0.11 0.32±0.11 Qwen3-8B 0.21±0.07 0.26±0.08 0.21±0.10 0.28±0.11 0.21±0.09 0.27±0.09 0.09±0.05 0.12±0.06 0.68±0.14 0.69±0.14 0.28±0.09 0.32±0.09 Qwen3-14B 0.21±0.08 0.27±0.09 0.21±0.11 0.29±0.12 0.22±0.10 0.28±0.10 0.11±0.07 0.15±0.08 0.69±0.13 0.73±0.13 0.29±0.10 0.34±0.10 Qwen3-32B 0.21±0.07 0.26±0.08 0.24±0.10 0.33±0.12 0.28±0.10 0.35±0.10 0.14±0.09 0.20±0.10 0.69±0.13 0.73±0.12 0.31±0.10 0.37±0.11 Gemini-3.1-flash-lite 0.26±0.11 0.34±0.12 0.31±0.13 0.41±0.13 0.38±0.14 0.47±0.13 0.19±0.11 0.26±0.12 0.73±0.13 0.81±0.13 0.37±0.13 0.46±0.13 Qwen3.5-397B-A17B 0.28±0.11 0.36±0.12 0.44±0.16 0.55±0.15 0.46±0.14 0.52±0.12 0.25±0.09 0.31±0.09 0.83±0.12 0.83±0.12 0.45±0.13 0.51±0.12 
+
+Fine-tuned models 
+
+CycleReviewer Llama3.1-8B 0.39±0.21 0.49±0.19 0.25±0.18 0.34±0.17 0.26±0.15 0.33±0.16 0.15±0.18 0.23±0.22 0.84±0.13 0.87±0.13 0.38±0.17 0.45±0.17 Qwen3-8B 0.31±0.19 0.37±0.19 0.28±0.19 0.36±0.20 0.21±0.14 0.27±0.15 0.17±0.18 0.21±0.20 0.84±0.14 0.84±0.20 0.36±0.17 0.41±0.19 DeepReview Llama3.1-8B 0.34±0.19 0.47±0.19 0.35±0.21 0.50±0.20 0.26±0.15 0.36±0.17 0.24±0.20 0.33±0.21 0.85±0.12 0.92±0.10 0.41±0.18 0.51±0.17 Qwen3-8B 0.35±0.20 0.46±0.17 0.22±0.18 0.33±0.18 0.23±0.15 0.32±0.16 0.13±0.17 0.23±0.21 0.85±0.11 0.90±0.10 0.35±0.16 0.45±0.17 Vanilla RL Qwen3-8B 0.33±0.17 0.49±0.14 0.51±0.15 0.61±0.13 0.36±0.16 0.47±0.11 0.38±0.13 0.43±0.12 0.89±0.12 0.89±0.08 0.49±0.14 0.58±0.12 
+
+ProReviewer (ours) Llama3.1-8B 0.30±0.13 0.40±0.13 0.56±0.19 0.70±0.17 0.44±0.15 0.54±0.13 0.40±0.16 0.50±0.14 0.89±0.08 0.90±0.08 0.52±0.14 0.61±0.13 Qwen3-8B 0.46±0.13 0.55±0.13 0.64±0.16 0.76±0.12 0.48±0.13 0.57±0.12 0.40±0.13 0.48±0.12 0.88±0.11 0.90±0.11 0.57±0.13 0.65±0.12 
+
+Table 1: Average evaluation results across three judges (DeepSeek-V4 flash, GPT-5.4 nano, RevUtil). All scores are mean±std (on [0,1] scale). Green highlights the best and Blue the second-best result in each column. The detailed result per judge can be found in Appendix I. 
+
+Opponent Act. Grd. Ver. Depth 
+
+Win% / Lose% Win% / Lose% Win% / Lose% Win% / Lose% AgentReview (397B) 57.1 / 14.3 76.2 / 9.5 61.9 / 14.3 71.4 / 9.5 AI-Sci-v2 (397B) 66.7 / 14.3 85.7 / 0.0 57.1 / 9.5 76.2 / 9.5 CycleReviewer (8B) 61.5 / 7.7 94.9 / 0.0 82.1 / 0.0 82.1 / 2.6 DeepReview (8B) 51.3 / 23.1 74.4 / 7.7 61.5 / 15.4 69.2 / 17.9 
+
+Table 2: Human pairwise evaluation: ProReviewer 
+
+(Qwen3-8B) vs. baselines judged by five human review-ers. 397B = Qwen3.5-397B-A17B; 8B = Qwen3-8B. 
+
+Green indicates ProReviewer win rate. 
+
+lines (protocol in Appendix F). As shown in Ta-ble 2, ProReviewer is preferred in every matchup on each dimension, with win rates of 51%–95%. Consistent with the automatic results, the largest margins again appear on Grounding and Technical Depth (69.2%–94.9%), where proactive investiga-tion through the review log is most visible to expert judges. The performance lead in the untrained Ac-tionability and Verifiability is also confirmed by human evaluators. To aggregate these pairwise comparisons into a single consistent ranking, we fit a Bradley–Terry model over the full matchup data. The resulting ranking places ProReviewer 
+
+first across all dimensions, with non-overlapping confidence intervals. 
+
+5 Discussion 
+
+5.1 Ablation Study 
+
+We conduct ablation studies on two critical design choices of ProReviewer : structured review log and MDP formulation. 
+
+Review Log. We ablate the structured review log by replacing it with free-form chain-of-thought 
+
+Method Act. Grd. TD Ver. Avg. 
+
+ProReviewer 0.46 0.64 0.48 0.40 0.50 
+
+w/o Review Log 0.31 ↓.15 0.26 ↓.38 0.24 ↓.24 0.34 ↓.06 0.29 ↓.21 
+
+w/o MDP 0.33 ↓.13 0.51 ↓.13 0.36 ↓.12 0.38 ↓.02 0.40 ↓.10 
+
+Table 3: Ablation study of ProReviewer (Qwen3-8B), averaged across three judges. Act.: Actionability, Grd.: Grounding, TD: Technical Depth, Ver.: Verifiability. ↓
+
+denotes absolute drop from the full model. 
+
+while keeping the multi-step agent loop unchanged. As shown in Table 3, performance drops across all quality dimensions: grounding by 38%, tech-nical depth by 24%, actionability by 15%, and verifiability by 6%. This suggests that structured tracking of claims, questions, notes is essential for 
+
+ProReviewer to produce well-grounded and tech-nically substantive reviews. 
+
+MDP Formulation. Removing the MDP formu-lation and generating the review in a single pass fur-ther degrades performance: both actionability and grounding drops by 13%, technical depth by 12%, and verifiability by 2%. Together, these results show that ProReviewer benefits from both struc-tured review log for tracking evidence and sequen-tial decision-making ability for iterative manuscript analysis and investigation. 
+
+5.2 Counterfactual Error Detection 
+
+Beyond overall review quality, we evaluate the abil-ity of different methods to perform in-depth review-ing through a challenging task: detecting subtle logic errors deliberately embedded in manuscripts. This task requires models to cross-check informa-7tion across sections and revisit suspicious content to identify logical inconsistencies, rather than re-lying on generic assessment heuristics. We use the counterfactual dataset introduced by Dycke and Gurevych (2026), which contains 138 papers from multiple AI conferences. Each paper is perturbed with one of three error types: (1) conclusion per-turbation , which alters a conclusion to misalign with its supporting results; (2) finding perturba-tion , which exaggerates a finding beyond what the evidence supports; and (3) result perturbation ,which modifies a result so that it contradicts the conclusion it originally supported. A detection is considered successful if any weakness identified by a method correctly matches the injected error, as judged by GPT-5.4-nano (see Appendix G for dataset details and evaluation prompts).                          
+
+> Method Find. Res. Concl. All
+> AI Sci. V2 (Qwen3.5-397B-A17B) .09 .26 .27 .21 AgentReview (Qwen3.5-397B-A17B) .10 .16 .20 .15 CycleReviewer (Qwen3-8B) .01 .01 .04 .02 DeepReview (Qwen3-8B) .03 .02 .09 .05
+> ProReviewer (Qwen3-8B) .24 .29 .27 .27
+
+Table 4: Counterfactual error detection. Green : best; Blue : second-best. 
+
+As shown in Table 4, ProReviewer achieves the highest overall detection rate (27%), outperform-ing AI-Scientist-V2 by 6 percentage points. More-over, ProReviewer maintains relatively balanced performance across all three perturbation types (24– 29%), whereas AI-Scientist-V2 drops sharply on finding perturbations (9%) despite performing well on conclusion perturbations (27%). CycleReviewer and DeepReview fall below 5% overall, reflecting that SFT-based single-pass generation cannot re-liably detect cross-section inconsistencies. These results suggest that ProReviewer ’s proactive and traceable review process supports more effective cross-sectional reasoning and targeted investigation of subtle inconsistencies. 
+
+5.3 Robustness to Paper Length 
+
+We hypothesize that ProReviewer ’s structured re-view log and iterative investigation make it ro-bust to increasing paper length. To test this, we partition the test set into five bins by token count (see Appendix H for the distribution) and report the average rubric score (mean of four qual-ity dimensions) per bin. As shown in Figure 3, 
+
+ProReviewer (Qwen3-8B) is essentially flat across bins ( 0.49 →0.48 from the shortest to the longest <14k 14–18k 18–22k 22–26k >26k  
+
+> Paper Length (tokens)
+> 0.30
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> Avg Score
+> +.07
+> +.13
+> 0.49 0.48
+> 0.44
+> 0.41
+> 0.37
+> 0.35
+> 0.37
+> 0.34
+> ProReviewer (8B)
+> Vanilla RL (8B)
+> AI Sci v2 (397B)
+> AgentReview (397B)
+
+Figure 3: Average rubric score across five paper-length bins. ProReviewer (Qwen3-8B) maintains a stable lead across all lengths compared to baselines. 8B = Qwen3-8B; 397B = Qwen3.5-397B-A17B. 
+
+papers), with no monotonic trend in between. Ev-ery baseline, by contrast, trends downward as pa-pers grow longer: Vanilla RL declines from 0.44 
+
+to 0.41 , AI-Scientist-v2 from 0.37 to 0.35 , and AgentReview from 0.37 to 0.34 (relative declines of 6.8% , 5.4% , and 8.1% ). ProReviewer main-tains its lead across every length bin, outperform-ing AI-Scientist-v2 by +0 .13 and Vanilla RL by 
+
++0 .07 on the longest papers. This demonstrates that ProReviewer is more robust to paper length. 
+
+6 Conclusion 
+
+We introduced ProReviewer , a review agent that shifts automated peer review from passive genera-tion to proactive investigation by formulating the review process as an MDP guided by a structured review log. The review log tracks claims, questions, and notes throughout the investigation, enabling the agent to verify earlier claims against later evidence, resolve open questions, and ground each critique in accumulated findings. Experiments show that 
+
+ProReviewer with an 8B backbone outperforms both prompt-based systems with much larger fron-tier LLMs and fine-tuned baselines across auto-matic and human evaluation, while further anal-yses confirm its ability to detect cross-section in-consistencies and maintain robust performance on longer papers. These results suggest that proac-tive investigation supported by evidence tracking is a promising direction for LLM-assisted peer re-view and potentially for tasks requiring multi-step analytical reasoning over complex documents. 8Limitations 
+
+While ProReviewer achieves strong performance, there are several limitations that motivate future work. First, the current implementation is text-only: the agent cannot directly inspect figures, which could include complementary evidence that is not accurately described in the text by the authors. Extending the agent with multimodal perception would allow it to verify visual claims (e.g., whether a reported trend matches a plotted curve). Second, ProReviewer is trained and evaluated on AI conference papers (ICLR), as other fields currently lack sufficient publicly available, clean manuscript–review pairs. It is promising to adapt the approach to domains such as biomedicine or the social sciences once review data becomes available. Third, the current implementation focuses on intra-manuscript reasoning and does not perform external novelty search. Novelty assessment is a different problem, an open-corpus retrieval task whose reliability depends on index coverage and corpus freshness, rather than reasoning over evi-dence within the paper, which is our focus in this work. Looking ahead, the MDP formulation naturally accommodates all three extensions—multimodal perception, cross-domain adaptation, and external retrieval—by adding corresponding actions with-out modifying the core architecture, making them promising directions for future work. 
+
+Ethical Considerations 
+
+The development of ProReviewer carries several ethical considerations given its potential impact on the peer review process. Its primary intended use is to help the authors of scientific papers identify potential issues and improve their work before sub-mission and to provide supplementary reference to help reviewers identify possible issues, not as a final judgment. However, there are risks of mis-use and unintended consequences that we discuss below. An automated reviewing system could be misused to mass-produce superficial reviews or to game review assignment systems. To mitigate this risk, we advocate for transparent disclosure when-ever AI-generated reviews are used and recommend that venues establish clear policies governing their use. Overreliance on automated reviews could also lead to reduced human oversight and potential ero-sion of review quality. To address this, we empha-size that ProReviewer is designed to complement, not replace, human judgment, and we encourage users to critically evaluate its outputs rather than accepting them uncritically. Additionally, our train-ing and evaluation data consist of publicly available ICLR submissions and reviews from OpenReview. We use this data solely for research purposes and in accordance with its public availability. No private or confidential review data is used. 
+
+Acknowledgments 
+
+This research work has been funded by the Ger-man Federal Ministry of Research, Technology, and Space and the Hessian Ministry of Higher Edu-cation, Research, Science, and the Arts within their joint support of the National Research Center for Applied Cybersecurity ATHENE. This work has been co-funded by the European Union (ERC, Inter-Text, 101054961). Views and opinions expressed are, however, those of the author(s) only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them. We gratefully acknowl-edge support from the hessian.AI Service Center (funded by the Federal Ministry of Research, Tech-nology and Space, BMFTR, grant no. 16IS22091) and the hessian.AI Innovation Lab (funded by the Hessian Ministry for Digital Strategy and Innova-tion, grant no. S-DIW04/0013/003). We express our sincere gratitude to Md Imbesat Hassan Rizvi, Serwar Basch, Sheng Lu, Qian Ruan, Fengyu Cai, and Frank Niu for their constructive feedback. 
+
+References             
+
+> Joydeep Biswas, Sheila Schoepp, Gautham Vasan, An-thony Opipari, Arthur Zhang, Zichao Hu, Sebastian Joseph, Matthew Lease, Junyi Jessy Li, Peter Stone, Kiri L. Wagstaff, Matthew E. Taylor, and Odest Chad-wicke Jenkins. 2026. AI-assisted peer review at scale: The AAAI-26 AI review pilot. arXiv preprint arXiv:2604.13940 .Yuan Chang, Ziyue Li, Hengyuan Zhang, Yuanbo Kong, Yanru Wu, Hayden Kwok-Hay So, Zhijiang Guo, Liya Zhu, and Ngai Wong. 2025. Treereview: A dynamic tree of questions framework for deep and efficient llm-based scientific peer review. In Proceed-ings of the 2025 Conference on Empirical Methods in Natural Language Processing, EMNLP 2025, Suzhou, China, November 4-9, 2025 , pages 15651–15682. As-sociation for Computational Linguistics. DeepSeek-AI. 2026. Deepseek-v4: Towards highly efficient million-token context intelli-gence. https://huggingface.co/deepseek-ai/
+
+9DeepSeek-V4-Pro/blob/main/DeepSeek_V4.pdf .Technical Report. Jiangshu Du, Yibo Wang, Wenting Zhao, Zhongfen Deng, Shuaiqi Liu, Renze Lou, Henry Peng Zou, Pranav Narayanan Venkit, Nan Zhang, Mukund Sri-nath, Haoran Zhang, Vipul Gupta, Yinghui Li, Tao Li, Fei Wang, Qin Liu, Tianlin Liu, Pengzhi Gao, Congying Xia, and 21 others. 2024. Llms assist NLP researchers: Critique paper (meta-)reviewing. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, EMNLP 2024, Miami, FL, USA, November 12-16, 2024 , pages 5081–5099. Association for Computational Linguis-tics. Nils Dycke and Iryna Gurevych. 2026. Automatic re-viewers fail to detect faulty reasoning in research papers: A new counterfactual evaluation framework. 
+
+Transactions of the Association for Computational Linguistics , 14:465–488. Zhaolin Gao, Kianté Brantley, and Thorsten Joachims. 2024. Reviewer2: Optimizing review generation through prompt generation. CoRR , abs/2402.10886. Madhav Krishan Garg, Tejash Prasad, Tanmay Singhal, Chhavi Kirtani, Murari Mandal, and Dhruv Kumar. 2025. Revieweval: An evaluation framework for ai-generated reviews. In Findings of the Association for Computational Linguistics: EMNLP 2025, Suzhou, China, November 4-9, 2025 , pages 20542–20564. Association for Computational Linguistics. Palash Goyal, Mihir Parmar, Yiwen Song, Hamid Palangi, Tomas Pfister, and Jinsung Yoon. 2026. Scholarpeer: A context-aware multi-agent framework for automated peer review. CoRR , abs/2601.22638. Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, and 1 others. 2024. The llama 3 herd of models. CoRR , abs/2407.21783. Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Peiyi Wang, Qihao Zhu, Runxin Xu, Ruoyu Zhang, Shirong Ma, Xiao Bi, Xiaokang Zhang, Xingkai Yu, Yu Wu, Z. F. Wu, Zhibin Gou, Zhihong Shao, Zhu-oshu Li, Ziyi Gao, Aixin Liu, and 175 others. 2025. Deepseek-r1 incentivizes reasoning in llms through reinforcement learning. Nat. , 645(8081):633–638. Yuyang Hu, Shichun Liu, Yanwei Yue, Guibin Zhang, Boyang Liu, Fangyi Zhu, Jiahang Lin, Honglin Guo, Shihan Dou, Zhiheng Xi, Senjie Jin, Jiejun Tan, Yan-bin Yin, Jiongnan Liu, Zeyu Zhang, Zhongxiang Sun, Yutao Zhu, Hao Sun, Boci Peng, and 28 oth-ers. 2025. Memory in the age of AI agents. CoRR ,abs/2512.13564. Maximilian Idahl and Zahra Ahmadi. 2025. Openre-viewer: A specialized large language model for gener-ating critical scientific paper reviews. In Proceedings of the 2025 Conference of the Nations of the Amer-icas Chapter of the Association for Computational Linguistics: Human Language Technologies, NAACL 2025 - System Demonstrations, Albuquerque, New Mexico, USA, April 29 - May 4, 2025 , pages 550–562. Association for Computational Linguistics. Carlos E. Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and Karthik R. Narasimhan. 2024. Swe-bench: Can language mod-els resolve real-world github issues? In The Twelfth International Conference on Learning Representa-tions, ICLR 2024, Vienna, Austria, May 7-11, 2024 .OpenReview.net. Yiqiao Jin, Qinlin Zhao, Yiyang Wang, Hao Chen, Kai-jie Zhu, Yijia Xiao, and Jindong Wang. 2024. Agen-treview: Exploring peer review dynamics with LLM agents. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, EMNLP 2024, Miami, FL, USA, November 12-16, 2024 , pages 1208–1226. Association for Computa-tional Linguistics. Jiatao Li, Yanheng Li, Xinyu Hu, Mingqi Gao, and Xiao-jun Wan. 2025a. Aspect-guided multi-level perturba-tion analysis of large language models in automated peer review. CoRR , abs/2502.12510. Ruochi Li, Haoxuan Zhang, Edward F. Gehringer, Ting Xiao, Junhua Ding, and Haihua Chen. 2025b. Un-veiling the merits and defects of llms in automatic review generation for scientific papers. In IEEE In-ternational Conference on Data Mining, ICDM 2025, Washington DC, USA, November 12-15, 2025 , pages 1370–1379. IEEE. Weixin Liang, Yuhui Zhang, Hancheng Cao, Binglu Wang, Daisy Ding, Xinyu Yang, Kailas Vodrahalli, Siyu He, Daniel Scott Smith, Yian Yin, Daniel A. McFarland, and James Zou. 2023. Can large lan-guage models provide useful feedback on research papers? A large-scale empirical analysis. CoRR ,abs/2310.01783. Ryan Liu and Nihar B. Shah. 2023. Reviewergpt? an exploratory study on using large language models for paper reviewing. CoRR , abs/2306.00622. Chris Lu, Cong Lu, Robert Tjarko Lange, Jakob N. Fo-erster, Jeff Clune, and David Ha. 2024. The AI scien-tist: Towards fully automated open-ended scientific discovery. CoRR , abs/2408.06292. Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, Shashank Gupta, Bodhisattwa Prasad Majumder, Katherine Hermann, Sean Welleck, Amir Yazdan-bakhsh, and Peter Clark. 2023. Self-refine: Itera-tive refinement with self-feedback. In Advances in Neural Information Processing Systems 36: Annual Conference on Neural Information Processing Sys-tems 2023, NeurIPS 2023, New Orleans, LA, USA, December 10 - 16, 2023 .Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, 
+
+10 Shantanu Jain, Vineet Kosaraju, William Saunders, Xu Jiang, Karl Cobbe, Tyna Eloundou, Gretchen Krueger, Kevin Button, Matthew Knight, Benjamin Chess, and John Schulman. 2021. Webgpt: Browser-assisted question-answering with human feedback. 
+
+CoRR , abs/2112.09332. Maxwell I. Nye, Anders Johan Andreassen, Guy Gur-Ari, Henryk Michalewski, Jacob Austin, David Bieber, David Dohan, Aitor Lewkowycz, Maarten Bosma, David Luan, Charles Sutton, and Augustus Odena. 2021. Show your work: Scratchpads for inter-mediate computation with language models. CoRR ,abs/2112.00114. OpenAI. 2025. gpt-oss-120b & gpt-oss-20b model card. 
+
+CoRR , abs/2508.10925. Jiefu Ou, William Gantt Walden, Kate Sanders, Zheng-ping Jiang, Kaiser Sun, Jeffrey Cheng, William Jurayj, Miriam Wanner, Shaobo Liang, Candice Morgan, Seunghoon Han, Weiqi Wang, Chandler May, Hannah Recknor, Daniel Khashabi, and Ben-jamin Van Durme. 2025. CLAIMCHECK: how grounded are LLM critiques of scientific papers? In 
+
+Findings of the Association for Computational Lin-guistics: EMNLP 2025, Suzhou, China, November 4-9, 2025 , pages 21712–21735. Association for Com-putational Linguistics. Zachary Robertson. 2023. GPT4 is slightly helpful for peer-review assistance: A pilot study. CoRR ,abs/2307.05492. Abdelrahman Sadallah, Tim Baumgärtner, Iryna Gurevych, and Ted Briscoe. 2025. The good, the bad and the constructive: Automatically measuring peer review’s utility for authors. In Proceedings of the 2025 Conference on Empirical Methods in Nat-ural Language Processing, EMNLP 2025, Suzhou, China, November 4-9, 2025 , pages 28991–29021. Association for Computational Linguistics. Gaurav Sahu, Hugo Larochelle, Laurent Charlin, and Christopher Pal. 2025. Reviewertoo: Should AI join the program committee? A look at the future of peer review. arXiv preprint arXiv:2510.08867 .Hyungyu Shin, Jingyu Tang, Yoonjoo Lee, Nayoung Kim, Hyunseung Lim, Ji Yong Cho, Hwajung Hong, Moontae Lee, and Juho Kim. 2025. Mind the blind spots: A focus-level evaluation framework for LLM reviews. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, EMNLP 2025, Suzhou, China, November 4-9, 2025 ,pages 35630–35656. Association for Computational Linguistics. Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023a. Re-flexion: Language agents with verbal reinforcement learning. In Advances in Neural Information Pro-cessing Systems .Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023b. Re-flexion: language agents with verbal reinforcement learning. In Advances in Neural Information Pro-cessing Systems 36: Annual Conference on Neural Information Processing Systems 2023, NeurIPS 2023, New Orleans, LA, USA, December 10 - 16, 2023 .Yixuan Weng, Minjun Zhu, Guangsheng Bao, Hongbo Zhang, Jindong Wang, Yue Zhang, and Linyi Yang. 2025. Cycleresearcher: Improving automated re-search via automated review. In The Thirteenth In-ternational Conference on Learning Representations, ICLR 2025, Singapore, April 24-28, 2025 . OpenRe-view.net. Yixuan Weng, Minjun Zhu, Qiujie Xie, Zhiyuan Ning, Shichen Li, Panzhong Lu, Zhen Lin, Enhao Gu, Qiyao Sun, and Yue Zhang. 2026. Deepreviewer 2.0: A traceable agentic system for auditable scien-tific peer review. CoRR , abs/2604.09590. L Denise Willis. 2024. The peer review process. Respi-ratory care , 69(4):492–499. Yutaro Yamada, Robert Tjarko Lange, Cong Lu, Shen-gran Hu, Chris Lu, Jakob N. Foerster, Jeff Clune, and David Ha. 2025. The AI scientist-v2: Workshop-level automated scientific discovery via agentic tree search. CoRR , abs/2504.08066. Sikuan Yan, Xiufeng Yang, Zuchao Huang, Ercong Nie, Zifeng Ding, Zonggen Li, Xiaowen Ma, Hin-rich Schütze, Volker Tresp, and Yunpu Ma. 2025. Memory-r1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. CoRR , abs/2508.19828. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, and 1 others. 2025. Qwen3 technical report. CoRR , abs/2505.09388. Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R. Narasimhan, and Yuan Cao. 2023. React: Synergizing reasoning and acting in language models. In The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net. Rui Ye, Xianghe Pang, Jingyi Chai, Jiaao Chen, Zhenfei Yin, Zhen Xiang, Xiaowen Dong, Jing Shao, and Siheng Chen. 2024. Are we there yet? revealing the risks of utilizing large language models in scholarly peer review. CoRR , abs/2412.01708. Sihang Zeng, Kai Tian, Kaiyan Zhang, Yuru Wang, Junqi Gao, Runze Liu, Sa Yang, Jingxuan Li, Xin-wei Long, Jiaheng Ma, Biqing Qi, and Bowen Zhou. 2025. Reviewrl: Towards automated scientific review with RL. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, EMNLP 2025, Suzhou, China, November 4-9, 2025 ,pages 16931–16943. Association for Computational Linguistics. 
+
+11 Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. 2023. Judging llm-as-a-judge with mt-bench and chatbot arena. In 
+
+Advances in Neural Information Processing Systems 36: Annual Conference on Neural Information Pro-cessing Systems 2023, NeurIPS 2023, New Orleans, LA, USA, December 10 - 16, 2023 .Minjun Zhu, Yixuan Weng, Linyi Yang, and Yue Zhang. 2025. Deepreview: Improving llm-based paper re-view with human-like deep thinking process. In Pro-ceedings of the 63rd Annual Meeting of the Associa-tion for Computational Linguistics (Volume 1: Long Papers), ACL 2025, Vienna, Austria, July 27 - Au-gust 1, 2025 , pages 29330–29355. Association for Computational Linguistics. Zhenzhen Zhuang, Jiandong Chen, Hongfeng Xu, Yuwen Jiang, and Jialiang Lin. 2025. Large lan-guage models for automated scholarly paper review: A survey. Inf. Fusion , 124:103332. 
+
+A Action Schema 
+
+Table 5 lists the complete action space avail-able to the ProReviewer agent. Each turn, the agent outputs a JSON object with two fields: 
+
+action (exactly one environment action) and 
+
+memory_operations (a list of zero or more log actions). The review log maintained by the agent has four components: • Claims (C1 , C2 , . . . ): Assertions extracted from the paper, each with a verification status and source section. • Questions (Q1 , Q2 , . . . ): Points of uncertainty raised during reading, each with a resolution status. • Notes (N1 , N2 , . . . ): The agent’s intermediate observations, plans, or thoughts. • Review Outline : The final structured review (summary, strengths, weaknesses, questions, overall score), where each entry must refer-ence evidence IDs. Below is an example of a single-turn agent out-put illustrating the JSON format: 
+
+> {"memory_operations": [ {"op": "log", "args": {"type": "claim", "text": "Model achieves 92% accuracy on MMLU", "section": "4.2", "claim_type": "empirical"}}, {"op": "update", "args": {"entry_id": "Q1", "status": "resolved", "answer": "Ablation in Table 3 confirms contribution"}} ], "action": {"name": "read_section", "args": {"section_name": "5. Analysis"}} }
+
+A.1 System Prompt 
+
+Figure 4 presents the complete system prompt used by the ProReviewer agent. 
+
+B Dataset Details 
+
+Training Data. We curate 4,011 submissions from ICLR 2025 for training and validation. Pa-per manuscripts, including appendices, are fetched from the arXiv repository and converted from HTML to parseable Markdown format. Since ICLR allows authors to update their manuscripts during the rebuttal period, we carefully match each paper’s initial submission with its corresponding reviews and initial scores, ensuring that the review text is aligned with the manuscript version it as-sessed rather than a revised version modified in response to reviewer feedback. For each paper, we collect the full set of official reviews, including tex-tual assessments (summary, strengths, weaknesses, questions), overall ratings on a 1–10 scale, and reviewer confidence scores. After filtering for ver-sion alignment and review completeness, we split the data 90%/10% into training and validation sets. 
+
+Evaluation Data. For evaluation, we sample 1,000 papers from ICLR 2026 submissions, en-suring temporal separation from the training set to prevent data leakage. 
+
+Data Distribution. Table 6 summarizes the statis-tics of each data split. 
+
+SFT Trace Generation. To produce supervised fine-tuning data, we use a teacher model (i.e., Qwen3.5-397B-A17B) to reconstruct the review process that would naturally produce a given hu-man review. For each paper, we select multiple human reviews that are sufficiently detailed (long review text) and whose self-reported confidence is ≥ 4, increasing the diversity and quality of the resulting traces. The teacher receives the paper, the human review (summary, strengths, weaknesses, questions, and overall score). It then generates a 12 Category Action Arguments & Description 
+
+Environment Actions 
+
+read_section • section_name : name of the paper section to retrieve 
+
+look_up • query : keywords or phrases to search in the paper 
+
+finish • No arguments. Terminates the episode and submits the review 
+
+Log Actions 
+
+log • type : claim | question | note 
+
+• text : content of the entry • section : source section in the paper • claim_type : category of the claim (optional) • issues : identified issues for the claim (optional) • question_type : category of the question (optional) • related_claims : linked claim IDs (optional) 
+
+update • entry_id : ID of the entry to update, e.g., C1 , Q3 
+
+• status : verification or resolution status • reasoning : justification for claim status • answer : resolution for questions • cross_references : related entry IDs (optional) • answer_sections : sections supporting the answer (op-tional) 
+
+outline • section : review section to add to • content : free text or score (1–10) • tags : evidence entry IDs supporting this point 
+
+Table 5: Complete action schema for ProReviewer . Environment actions interact with the paper; log actions update the review log. 
+
+Split # Papers Avg Tokens Avg Rating Accept % 
+
+Train 3,610 14,820 5.2 32.4 Validation 401 14,650 5.1 31.9 Test 1,000 15,130 5.3 33.1 
+
+Table 6: Dataset statistics across splits. Avg Tokens is the mean paper length. Avg Rating is the mean overall score from human reviewers. Accept % is the proportion of accepted papers. 
+
+multi-turn interaction trace—reading sections, log-ging claims, raising questions, taking notes, verify-ing evidence, and incrementally building the review outline—that faithfully reflects how a thorough re-viewer would engage with the paper. The human review serves as a minimum coverage floor: the reconstructed trace must cover at least all points from the reference review but may include addi-tional findings. This procedure yields 31,312 step-level training instances from 1,485 unique papers, grounded in actual human judgments without re-quiring human annotators to produce step-by-step traces. 
+
+C Hyperparameters 
+
+Table 7 lists the key hyperparameters used in train-ing.                               
+
+> Stage Hyperparameter Qwen3-8B Llama3.1-8B
+> SFT Learning rate 1×10 −51×10 −5
+> Epochs 33Global batch size 64 64 LR schedule Cosine (5% warmup) GRPO RL Actor LR 1×10 −65×10 −7
+> KL coeff. 0.01 0.001 Train batch size 16 16 Rollouts per prompt ( n)88Max episode steps 30 30 Infra. GPUs 8×A100 (80 GiB)
+
+Table 7: Training hyperparameters for SFT and GRPO RL stages for ProReviewer .
+
+Reward Weights. Training follows a two-phase curriculum. In Phase 1, only deterministic, rule-based rewards are active: syntactic validity (weight 1.0), review completeness (weight 1.0), and score alignment (weight 2.0). Phase 2 retains all Phase 1 rewards with adjusted score alignment weight (1.0) and additionally introduces the LLM-judge-based content quality reward (weight 2.0), which com-bines technical depth and grounding (§3.3). 
+
+D Complexity Analysis 
+
+Theoretical Comparison. Let N denote the pa-per length in tokens, T the number of agent steps, and c the average context size per step. For a single-pass method, the computational cost of one 13 Method LLM Calls Avg Context Total Tokens          
+
+> Single-pass (prompt) 1∼16K ∼20K Multi-stage pipeline 3–5 ∼16K ∼60K
+> ProReviewer 15–20 ∼4K ∼70K
+> Table 8: Inference complexity comparison for a typical 16K-token paper. Total tokens includes both input and output tokens. Values are approximate and may vary with paper length.
+
+forward pass scales as O(N 2) under standard self-attention (or O(N ) with linear-attention variants), since the model must attend over the full paper. For a multi-stage pipeline with K stages, the cost is O(K · N 2) as each stage typically re-processes the full paper. For ProReviewer , the state at step 
+
+t has size ct = |P| + |L t| + |C t|, where the pa-per index |P| and current context |C t| are bounded, but the review log |L t| grows as the agent accu-mulates entries. In the worst case, |L t| = O(t),so the per-step cost at step t is O(c2 
+
+> t
+
+) and the to-tal cost across T steps is O(PTt=1 c2 
+
+> t
+
+). In practice, the review log remains compact: with Tmax =30 
+
+steps and short structured entries (each ∼50–100 tokens), the log reaches ∼1.5–2K tokens at ter-mination. Combined with the paper index ( ∼200 tokens) and current section ( ∼2K tokens), the effec-tive context at the final step is ∼4–5K tokens—still substantially smaller than the full paper ( ∼12–20K tokens). Thus, while ct is not strictly constant, it grows slowly and remains bounded by Tmax , mak-ing the total cost O(T · c2 
+
+> T
+
+) ≪ O (N 2) for typical papers. 
+
+Empirical Comparison. Unlike single-pass methods that process the entire paper in one for-ward pass, ProReviewer performs multiple shorter forward passes (one per step), each conditioned on a compact state rather than the full paper. Table 8 compares the token consumption across paradigms. Although ProReviewer issues more LLM calls per paper, the per-call context is substantially smaller (state ≈4K tokens vs. full paper ≈12–20K tokens), and the total token budget remains comparable. 
+
+E Evaluation Rubrics 
+
+Since no single standardized rubric exists for review-quality evaluation, we construct a four-dimensional rubric grounded in prior work: we build on the utility framework of Sadallah et al. (2025) and integrate rubric designs from DeepRe-view (Zhu et al., 2025), ScholarPeer (Goyal et al., 2026), and CycleReviewer (Weng et al., 2025). 
+
+Grounding (1–5). Measures whether the review model can identify the specific part of the paper be-ing addressed. A comment is explicitly grounded 
+
+(scores 4–5) only if it includes a structural refer-ence (section number, table/figure number, equa-tion number, or a direct quote). Referring to a con-cept or method name without a structural locator is 
+
+weak grounding (scores 2–3). • 5: Fully grounded and specific—explicitly ref-erences which part of the paper is addressed and clearly specifies what needs to be ad-dressed. • 4: Fully grounded but under-specific— references the part but does not clearly specify the issue. • 3: Weakly grounded but specific—the ref-erenced part is ambiguous, but the issue is clearly specified. • 2: Weakly grounded and not specific. • 1: Not grounded at all. 
+
+Actionability (1–5). Assesses actionability based on two criteria: (1) whether actions are explicitly stated or must be inferred, and (2) whether the suggested actions are concrete or vague. • 5: Highly actionable—explicit actions with concrete implementation details. • 4: Mostly actionable—implicit actions but concrete implementation guidance. • 3: Somewhat actionable—explicit actions but vague on execution. • 2: Borderline actionable—implicit and vague. • 1: Unactionable—no meaningful improve-ment guidance. 
+
+Technical Depth (1–5). Evaluates technical en-gagement and analytical reasoning. • 5: Technical and reasoned—engages with spe-cific technical content (methodology, algo-rithms, proofs) and explains why the issue is problematic. • 4: Technical but unreasoned—engages with technical content without explaining conse-quences. 14 • 3: Non-technical but reasoned—does not en-gage with specific technical content but pro-vides reasoning about why the gap matters. • 2: Non-technical and unreasoned. • 1: No substance—pure surface observation. 
+
+Verifiability (1–5 or X). First determines whether the weakness contains a claim (opinion, judgment, or deduction beyond stating facts). If no claim is present, scores X (mapped to 0). Other-wise: • 5: Fully verifiable—claim thoroughly sup-ported by explicit evidence, precise reasoning, or external references. • 4: Mostly verifiable—well-supported with mi-nor gaps. • 3: Somewhat verifiable—some justification but lacks key elements. • 2: Borderline verifiable—vague or insufficient support. • 1: Unverifiable—no supporting evidence or reasoning. We use three independent judges (GPT-5.4 nano, DeepSeek-V4 flash, and RevUtil) and average their scores. Per-judge results are reported in Ap-pendix I. 
+
+F Human Evaluation 
+
+Evaluators. We recruit 5 expert evaluators who have served as reviewers for top-tier AI conferences (e.g., NeurIPS, ICLR, ACL, EMNLP). 
+
+Evaluation Protocol. Human evaluation uses pairwise comparison of reviews. For each paper, evaluators compare pairs of reviews from different systems. Each comparison presents the paper and two anonymized reviews (labeled “Review A” and “Review B”), and evaluators select which review provides higher-quality feedback. 
+
+Systems Compared. Five systems are included: AgentReview, AI Scientist v2, CycleReviewer, DeepReview, and ProReviewer . Systems are as-signed anonymous identifiers ( system_P through 
+
+system_T ) with a seeded random permutation; evaluators never see real system names. For each paper, 5 pairwise comparisons are generated from a rotating cycle design that ensures all 10 possible 
+
+Table 9: Bradley-Terry Elo scores with 95% bootstrap confidence intervals (2,000 resamples) for each dimen-sion.                                             
+
+> System Act. Grd. Ver. Depth
+> ProReviewer 1130 [1086, 1181] 1296 [1238, 1370] 1181 [1134, 1237] 1210 [1157, 1276]
+> AI-Sci-v2 967 [923, 1009] 1035 [993, 1077] 1046 [1003, 1088] 1034 [993, 1077]
+> AgentReview 974 [933, 1015] 969 [923, 1011] 984 [943, 1025] 984 [940, 1027]
+> CycleReviewer 911 [864, 954] 784 [735, 827] 818 [768, 860] 819 [766, 867]
+> DeepReview 1018 [976, 1062] 917 [865, 962] 972 [925, 1017] 953 [903, 1001]
+
+Dimension Kripp. α Fleiss’ κ Cohen’s κ2
+
+Actionability .44 .52 .46 Grounding .70 .68 .50 Verifiability .55 .43 .66 Analytical Depth .56 .54 .52 
+
+Table 10: Inter-annotator agreement across dimensions on the overlap set. 
+
+system pairs are covered in aggregate, with each system appearing twice per paper. The A/B pre-sentation order is randomized with a coin flip per comparison. 
+
+Paper Selection and Overlap. 50 papers are randomly sampled from the test set. Each eval-uator reviews 30 papers (150 pairwise compar-isons). Approximately 20% of each evaluator’s papers are shared across all evaluators to enable inter-annotator agreement measurement. 
+
+F.1 Annotator Guidelines 
+
+Figure 5 reproduces the complete guidelines pro-vided to human evaluators. 
+
+F.2 Bradley-Terry Analysis 
+
+Based on the evaluated data, we fit a Bradley-Terry (BT) model to derive proper strength estimates. Ties are split as 0.5 wins for each side. Scores are reported on an Elo-like scale (400 points ≈ 10 ×
+
+strength ratio), anchored at 1000. Table 9 shows the full ranking. ProReviewer 
+
+achieves the highest BT score on every dimen-sion, with non-overlapping 95% confidence inter-vals against most baselines. 
+
+F.3 Inter-Annotator Agreement 
+
+We measure inter-annotator agreement on the 20% overlap set using three chance-corrected metrics: Krippendorff’s α, Fleiss’ κ, and average pairwise quadratic-weighted Cohen’s κ2.
+
+G Counterfactual Error Detection 
+
+Dataset. We use the counterfactual dataset intro-duced by Dycke and Gurevych (2026), which con-15 tains 138 papers from six AI conferences, includ-ing ACL 2023, ACL2024, EMNLP 2023, EMNLP 2024, NeurIPS 2024, and ICLR 2025. Our eval-uation excludes papers from ICLR 2025 to pre-vent data overlap and use the remaining 115 papers. Each paper has an original version and a counterfac-tual version with one deliberately injected logical error. 
+
+Perturbation Types. Three types of errors are injected: 1. Conclusion perturbation : Alters a conclu-sion to misalign with its underlying result. 2. Finding perturbation : Exaggerates the claim of a finding beyond what the evidence sup-ports. 3. Result perturbation : Changes a result to con-tradict the conclusion it originally supported. Each counterfactual paper includes metadata spec-ifying the modification type, the modified claim, and the logical relationship explaining why the in-jected claim is incorrect. 
+
+Detection Judgment. Each review system gen-erates a review of the counterfactual paper. We then use an LLM judge (GPT-5.4 nano) to deter-mine whether any weakness in the generated review identifies or implies the injected error. The judge receives: • The injected error description (type, modified claim, and why it is wrong). • The list of weaknesses from the generated re-view. Paraphrases and conceptually equivalent ob-servations count as detections. The judge outputs a JSON with four fields: detected 
+
+(true/false), confidence (high/medium/low), 
+
+matching_weakness_index , and reasoning . A detection is counted as successful if the judge returns detected: true with confidence: high .
+
+H Paper Length Analysis 
+
+Table 11 reports the distribution of papers across the five length bins used in the robustness analysis (Section 5.3).               
+
+> Bin # Papers % of Test Set
+> 0–14k tokens 169 16.9% 14–18k tokens 234 23.4% 18–22k tokens 202 20.2% 22–26k tokens 119 11.9% 26k+ tokens 276 27.6% Total 1,000 100%
+> Table 11: Distribution of test papers across length bins.
+
+I Per-Judge Evaluation Results 
+
+Tables 12–14 present the full evaluation results for each of the three judges used in our evalua-tion: GPT-5.4 nano (Table 12), DeepSeek-V4 flash (Table 13), and the utility-based RevUtil judge (Ta-ble 14). The main paper reports averages across all three judges. 
+
+J Case Study 
+
+To illustrate how proactive investigation and evi-dence tracking produce well-grounded critiques, we present ProReviewer ’s review of an ICLR sub-mission titled “Surf3R: Rapid Surface Reconstruc-tion from Sparse RGB Views in Seconds.” The agent completed the review in 30 steps, accumu-lating 12 claims, 6 questions, and 32 notes in its review log. Figure 6 shows the abridged trajec-tory: the agent flags suspicious claims early, cross-references them against experimental evidence, up-dates their status as new information emerges, and ultimately derives each review point from specific log entries—demonstrating the traceability and proactive investigation. 16 Method Model Actionability Grounding Technical Depth Verifiability Avg. 
+
+Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 
+
+Prompt-based methods 
+
+AgentReview Llama3.1-8B 0.18±0.10 0.19±0.10 0.07±0.09 0.09±0.10 0.08±0.08 0.09±0.09 0.16±0.11 0.18±0.11 0.12±0.10 0.14±0.10 Qwen3-8B 0.25±0.06 0.28±0.05 0.15±0.09 0.20±0.09 0.14±0.09 0.19±0.09 0.17±0.07 0.20±0.07 0.18±0.08 0.22±0.08 Qwen3-14B 0.26±0.06 0.30±0.06 0.14±0.09 0.20±0.10 0.17±0.10 0.24±0.09 0.24±0.07 0.26±0.06 0.20±0.08 0.25±0.08 Qwen3-32B 0.32±0.09 0.37±0.09 0.28±0.13 0.36±0.16 0.29±0.11 0.36±0.10 0.39±0.16 0.49±0.16 0.32±0.12 0.40±0.13 Gemini-3.1-flash-lite 0.36±0.09 0.41±0.09 0.31±0.12 0.39±0.12 0.34±0.11 0.40±0.10 0.37±0.12 0.45±0.11 0.34±0.11 0.42±0.10 Qwen3.5-397B-A17B 0.38±0.10 0.45±0.10 0.61±0.15 0.71±0.12 0.41±0.12 0.48±0.11 0.29±0.08 0.32±0.09 0.42±0.11 0.49±0.10 AI Scientist v2 Llama3.1-8B 0.21±0.09 0.26±0.08 0.09±0.11 0.15±0.12 0.08±0.09 0.12±0.10 0.18±0.09 0.21±0.08 0.14±0.10 0.18±0.09 Qwen3-8B 0.27±0.06 0.30±0.06 0.15±0.09 0.22±0.10 0.16±0.09 0.22±0.09 0.22±0.06 0.24±0.06 0.20±0.07 0.25±0.07 Qwen3-14B 0.26±0.07 0.31±0.06 0.13±0.10 0.19±0.10 0.16±0.10 0.22±0.09 0.24±0.06 0.27±0.06 0.20±0.08 0.25±0.08 Qwen3-32B 0.32±0.09 0.38±0.09 0.26±0.12 0.34±0.15 0.26±0.11 0.34±0.11 0.34±0.16 0.45±0.16 0.29±0.12 0.38±0.13 Gemini-3.1-flash-lite 0.33±0.09 0.39±0.09 0.26±0.12 0.34±0.12 0.32±0.13 0.40±0.12 0.27±0.11 0.34±0.12 0.29±0.11 0.37±0.11 Qwen3.5-397B-A17B 0.37±0.11 0.45±0.11 0.49±0.20 0.62±0.18 0.43±0.13 0.51±0.12 0.28±0.07 0.31±0.07 0.40±0.13 0.47±0.12 
+
+Fine-tuned models 
+
+CycleReviewer Llama3.1-8B 0.39±0.14 0.46±0.13 0.15±0.14 0.21±0.13 0.23±0.15 0.31±0.15 0.23±0.15 0.31±0.15 0.25±0.15 0.32±0.14 Qwen3-8B 0.27±0.12 0.32±0.14 0.20±0.18 0.30±0.21 0.18±0.14 0.24±0.14 0.25±0.12 0.28±0.13 0.22±0.14 0.28±0.16 DeepReview Llama3.1-8B 0.32±0.14 0.41±0.16 0.30±0.22 0.47±0.22 0.23±0.15 0.32±0.15 0.28±0.13 0.30±0.14 0.28±0.16 0.38±0.17 Qwen3-8B 0.36±0.14 0.44±0.12 0.12±0.14 0.21±0.15 0.20±0.14 0.29±0.14 0.20±0.16 0.29±0.16 0.22±0.15 0.31±0.14 Vanilla RL Qwen3-8B 0.40±0.13 0.54±0.11 0.42±0.11 0.47±0.11 0.41±0.13 0.47±0.10 0.38±0.10 0.42±0.10 0.40±0.12 0.48±0.11 
+
+ProReviewer (ours) Llama3.1-8B 0.38±0.13 0.48±0.12 0.50±0.21 0.66±0.19 0.46±0.14 0.55±0.12 0.43±0.14 0.51±0.13 0.44±0.15 0.55±0.14 Qwen3-8B 0.51±0.10 0.58±0.10 0.50±0.15 0.62±0.14 0.46±0.12 0.54±0.11 0.42±0.11 0.49±0.11 0.47±0.12 0.56±0.11 
+
+Table 12: Evaluation results using GPT-5.4 nano as rubric judge (normalized to [0,1]). All scores are mean±std. 
+
+Green highlights the best and Blue the second-best result in each column. 
+
+Method Model Actionability Grounding Technical Depth Verifiability Avg. 
+
+Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 
+
+Prompt-based methods 
+
+AgentReview Llama3.1-8B 0.19±0.09 0.20±0.09 0.26±0.12 0.28±0.13 0.18±0.11 0.20±0.11 0.02±0.05 0.03±0.06 0.16±0.09 0.18±0.10 Qwen3-8B 0.26±0.05 0.29±0.05 0.36±0.09 0.42±0.09 0.27±0.09 0.34±0.09 0.02±0.05 0.04±0.08 0.23±0.07 0.27±0.08 Qwen3-14B 0.28±0.05 0.30±0.06 0.40±0.09 0.45±0.09 0.31±0.10 0.37±0.10 0.09±0.11 0.17±0.13 0.27±0.09 0.32±0.10 Qwen3-32B 0.28±0.05 0.30±0.06 0.42±0.09 0.47±0.09 0.33±0.10 0.39±0.10 0.09±0.10 0.16±0.12 0.28±0.09 0.33±0.09 Gemini-3.1-flash-lite 0.36±0.09 0.42±0.11 0.53±0.10 0.60±0.11 0.53±0.13 0.60±0.12 0.34±0.18 0.48±0.16 0.44±0.12 0.52±0.12 Qwen3.5-397B-A17B 0.35±0.10 0.41±0.12 0.54±0.11 0.61±0.12 0.49±0.14 0.57±0.13 0.38±0.17 0.50±0.14 0.44±0.13 0.52±0.13 AI Scientist v2 Llama3.1-8B 0.21±0.08 0.26±0.06 0.29±0.10 0.37±0.10 0.19±0.10 0.27±0.10 0.02±0.06 0.05±0.09 0.18±0.08 0.24±0.09 Qwen3-8B 0.27±0.05 0.29±0.06 0.36±0.09 0.42±0.09 0.27±0.09 0.33±0.09 0.06±0.09 0.12±0.11 0.24±0.08 0.29±0.09 Qwen3-14B 0.27±0.06 0.30±0.06 0.37±0.10 0.43±0.10 0.28±0.10 0.34±0.10 0.10±0.12 0.18±0.13 0.26±0.09 0.32±0.10 Qwen3-32B 0.27±0.05 0.30±0.06 0.40±0.09 0.45±0.09 0.30±0.10 0.37±0.10 0.08±0.10 0.15±0.12 0.26±0.08 0.32±0.09 Gemini-3.1-flash-lite 0.31±0.09 0.36±0.10 0.47±0.10 0.52±0.10 0.45±0.15 0.54±0.14 0.28±0.16 0.39±0.14 0.38±0.12 0.45±0.12 Qwen3.5-397B-A17B 0.36±0.10 0.42±0.11 0.54±0.11 0.61±0.11 0.46±0.14 0.52±0.13 0.43±0.14 0.53±0.12 0.45±0.12 0.51±0.12 
+
+Fine-tuned models 
+
+CycleReviewer Llama3.1-8B 0.35±0.17 0.44±0.13 0.28±0.13 0.34±0.15 0.28±0.15 0.35±0.18 0.08±0.18 0.17±0.25 0.25±0.16 0.32±0.18 Qwen3-8B 0.29±0.14 0.35±0.14 0.33±0.14 0.39±0.13 0.25±0.14 0.30±0.16 0.14±0.21 0.17±0.23 0.25±0.16 0.30±0.17 DeepReview Llama3.1-8B 0.32±0.14 0.40±0.15 0.39±0.15 0.49±0.14 0.28±0.16 0.39±0.20 0.28±0.25 0.33±0.27 0.32±0.17 0.40±0.19 Qwen3-8B 0.32±0.16 0.42±0.13 0.27±0.13 0.34±0.16 0.26±0.15 0.36±0.18 0.06±0.15 0.15±0.23 0.23±0.15 0.32±0.17 Vanilla RL Qwen3-8B 0.30±0.15 0.44±0.12 0.45±0.15 0.58±0.12 0.31±0.19 0.47±0.12 0.53±0.12 0.57±0.11 0.40±0.15 0.52±0.12 
+
+ProReviewer (ours) Llama3.1-8B 0.33±0.08 0.35±0.09 0.53±0.15 0.63±0.14 0.42±0.15 0.53±0.14 0.51±0.17 0.61±0.14 0.45±0.14 0.53±0.13 Qwen3-8B 0.39±0.12 0.47±0.14 0.62±0.14 0.73±0.12 0.49±0.14 0.59±0.14 0.61±0.13 0.69±0.11 0.53±0.13 0.62±0.13 
+
+Table 13: Evaluation results using DeepSeek-V4 flash as rubric judge (normalized to [0,1]). All scores are mean±std. 
+
+Green highlights the best and Blue the second-best result in each column. 
+
+17 # Task You are reviewing a scientific paper . Your objective is to produce an accurate , internally consistent , and evidence - based review with : summary , strengths , weaknesses , questions for authors , and an overall score (1 -10) . You maintain a review log which help track your analysis and reasoning process . Your final review output is based on this log , so keep it updated and organized . # Action space Each turn , output a JSON object with two fields : { " memory_operations ": [...] , " action ": {...} }" memory_operations " is a list of log operations to update your review log ( can be empty []) . " action " is exactly one paper action . ## Paper Actions - read_section : {" name ": " read_section ", " args ": {" section_name ": "..."}} - look_up : {" name ": " look_up ", " args ": {" query ": "..."}} - finish : {" name ": " finish ", " args ": {}} ( You MUST call finish before running out of turns or your review is discarded .) ## Log Operations - log : Record a new entry . Always use " op ": " log ". Claim : {" op ":" log " ," args ":{" type ":" claim " ," text ":"..." ," section ":"2.1" ," claim_type ":" empirical "}} Question : {" op ":" log " ," args ":{" type ":" question " ," text ":"..." ," section ":"3" ," question_type ":" methodology "}} Note : {" op ":" log " ," args ":{" type ":" note " ," text ":"..." ," section ":"4"}} " section " is required . For claims , optionally add " issues ": [...]. For questions , optionally add "related_claims ": [...]. All entries must cite concrete paper elements (e.g., Eq 3, Table 2, Fig 4( b)) and include specific details . - update : Update the status of an existing claim or question . {" op ":" update " ," args ":{" entry_id ":" C1 | Q1 " ," status ":"..." ," reasoning ":"..."}} For claims (C *) : status in [ supported , weak , invalid , to_be_verified ]. Optionally include "cross_references ": [...] For questions (Q *) : status in [ resolved , partially_answered , open ]. Include " answer ": "...". Optionally " answer_sections ": [...] - outline : Add one entry to your review outline . {" op ":" outline " ," args ":{" section ":" summary | strengths | weaknesses | questions | overall_score " ," content ":"..." ," tags ":[...]}} For overall_score , content MUST be an integer 1 -10. Each point in strengths / weaknesses MUST be grounded in the records ( claims , questions , notes ) , reflected by the tags (C1 , Q2 , N3 , etc ). Every weakness and strength must cover a distinct issue . # Review Log You maintain a review log as persistent memory across turns . It has four components : - Claims : Authors ' statements you extracted , each with a verification status . - Questions : Points of uncertainty or suspicion , each with a resolution status . - Notes : Your observations , plans or thoughts . - Review Outline : Your final verdict -- only add when confident based on evidence . Guidelines : - Use `log ` to record claims , questions , and notes . Use `update ` to change status after gathering evidence . - Use `outline ` to build your review . When you call `finish `, the outline becomes your final output . - Verify all logged claims and answer all open questions . Never repeat a look \ _up with the same query .- If multiple look \ _ups return no matches , the topic may be absent from the paper -- this itself can be a weakness . Output valid JSON only . 
+
+Figure 4: System prompt for the ProReviewer agent (used during both RL training and inference). 
+
+18 # Annotator Guidelines : Review Quality Pairwise Evaluation ## Overview You will compare pairs of peer reviews for the same academic paper across 4 quality dimensions . For each comparison , you see : - Paper Info : The paper title , abstract , and a link to the full paper on arXiv - Review A and Review B: Two anonymized reviews For each dimension , judge which review is better , or whether they are tied (A wins / B wins / Tie ). ## Dimension 1: Actionability Which review provides more actionable feedback ? Consider : Are suggestions explicit or implicit ? Concrete or vague ? Does the review tell authors * how * to improve ? (5) Highly Actionable : Explicit actions with concrete implementation details (4) Mostly Actionable : Implicit actions but concrete execution details (3) Somewhat Actionable : Explicit actions but vague on execution (2) Borderline Actionable : Implicit and vague actions (1) Unactionable : Pure observations without suggestions ## Dimension 2: Grounding Which review better grounds its critiques in specific parts of the paper ? Consider : Does it reference specific sections , tables , figures , equations ? Or make generic claims ? (5) Fully Grounded and Specific : References sections / tables / figures AND specifies what is wrong (4) Fully Grounded but Under - Specific : References location but vague about the issue (3) Weakly Grounded and Specific : No structural reference but clear about the issue (2) Weakly Grounded and Not Specific : Neither referenced nor specific (1) Not Grounded : No identifiable paper section addressed ## Dimension 3: Verifiability Which review better supports its claims with justification ? Consider : Does the reviewer provide logical reasoning , common knowledge , or external references ? (5) Fully Verifiable : Claims thoroughly supported by reasoning or references (4) Mostly Verifiable : Well - supported but minor gaps (3) Somewhat Verifiable : Some justification but lacks key elements (2) Borderline Verifiable : Vague or insufficient support (1) Unverifiable : No supporting evidence or justification ## Dimension 4: Technical Depth Which review demonstrates deeper technical analysis ? Consider : Does it engage with methodology , identify assumption violations , explain * why * an issue matters ? (5) Deep technical critique : Theoretical gaps , assumption violations , subtle correctness issues (4) Technical analysis : Identifies assumptions , edge cases , component interactions (3) Methodological engagement : Questions justification or applicability (2) Mixed surface + technical : Describes methods without questioning assumptions (1) Surface only : " Dataset is small ", " writing could be clearer " ## Important Notes - Evaluate each dimension independently . - Ignore review length -- a shorter , focused review can be better than a longer , vague one . - Do not try to identify the systems ; reviews are anonymized . - Be consistent . Apply the same standards across all comparisons . - When in doubt , re - read the paper via the provided arXiv link . 
+
+Figure 5: Complete annotator guidelines for human evaluation of review quality via pairwise comparison. 
+
+19 Method Model Actionability Grounding Technical Depth Verifiability Avg. 
+
+Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 Avg-of-4 Best-of-4 
+
+Prompt-based methods 
+
+AgentReview Llama3.1-8B 0.02±0.06 0.04±0.07 0.02±0.05 0.03±0.07 — — 0.00±0.00 0.00±0.00 0.01±0.04 0.02±0.05 Qwen3-8B 0.38±0.14 0.49±0.13 0.45±0.18 0.59±0.14 — — 0.22±0.14 0.31±0.16 0.35±0.15 0.47±0.15 Qwen3-14B 0.04±0.08 0.08±0.10 0.07±0.11 0.13±0.13 — — 0.00±0.01 0.00±0.02 0.04±0.06 0.07±0.08 Qwen3-32B 0.02±0.05 0.05±0.08 0.05±0.08 0.12±0.11 — — 0.00±0.01 0.00±0.03 0.02±0.05 0.06±0.07 Gemini-3.1-flash-lite 0.16±0.15 0.29±0.16 0.25±0.19 0.40±0.17 — — 0.03±0.07 0.06±0.10 0.15±0.14 0.25±0.14 Qwen3.5-397B-A17B 0.10±0.12 0.20±0.14 0.23±0.19 0.38±0.19 — — 0.02±0.06 0.05±0.08 0.12±0.12 0.21±0.14 AI Scientist v2 Llama3.1-8B 0.08±0.15 0.22±0.19 0.10±0.19 0.28±0.25 — — 0.00±0.01 0.00±0.02 0.06±0.12 0.17±0.16 Qwen3-8B 0.08±0.10 0.17±0.12 0.10±0.12 0.21±0.14 — — 0.00±0.02 0.01±0.03 0.06±0.08 0.13±0.10 Qwen3-14B 0.09±0.11 0.19±0.13 0.12±0.14 0.24±0.15 — — 0.00±0.02 0.01±0.04 0.07±0.09 0.14±0.11 Qwen3-32B 0.04±0.08 0.10±0.10 0.08±0.11 0.18±0.13 — — 0.00±0.02 0.01±0.04 0.04±0.07 0.10±0.09 Gemini-3.1-flash-lite 0.14±0.16 0.27±0.17 0.19±0.18 0.35±0.18 — — 0.02±0.07 0.05±0.10 0.12±0.13 0.22±0.15 Qwen3.5-397B-A17B 0.12±0.12 0.21±0.13 0.29±0.18 0.43±0.17 — — 0.04±0.07 0.08±0.09 0.15±0.12 0.24±0.13 
+
+Fine-tuned models 
+
+CycleReviewer Llama3.1-8B 0.41±0.32 0.57±0.30 0.32±0.27 0.45±0.24 — — 0.12±0.22 0.23±0.25 0.29±0.27 0.42±0.26 Qwen3-8B 0.37±0.30 0.45±0.30 0.31±0.26 0.39±0.26 — — 0.13±0.22 0.19±0.24 0.27±0.26 0.34±0.27 DeepReview Llama3.1-8B 0.39±0.29 0.60±0.25 0.35±0.27 0.55±0.23 — — 0.17±0.23 0.35±0.23 0.30±0.26 0.50±0.24 Qwen3-8B 0.36±0.29 0.53±0.26 0.26±0.26 0.43±0.24 — — 0.12±0.21 0.26±0.25 0.25±0.25 0.41±0.25 Vanilla RL Qwen3-8B 0.28±0.21 0.49±0.20 0.67±0.20 0.77±0.16 — — 0.22±0.16 0.30±0.15 0.39±0.19 0.52±0.17 
+
+ProReviewer (ours) Llama3.1-8B 0.20±0.19 0.36±0.18 0.66±0.21 0.81±0.16 — — 0.27±0.18 0.38±0.15 0.38±0.19 0.52±0.16 Qwen3-8B 0.47±0.16 0.59±0.14 0.80±0.18 0.92±0.10 — — 0.16±0.15 0.27±0.15 0.48±0.16 0.59±0.13 
+
+Table 14: Evaluation results using the RevUtil judge. All scores are mean±std (on [0,1] scale). Green highlights the best and Blue the second-best result in each column. 
+
+20 Step 1 
+
+Env action: read_section(abstract) 
+
+Observation: “. . . completes an entire scene in under 10 seconds . . . multi-branch and multi-view decoding architecture . . . D-Normal regularizer . . . ” 
+
+Log action: log(claim, C1: “Surf3R completes an entire scene in under 10 seconds.” unverified )log(note, N2: “10-second claim doesn’t specify how many views or what hardware. Need to verify.” )log(question, Q1: “Does the multi-branch architecture improve quality vs. a single-reference baseline?” 
+
+open )log(question, Q2: “Does the paper ablate D-Normal vs. other regularization methods?” open )
+
+. . . Step 2–5: read_section(introduction) , read_section(methodology) , read_section(experiments) ,
+
+read_section(ablation_study) — logs claims C2–C12 about architecture, loss design, and ablation results. 
+
+Step 6 
+
+Env action: read_section(ablation_study) (re-read) 
+
+Observation: Table 5 Row A: removing multi-branch drops F1 36.66 → 23.24. Row D: removing D-Normal drops F1 41.92 → 30.96. 
+
+Log action: log(note, N8: “Multi-branch ablation is within the same model—no separately trained single-branch baseline.” )update(Q1, open → partially answered — ablation exists but within-model only )update(Q2, open → partially answered — component ablation but no alternative methods )
+
+. . . Step 7–22: look_up(“10 seconds”) , look_up(“GPU”) , look_up(“inference time”) ,
+
+read_section(implementation_details) , . . . — finds 32 H800 GPUs for training but no inference hardware or timing reported. 
+
+Step 23 
+
+Env action: read_section(NVS_results) 
+
+Observation: Table 3 compares Surf3R-GD only against DUSt3R (PSNR 15.06 vs. 11.66 at 4 views). No other NVS baselines. 
+
+Log action: log(note, N9: “NVS evaluation compares only against DUSt3R. No other baselines provided.” )update(C1, unverified → unsupported — no inference hardware or timing found )update(C4, unverified → weak — SOTA claimed but NVS lacks baselines beyond DUSt3R )
+
+. . . Step 24–29: read_section(surface_reconstruction) , read_section(conclusion) , . . . — finds 180 × speedup claim without specifying baseline; logs N29. 
+
+Step 30: Review generation 
+
+Env action: finish 
+
+Log action: outline(summary) → outline(strengths) → outline(weaknesses) → outline(questions) →
+
+outline(score) 
+
+Summary: “Surf3R proposes a feed-forward framework for pose-free 3D surface reconstruction from sparse RGB views using a multi-branch architecture and a D-Normal regularizer based on 3D Gaussians . . . ” 
+
+Strength 1 [C5, C6, N4] : “Novel feed-forward approach for pose-free surface reconstruction . . . ” 
+
+Strength 2 [C7, C10, C11] : “D-Normal Regularizer confirmed by ablation (Table 5, Row D: F1 41.92 → 30.96) . . . ” 
+
+Weakness 1 [C1, N2, N26, N28] : “The paper claims completion in under 10 seconds (abstract, introduction) but provides no hardware specifications (number of GPUs, inference time) or number of views. Section 4.1 mentions 32 H800 GPUs for training but does not specify inference hardware.” 
+
+Weakness 2 [C2, Q1, N8] : “Table 5 Row A shows that removing multi-branch degrades F1 from 36.66 to 23.24, but this is within the same model. A proper ablation would train a single-branch model separately to confirm the architecture’s necessity.” 
+
+Weakness 3–5 . . . (3 more weaknesses about D-Normal ablation, NVS baselines, and speedup claim) 
+
+Overall score: 5/10 
+
+Figure 6: Abridged review trajectory of ProReviewer on Surf3R (30 steps; 12 claims, 6 questions, 32 notes). Orange boxes show key steps; gray boxes summarize omitted steps with “. . . ”; the green box shows the final review. Each review point traces back to evidence entries accumulated during investigation. 
+
+21
