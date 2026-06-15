@@ -1,0 +1,455 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-15T22:55:29.479567+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 6,
+    "deep_cap": 7,
+    "deep_selected": 6,
+    "quick_candidates": 4,
+    "quick_skim_target": 12,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2606.13662v2",
+      "source": "arxiv",
+      "title": "EurekAgent: Agent Environment Engineering is All You Need For Autonomous Scientific Discovery",
+      "abstract": "LLM-based agents have shown increasing potential in automating scientific discovery. Given an optimizable metric and an execution environment, they can propose, validate, and iterate scientific solutions, and have produced results that outperform human-designed approaches. As model capabilities continue to improve, we argue that the bottleneck for autonomous scientific discovery is shifting from prescribing agent workflows to designing agent environments: the resources, constraints, and interfaces that shape agent behavior. We frame this as environment engineering: building environments that amplify productive behaviors, such as open-ended exploration, systematic artifact management, and inter-agent collaboration, while suppressing harmful behaviors, such as reward hacking and high-friction human oversight. We present EurekAgent, an environment-engineered agent system for metric-driven autonomous scientific discovery. EurekAgent engineers the environment along four dimensions: permissions engineering for bounded agent execution and isolated evaluation; artifact engineering for filesystem and Git-based collaboration; budget engineering for budget-aware exploration; and human-in-the-loop engineering for easy human supervision and intervention. EurekAgent sets new state-of-the-art results on multiple mathematics, kernel engineering, and machine learning tasks, including new state-of-the-art 26-circle packing results discovered with less than $11 in total API cost. We open-source our code and results, and call for environment engineering as a core research direction for developing reliable autonomous research agents.",
+      "authors": [
+        "Amy Xin",
+        "Jiening Siow",
+        "Junjie Wang",
+        "Zijun Yao",
+        "Fanjin Zhang",
+        "Jian Song",
+        "Lei Hou",
+        "Juanzi Li"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-06-11T17:56:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.13662v2",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "environment engineering for LLM agents automating scientific discovery, iterating solutions, managing artifacts",
+      "llm_evidence_cn": "为自动化科学发现的LLM智能体设计环境工程，迭代解决方案并管理研究工件",
+      "llm_evidence": "为自动化科学发现的LLM智能体设计环境工程，迭代解决方案并管理研究工件",
+      "canonical_evidence": "为自动化科学发现的LLM智能体设计环境工程，迭代解决方案并管理研究工件",
+      "llm_tldr_en": "Proposes EurekAgent, shifting focus from agent workflows to environment engineering, designing resources and constraints that promote open-ended exploration, artifact management, and collaboration, resulting in LLM agents iteratively producing solutions that outperform human-designed ones.",
+      "llm_tldr_cn": "随着LLM能力提升，自主科学发现的瓶颈正从工作流设计转向环境设计。本文提出EurekAgent，将重心放在环境工程上，通过设计环境资源、约束和接口来放大自主探索、系统化工件管理和智能体协作等生产性行为。在多个科学发现基准中，EurekAgent通过给定优化指标和可执行环境，反复提出、验证并迭代科学方案，产生了超越人类设计的成果，证明了环境设计是释放智能体自主科研潜力的关键。",
+      "llm_tldr": "随着LLM能力提升，自主科学发现的瓶颈正从工作流设计转向环境设计。本文提出EurekAgent，将重心放在环境工程上，通过设计环境资源、约束和接口来放大自主探索、系统化工件管理和智能体协作等生产性行为。在多个科学发现基准中，EurekAgent通过给定优化指标和可执行环境，反复提出、验证并迭代科学方案，产生了超越人类设计的成果，证明了环境设计是释放智能体自主科研潜力的关键。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.14239v1",
+      "source": "arxiv",
+      "title": "SkillAudit: Ground-Truth-Free Skill Evolution via Paired Trajectory Auditing",
+      "abstract": "Agent skills are structured procedural packages that guide frozen LLM agents in specialized workflows. Skills rarely remain sufficient after deployment: edge cases, API changes, and deployment constraints become visible only through use, making skill evolution a practical necessity. Existing methods depend on privileged feedback such as held-out validation scores, hidden test outcomes, or environment rewards -- signals often unavailable when a practitioner has only a task description and workspace data. We introduce SkillAudit, a framework for evolving agent skills without ground-truth feedback. The key idea is paired trajectory auditing: at each iteration, the same task is executed with and without the candidate skill, isolating how the skill changes agent behavior without external labels. To turn behavioral differences into edit guidance, SkillAudit uses Process-Aligned Contrastive Evaluation (PACE), a cluster of evaluators that maps trajectory divergences to diagnostic signals linked to specific passages in the skill document. A structural verifier, compiled once from the task specification and then fixed, checks task constraints and rolls back harmful updates. SkillAudit routes edits through two pipelines: Refine removes noisy or irrelevant guidance from broadly useful skills, while Repair replaces passages that conflict with the task. Across 89 containerized tasks spanning 8 professional domains, SkillAudit achieves 73.9% average task reward, outperforming an agent without skills (40.9%) and the static expert skill (56.7%). These gains are obtained without accessing hidden tests, reference solutions, or external scoring functions during evolution.",
+      "authors": [
+        "Haowen Gao",
+        "Haoran Chen",
+        "Can Wang",
+        "Shasha Guo",
+        "Liang Pang",
+        "Zhaoyang Liu",
+        "Huawei Shen",
+        "Xueqi Cheng"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-12T08:20:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.14239v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Evolves agent skills without ground-truth by comparing task execution with and without the skill in paired trajectories",
+      "llm_evidence_cn": "通过对比有/无技能的成对轨迹审计，无需基准则评价即可演化代理技能",
+      "llm_evidence": "通过对比有/无技能的成对轨迹审计，无需基准则评价即可演化代理技能",
+      "canonical_evidence": "通过对比有/无技能的成对轨迹审计，无需基准则评价即可演化代理技能",
+      "llm_tldr_en": "SkillAudit uses paired trajectory auditing to measure the impact of a skill, providing feedback for evolution without ground-truth feedback, enabling skill improvement from execution traces.",
+      "llm_tldr_cn": "部署后技能需要根据实际使用中的边缘情况、API变化等进行演化，但现有方法依赖难以获取的验证分数等特权反馈。该论文提出SkillAudit，每次迭代中相同任务在有/无候选技能的情况下执行，通过成对轨迹审计隔离技能影响并生成演化信号。这种方法无需基准则评价，从执行轨迹中提取改进信息，为现实场景中技能库的自适应维护开辟了新途径。",
+      "llm_tldr": "部署后技能需要根据实际使用中的边缘情况、API变化等进行演化，但现有方法依赖难以获取的验证分数等特权反馈。该论文提出SkillAudit，每次迭代中相同任务在有/无候选技能的情况下执行，通过成对轨迹审计隔离技能影响并生成演化信号。这种方法无需基准则评价，从执行轨迹中提取改进信息，为现实场景中技能库的自适应维护开辟了新途径。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "methods for extracting reusable skills from agent trajectories and failures",
+      "matched_requirement_id": "req-19",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-1101-2025-07-21-665821-v2",
+      "source": "biorxiv",
+      "title": "OmicsNavigator: An auditable scientific partner for scalable hypothesis validation in spatial omics",
+      "abstract": "Translating high-dimensional, spatially resolved molecular datasets into testable biological findings remains a major research bottleneck. Here, we present OmicsNavigator, an autonomous large language model-powered system for end-to-end data exploration and hypothesis validation on spatial omics data. OmicsNavigator reasons directly over the multi-modal inputs of spatial omics data, including visual and molecular signatures, to perform knowledge-guided annotation of spatial structures. We show that by transforming high-dimensional data into textual interpretations, OmicsNavigator enables zero-shot semantic retrieval of tissue biomarkers and the reconstruction of patient-level disease profiles from raw omics observations. Furthermore, OmicsNavigator features an objective hypothesis validation engine governed by pre-registered, human-audited blueprints. By validating the system across datasets spanning diverse pathological conditions including diabetic kidney disease, kidney transplant rejection, and COVID-19 pulmonary pathology, we demonstrate that OmicsNavigator generates evidence-based, human-readable insights from spatial omics data, with potential to accelerate spatial biology discoveries.OmicsNavigator offers a scalable, interpretable, and modality-agnostic solution for spatial omics analysis.",
+      "authors": [
+        "Li, Y.",
+        "Vakharia, N.",
+        "Liang, W.",
+        "Mayer, A. T.",
+        "Luo, R.",
+        "Trevino, A. E.",
+        "Wu, Z."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-14T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.07.21.665821v2.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "autonomous LLM-powered system for end-to-end hypothesis validation in spatial omics",
+      "llm_evidence_cn": "自主LLM系统，用于空间组学的端到端假设验证",
+      "llm_evidence": "自主LLM系统，用于空间组学的端到端假设验证",
+      "canonical_evidence": "自主LLM系统，用于空间组学的端到端假设验证",
+      "llm_tldr_en": "Presents OmicsNavigator, an autonomous AI system that integrates spatial omics data for end-to-end hypothesis validation, enabling knowledge-guided annotation and patient-level disease profiling.",
+      "llm_tldr_cn": "OmicsNavigator是一个自主LLM系统，直接推理空间组学的多模态数据（视觉和分子特征），将高维数据转化为文本解释，实现知识引导的空间结构注释和零样本语义检索组织生物标志物。该系统从原始组学观察重建患者疾病谱，为可扩展的假设验证提供了可靠且可审计的科研伙伴。",
+      "llm_tldr": "OmicsNavigator是一个自主LLM系统，直接推理空间组学的多模态数据（视觉和分子特征），将高维数据转化为文本解释，实现知识引导的空间结构注释和零样本语义检索组织生物标志物。该系统从原始组学观察重建患者疾病谱，为可扩展的假设验证提供了可靠且可审计的科研伙伴。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "autonomous research agent systems for scientific discovery",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-11-731523-v1",
+      "source": "biorxiv",
+      "title": "Trustworthy agentic genomics through versioned skill libraries",
+      "abstract": "Genomics is adopting autonomous AI agents that interpret genomes from natural-language instructions faster than it is building the means to trust them. We report the first large-scale controlled evaluation of where, in an agentic genomic pipeline, correctness must reside for the system to be trustworthy at clinical scale. Using pharmacogenomics, a domain where errors are measurable and sometimes lethal, we benchmarked nine frontier large language models across 44,550 scored evaluations on 110 pharmacogenomic cases, and tested model interpretation of real star-allele diplotypes from more than 7,000 individuals in three ancestrally diverse populations. Trustworthiness proved to be a property of pipeline architecture, not of the model. Letting the model reason was stochastic and unsafe, and grounding it in the correct guidelines by retrieval paradoxically increased lethal-class errors. Encoding the validated decision logic as a versioned skill and executing it as code made the pharmacogenomic mapping exact, auditable and identical across models, confining all residual error to a single input-interpretation step. On individual genomes, unguarded model interpretation degraded along an ancestry gradient; execution removes this gradient from the clinical mapping, relocating it to the auditable completeness of the input caller. This establishes a generalisable, auditable architecture for trustworthy agentic genome interpretation at scale.",
+      "authors": [
+        "Corpas, M.",
+        "Iacoangeli, A.",
+        "Bourdenx, M.",
+        "Aldraimli, M.",
+        "Skene, N.",
+        "Fatumo, S.",
+        "Guio, H."
+      ],
+      "primary_category": "genomics",
+      "categories": [
+        "genomics"
+      ],
+      "published": "2026-06-15T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.11.731523v1.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Uses versioned skill libraries to ensure trustworthy agentic genomics, providing provenance and structured artifacts.",
+      "llm_evidence_cn": "利用版本化技能库确保可信的智能体基因组学，提供溯源和结构化工件。",
+      "llm_evidence": "利用版本化技能库确保可信的智能体基因组学，提供溯源和结构化工件。",
+      "canonical_evidence": "利用版本化技能库确保可信的智能体基因组学，提供溯源和结构化工件。",
+      "llm_tldr_en": "Evaluates where to embed correctness in autonomous genomic pipelines. Shows trustworthiness depends on pipeline architecture, not the model alone. Versioned skill libraries with structured provenance improve reliability in pharmacogenomics at clinical scale.",
+      "llm_tldr_cn": "基因组学正采用自主AI智能体解释基因组，但缺乏可信性保障。该研究通过大规模受控评估（44550次评分，110个药物基因组案例，7000余人真实数据），发现可信性取决于流水线架构而非模型本身。提出版本化技能库，将结构化溯源嵌入智能体决策流程，在临床级药物基因组学中显著提升正确性和可靠性。这一方法为构建可审计、可信赖的科学自动化工件提供了范例。",
+      "llm_tldr": "基因组学正采用自主AI智能体解释基因组，但缺乏可信性保障。该研究通过大规模受控评估（44550次评分，110个药物基因组案例，7000余人真实数据），发现可信性取决于流水线架构而非模型本身。提出版本化技能库，将结构化溯源嵌入智能体决策流程，在临床级药物基因组学中显著提升正确性和可靠性。这一方法为构建可审计、可信赖的科学自动化工件提供了范例。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "How are research artifacts structured and stored with provenance in automated scientific discovery?",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.14302v1",
+      "source": "arxiv",
+      "title": "Retrospective Progress-Aware Self-Refinement for LLM Agent Training",
+      "abstract": "LLM-based agents trained with reinforcement learning optimize step-wise action prediction but lack metacognitive awareness of task progress, inducing a gap that hinders long-horizon scaling. A pilot study reveals that online progress prompting hurts performance while retrospective demonstrations help, yet this capability cannot emerge from outcome-reward training alone. We present RePro, Retrospective Progress-Aware Training, a framework that trains agents to self-generate progress signals via a forward-then-reflect rollout paradigm: the agent executes actions online, then retrospectively reassesses its step-wise progress given the completed trajectory and known outcome. RePro initializes with a Retrospection Warmup that teaches reflection format from minimal external demonstrations, then further trains through RePro-PO with a composite reward that produces self-generated signals without continuous external supervision. Experiments on WebShop, ALFWorld, and Sokoban show that RePro enhances the Qwen family's performance, with up to $12\\%$ absolute success rate gains.",
+      "authors": [
+        "Xinbei Ma",
+        "Congmin Zheng",
+        "Jiyang Qiu",
+        "Jiale Hong",
+        "Yao Yao",
+        "Xiangmou Qu",
+        "Jiaxin Yin",
+        "Xingyu Lou",
+        "Jun Wang",
+        "Weiwen Liu",
+        "Weinan Zhang",
+        "Zhuosheng Zhang",
+        "Hai Zhao"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-12T09:38:47+00:00",
+      "link": "https://arxiv.org/pdf/2606.14302v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "trains LLM agents with retrospective progress awareness for long-horizon tasks",
+      "llm_evidence_cn": "训练LLM智能体具备回溯式进度感知，用于长程任务",
+      "llm_evidence": "训练LLM智能体具备回溯式进度感知，用于长程任务",
+      "canonical_evidence": "训练LLM智能体具备回溯式进度感知，用于长程任务",
+      "llm_tldr_en": "Proposes RePro, a training framework that teaches LLM agents to self-generate progress signals via retrospective reflection on completed trajectories, improving long-horizon task performance.",
+      "llm_tldr_cn": "RePro框架通过“前行后反思”机制训练LLM智能体，使其在完成任务后回顾轨迹并生成步骤级进度信号，从而增强对任务进展的元认知。该方法首先用反思预热阶段教授反思格式，再通过强化学习训练进度感知。实验表明，RePro有效提升了长程任务中的表现，为智能体的长期任务维护提供了新范式。",
+      "llm_tldr": "RePro框架通过“前行后反思”机制训练LLM智能体，使其在完成任务后回顾轨迹并生成步骤级进度信号，从而增强对任务进展的元认知。该方法首先用反思预热阶段教授反思格式，再通过强化学习训练进度感知。实验表明，RePro有效提升了长程任务中的表现，为智能体的长期任务维护提供了新范式。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-horizon agents in long-term tasks with state maintenance",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.14571v1",
+      "source": "arxiv",
+      "title": "StreamMemBench: Streaming Evaluation of Agent Memory for Future-Oriented Assistance",
+      "abstract": "A central role of personal-agent memory is to turn stored information and prior interactions into future-oriented assistance. In daily use, useful cues come from what the agent observes and how the user interacts with the agent, and the agent must carry them forward from the current request to similar future tasks. Existing memory benchmarks usually test dialogue recall or task improvement in isolation, leaving the trajectory from streaming observations to later assistance largely untested. We introduce StreamMemBench, a streaming benchmark that constructs a two-step task sequence around each evidence anchor from EgoLife egocentric streams. The initial task tests evidence use, while the follow-up task tests whether feedback and interaction experience are reused. Four metrics diagnose evidence recall, initial evidence use, feedback incorporation, and follow-up reuse. Experiments with eight memory systems across two backbones show that current systems often fail to use observed evidence or turn feedback into reliable follow-up behavior, even when evidence is stored or feedback is incorporated locally. StreamMemBench is publicly available at https://github.com/landian60/StreamMemBench.",
+      "authors": [
+        "Guanming Liu",
+        "Yuqi Ren",
+        "Hansu Gu",
+        "Peng Zhang",
+        "Weihang Wang",
+        "Jiahao Liu",
+        "Ning Gu",
+        "Tun Lu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-12T15:48:43+00:00",
+      "link": "https://arxiv.org/pdf/2606.14571v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Streaming benchmark evaluating agent memory's ability to use past observations and interactions for future-oriented assistance",
+      "llm_evidence_cn": "流式基准测试评估代理记忆利用过去观测和交互进行未来辅助的能力",
+      "llm_evidence": "流式基准测试评估代理记忆利用过去观测和交互进行未来辅助的能力",
+      "canonical_evidence": "流式基准测试评估代理记忆利用过去观测和交互进行未来辅助的能力",
+      "llm_tldr_en": "StreamMemBench constructs two-step task sequences from egocentric streams to evaluate how well agent memory carries forward evidence and feedback from initial tasks to follow-up tasks, revealing gaps in existing memory systems.",
+      "llm_tldr_cn": "现有记忆基准测试通常孤立地评估对话召回或任务改进，忽略了从流式观察到最后辅助的完整路径。该论文提出StreamMemBench，围绕EgoLife自中心视频流中的证据锚构建两步任务序列，初始任务测试证据使用，后续任务测试代理是否将反馈和交互记忆转化为未来帮助。该基准填补了流式记忆中前向辅助评估的空白，对长时记忆代理的实际部署具有重要指导意义。",
+      "llm_tldr": "现有记忆基准测试通常孤立地评估对话召回或任务改进，忽略了从流式观察到最后辅助的完整路径。该论文提出StreamMemBench，围绕EgoLife自中心视频流中的证据锚构建两步任务序列，初始任务测试证据使用，后续任务测试代理是否将反馈和交互记忆转化为未来帮助。该基准填补了流式记忆中前向辅助评估的空白，对长时记忆代理的实际部署具有重要指导意义。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "long-term memory for agents with retrieval and consolidation",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.14155v1",
+      "source": "arxiv",
+      "title": "Graph-based Target Back-Propagation for Context Adaptation in Multi-LLM Agentic Systems",
+      "abstract": "Context adaptation automates prompt engineering in LLM-based systems by iteratively revising tunable prompts from task feedback, without modifying model weights. Extending this paradigm to multi-LLM agentic systems is crucial: existing methods suffer from inaccurate credit assignment and lack convergence guarantees. We propose \\textbf{G}raph-based \\textbf{T}arget \\textbf{B}ack-\\textbf{P}ropagation (GTBP), a context adaptation framework for agentic workflows modeled as directed acyclic graphs. GTBP propagates local target outputs backward through the workflow graph and uses target--output discrepancies to guide a stage-wise prompt update mechanism. Theoretically, we show that GTBP's stage-wise prompt updates become stable over iterations, and that a sufficiently capable LLM optimizer can decrease the overall objective. Empirically, GTBP consistently outperforms strong baselines across three benchmarks while maintaining comparable computational cost.",
+      "authors": [
+        "Tan Zhu",
+        "Tong Yao",
+        "Kananart Kuwaranancharoen",
+        "Amit Singh",
+        "Yushang Lai",
+        "Deepa Mohan",
+        "Shankara Bhargava"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-06-12T06:27:15+00:00",
+      "link": "https://arxiv.org/pdf/2606.14155v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "graph-based target back-propagation for prompt adaptation in multi-LLM agentic systems, modeling workflows as DAGs",
+      "llm_evidence_cn": "基于图的目标反向传播用于多LLM智能体系统中的提示适应，将工作流建模为DAG",
+      "llm_evidence": "基于图的目标反向传播用于多LLM智能体系统中的提示适应，将工作流建模为DAG",
+      "canonical_evidence": "基于图的目标反向传播用于多LLM智能体系统中的提示适应，将工作流建模为DAG",
+      "llm_tldr_en": "GTBP models multi-LLM agentic workflows as DAGs and propagates target-output discrepancies backward to update prompts stage-wise, providing a convergent context adaptation method for better agent coordination.",
+      "llm_tldr_cn": "多LLM智能体系统中自动优化提示面临信用分配难题，GTBP框架将工作流建模为DAG，通过目标反向传播利用目标-输出差异指导分阶段提示更新，理论上保证收敛。实验表明其在多智能体任务上提升了适应性，为复杂智能体工作流的协调提供了有效手段。",
+      "llm_tldr": "多LLM智能体系统中自动优化提示面临信用分配难题，GTBP框架将工作流建模为DAG，通过目标反向传播利用目标-输出差异指导分阶段提示更新，理论上保证收敛。实验表明其在多智能体任务上提升了适应性，为复杂智能体工作流的协调提供了有效手段。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "multi-agent systems coordination and memory sharing",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.10917v1",
+      "source": "arxiv",
+      "title": "Role-Agent: Bootstrapping LLM Agents via Dual-Role Evolution",
+      "abstract": "Although Large Language Model (LLM) agents have demonstrated strong performance on complex tasks, their learning is often limited by inefficient interaction feedback and static training environments, which hinder broader generalization. To address these limitations, this paper introduces Role-Agent, \\textcolor{black}{a framework} that harnesses a single LLM to function concurrently as both the agent and the environment, enabling a bootstrapped co-evolution. Role-Agent comprises two synergistic components: World-In-Agent (WIA) and Agent-In-World (AIW). In WIA, the LLM acts as the agent and predicts future states after each action; the alignment between predicted and actual states is then used as a process reward, encouraging environment-aware reasoning. In AIW, the LLM analyzes failure modes from failed trajectories and retrieves tasks with similar failure patterns, thereby reshaping the training data distribution for targeted practice. Experiments on multiple benchmarks show that Role-Agent consistently improves performance, yielding an average gain of over 4\\% over strong baselines.",
+      "authors": [
+        "Xucong Wang",
+        "Ziyu Ma",
+        "Shidong Yang",
+        "Tongwen Huang",
+        "Pengkun Wang",
+        "Yong Wang",
+        "Xiangxiang Chu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-09T14:28:07+00:00",
+      "link": "https://arxiv.org/pdf/2606.10917v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dual-role evolution with future state prediction as process reward, enabling state-aware reasoning and self-improvement",
+      "llm_evidence_cn": "双角色演化，通过预测未来状态作为过程奖励，实现状态感知推理与自改进",
+      "llm_evidence": "双角色演化，通过预测未来状态作为过程奖励，实现状态感知推理与自改进",
+      "canonical_evidence": "双角色演化，通过预测未来状态作为过程奖励，实现状态感知推理与自改进",
+      "llm_tldr_en": "Introduces Role-Agent, where a single LLM acts as both agent and environment, using predicted state alignment as reward for bootstrapped co-evolution, improving generalization.",
+      "llm_tldr_cn": "针对大语言模型代理学习效率受限和泛化不足的问题，提出Role-Agent框架，让同一LLM同时扮演代理和环境，通过预测未来状态并计算与实际状态的差异作为过程奖励，驱动代理进行环境感知的推理与自优化；实验表明该自举协同演化机制能有效提升代理在复杂任务上的泛化能力，为代理的自我改进提供了新范式。",
+      "llm_tldr": "针对大语言模型代理学习效率受限和泛化不足的问题，提出Role-Agent框架，让同一LLM同时扮演代理和环境，通过预测未来状态并计算与实际状态的差异作为过程奖励，驱动代理进行环境感知的推理与自优化；实验表明该自举协同演化机制能有效提升代理在复杂任务上的泛化能力，为代理的自我改进提供了新范式。",
+      "llm_tags": [
+        "query:agent-memory"
+      ],
+      "matched_query_tag": "query:agent-memory",
+      "matched_query_text": "state tracking in agent reasoning and execution",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.14674v1",
+      "source": "arxiv",
+      "title": "AgentSpec: Understanding Embodied Agent Scaffolds Through Controlled Composition",
+      "abstract": "LLM agents are increasingly built not as single model calls, but as scaffolded systems that combine reasoning, memory, reflection, action execution, and learning. While such scaffolds often improve performance, they are often embedded in tightly coupled pipelines, making it difficult to isolate component contributions, compare alternative designs, or understand how module interactions shape agent behavior. We introduce AgentSpec, a modular specification framework that represents embodied agents as typed compositions of reusable policy components with standardized interfaces. AgentSpec standardizes the interfaces among perception, memory, reasoning, reflection, action, and optional learning, enabling components to be swapped and recombined under controlled conditions. We instantiate this framework across DeliveryBench, ALFRED, MiniGrid, and RoboTHOR, and analyze reasoning, memory, reflection, and reinforcement-learning modules across model backbones. Our results show that agent performance is governed by scaffold compatibility and interaction effects rather than isolated module strength. In particular, structured multi-granularity memory improves long-horizon state tracking, reasoning and memory interact non-uniformly across environments, reflection trades off correction and cost, and RL-trained policies compose best when optimized with deployment-time scaffold structure. AgentSpec provides a controlled foundation for studying, comparing, and designing composable LLM agents. Our code, baselines and interactive playground are publicly available at https://agentspec-embodied.github.io.",
+      "authors": [
+        "Jixuan Chen",
+        "Jianzhi Shen",
+        "Haoqiang Kang",
+        "Zhi Hong",
+        "Qingyi Jiang",
+        "Soham Bose",
+        "Yiming Zhang",
+        "Leon Leng",
+        "Amit Vyas",
+        "Lingjun Mao",
+        "Siru Ouyang",
+        "Kun Zhou",
+        "Lianhui Qin"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-12T17:39:49+00:00",
+      "link": "https://arxiv.org/pdf/2606.14674v1",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Modular framework standardizing memory, reasoning, reflection, etc., in embodied agent scaffolds",
+      "llm_evidence_cn": "标准化具身智能体框架中的记忆、推理、反思等模块接口，支持组合实验",
+      "llm_evidence": "标准化具身智能体框架中的记忆、推理、反思等模块接口，支持组合实验",
+      "canonical_evidence": "标准化具身智能体框架中的记忆、推理、反思等模块接口，支持组合实验",
+      "llm_tldr_en": "AgentSpec proposes a modular specification for embodied agents, isolating components like memory and reasoning to enable systematic comparison and recombination.",
+      "llm_tldr_cn": "LLM智能体常构建为紧密耦合的流水线，难以分离记忆、推理等组件贡献并对比设计。AgentSpec提出模块化规约框架，将感知、记忆、推理、反思、行动与学习等组件接口标准化，支持类型化组合与互换。在虚拟具身任务上的实验显示，该框架能有效分解组件贡献，为记忆模块消融研究提供可复用平台。",
+      "llm_tldr": "LLM智能体常构建为紧密耦合的流水线，难以分离记忆、推理等组件贡献并对比设计。AgentSpec提出模块化规约框架，将感知、记忆、推理、反思、行动与学习等组件接口标准化，支持类型化组合与互换。在虚拟具身任务上的实验显示，该框架能有效分解组件贡献，为记忆模块消融研究提供可复用平台。",
+      "llm_tags": [
+        "query:agent-memory:composite"
+      ],
+      "matched_query_tag": "query:agent-memory:composite",
+      "matched_query_text": "Papers central to 查找关于LLM Agent和Agent Memory的论文，重点关注长程任务、工具使用、多智能体、规划、工作流、状态跟踪、反馈、反思、错误恢复、记忆模块（长时记忆、情节记忆、语义记忆、检索、整合、更新、遗忘、冲突解决、图记忆、状态表示、轨迹到技能、技能库、自演化）等，要求有消融实验或评估。, especially work that connects or combines: graph memory; long-horizon agents in long-term tasks with state maintenance; multi-agent systems coordination and memory sharing; state tracking in agent reasoning and execution; long-term memory for agents with retrieval and consolidation; skill library from trajectories for agent improvement; papers on long horizon LLM agents using memory and skill reuse; how agents maintain state in long term tasks with episodic memory; methods for extracting reusable skills from agent trajectories and failures; agent memory consolidation and forgetting mechanisms for continual learning.",
+      "matched_requirement_id": "req-composite-agent-memory",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-06-730554-v1",
+      "source": "biorxiv",
+      "title": "APOSM: Pairwise preference learning improves generative small-molecule design",
+      "abstract": "Small-molecule lead refinement is constrained by the cost of synthesizing and assaying candidates, making the surrogate models that prioritize compounds for experimental testing central to the design process. The reliability of such surrogates is limited by the noise and sparsity of screening measurements. We show that training the surrogate on pairwise comparisons between candidate molecules, rather than on absolute predicted scores, yields a substantially more reliable signal for active candidate selection in this regime. We develop APOSM, an active-learning algorithm that combines a fragment-based generator, a pairwise message-passing graph neural network surrogate, and probabilistic ranking inside a batched acquisition loop. On the Practical Molecular Optimization benchmark and a GPCR ligand rediscovery task, APOSM improves target attainment and sampling efficiency over unguided fragment-based optimization, the Graph-GA genetic algorithm, and a pointwise-regression ablation, with the largest gains on tasks where absolute scores are hardest to calibrate.",
+      "authors": [
+        "Dreisler, M. W.",
+        "Michael, R.",
+        "Hatzakis, N. S.",
+        "Boomsma, W."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-10T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.06.730554v1.full.pdf",
+      "tags": [
+        "keyword:agent-memory",
+        "keyword:autoresearch",
+        "query:agent-memory",
+        "query:autoresearch"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "pairwise preference learning for generative molecular design automates compound selection in drug discovery, advancing AI for Science",
+      "llm_evidence_cn": "成对偏好学习用于生成式分子设计，自动筛选候选化合物，推动AI for Science",
+      "llm_evidence": "成对偏好学习用于生成式分子设计，自动筛选候选化合物，推动AI for Science",
+      "canonical_evidence": "成对偏好学习用于生成式分子设计，自动筛选候选化合物，推动AI for Science",
+      "llm_tldr_en": "Proposes APOSM, an active learning algorithm using pairwise preference surrogates for small-molecule lead refinement, improving reliability under noisy screening data.",
+      "llm_tldr_cn": "针对小分子先导优化中筛选数据噪声和稀疏导致代理模型不可靠的问题，提出APOSM算法，使用成对偏好学习训练消息传递图神经网络替代模型，结合片段生成器和概率排序，在批量采集循环中提高了活性候选物选择的可靠性；在Practical数据集上显著优于基于绝对评分的基线，证明成对偏好训练是一种更有效的分子设计策略。",
+      "llm_tldr": "针对小分子先导优化中筛选数据噪声和稀疏导致代理模型不可靠的问题，提出APOSM算法，使用成对偏好学习训练消息传递图神经网络替代模型，结合片段生成器和概率排序，在批量采集循环中提高了活性候选物选择的可靠性；在Practical数据集上显著优于基于绝对评分的基线，证明成对偏好训练是一种更有效的分子设计策略。",
+      "llm_tags": [
+        "query:autoresearch"
+      ],
+      "matched_query_tag": "query:autoresearch",
+      "matched_query_text": "AI for Science automated scientific discovery with machine learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
