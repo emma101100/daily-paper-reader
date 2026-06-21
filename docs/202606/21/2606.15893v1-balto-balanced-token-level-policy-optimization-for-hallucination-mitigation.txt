@@ -1,0 +1,1064 @@
+Title: BALTO: Balanced Token-Level Policy Optimization for Hallucination Mitigation
+
+URL Source: https://arxiv.org/pdf/2606.15893v1
+
+Published Time: Tue, 16 Jun 2026 01:21:00 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# BALTO: Balanced Token-Level Policy Optimization for Hallucination Mitigation 
+
+Ning Li 1, Zixuan Guo 2, Yan Xu 2, Wenbo Fei 1, Yifan Niu 3, Chang Luo 2,Yasheng Wang 2∗ , Weiwen Liu 1∗ , Yong Yu 1, Weinan Zhang 1
+
+> 1
+
+Shanghai Jiao Tong University 
+
+> 2
+
+Tencent 
+
+> 3
+
+The Hong Kong University of Science and Technology (Guangzhou) 
+
+## Abstract 
+
+Hallucinations remain a major obstacle to deploying large language models (LLMs) in knowledge-intensive settings, where generated responses must be faithfully grounded in provided evidence. Reinforcement learning (RL) is a promising di-rection for hallucination mitigation, but response-level faithfulness rewards suffer from a granularity mismatch: localized hallucinations can cause supported content to receive spurious penalties. Although recent work introduces fine-grained feed-back such as claim-level verification and token-level rewards, unbalanced credit assignment can still induce length, verbosity, or optimization-noise biases. We propose BALTO , a Bal anced Token-level Policy Optimization framework for hallucination mitigation. BALTO extracts checkable factual claims, verifies them against the reference context, and projects claim-level judgments to token-level labels. A balanced token-level credit assignment mechanism is introduced into the framework. This design redistributes probability mass from unsupported content toward faithful content, rather than suppressing the entire response. We systemati-cally analyze the limitations of response-level rewards from a theoretical standpoint, and prove BALTO’s advantages in training stability and optimization efficiency for hallucination mitigation. Experiments on ConFiQA, RAGTruth, and FinLLM-Eval show that BALTO achieves the highest faithfulness across all six model–benchmark settings and consistently outperforms existing post-training baselines in Q-Score, demonstrating a stronger faithfulness–informativeness trade-off. 
+
+## 1 Introduction 
+
+Large Language Models (LLMs) have demonstrated remarkable capabilities across a wide range of tasks [ 32 , 48 ]. However, their real-world deployment remains significantly constrained by faithfulness hallucinations—generating content that lacks factual support or contradicts provided evidence [ 38 ]. Such hallucinations pose significant risks in high-stakes domains such as healthcare [ 18 ], law [ 10 ], finance [ 17 ], and scientific discovery [ 43 ]. Unlike global factual failures, these hallucinations often appear as localized, unsupported spans (e.g., incorrect entities, dates, numerical values, or logical relations) embedded within otherwise coherent and accurate content. This locality makes them particularly difficult to detect and mitigate. Currently, most reinforcement learning (RL)-based methods for mitigating hallucinations employ response-level rewards, assigning a single scalar score to the entire output. However, such coarse-grained supervision cannot distinguish hallucinated spans from faithful ones: a uniform penalty applied to all tokens may erroneously penalize correct information while providing only weak corrective signals to the actual hallucinated content. This not only diminishes the effectiveness of 
+
+> ∗Correspondence to: Yasheng Wang ( asheryswang@tencent.com ) and Weiwen Liu ( wwliu@sjtu.edu.cn ). Preprint.
+> arXiv:2606.15893v1 [cs.CL] 14 Jun 2026
+
+hallucination mitigation but may also induce reward hacking: models may learn to generate shorter, more conservative responses to avoid penalties, thereby reducing the overall informativeness and utility of the response. Recent studies [ 41 , 21 ] have moved beyond response-level supervision to incorporate fine-grained feedback signals, such as step-wise faithfulness verification and token-level dense rewards. Neverthe-less, fine-grained feedback alone does not determine how policy-gradient credit should be assigned. Unbalanced token-level rewards may introduce length or faithful-density bias, while token-level updates whose magnitudes remain tied to response-level advantages can still inherit noise from global response-level rewards. These observations suggest that hallucination mitigation requires not only fine-grained detection, but also balanced token-level credit assignment. Based on this premise, we propose BALTO (Bal anced Token-Level Policy Optimization), a reinforce-ment learning framework for fine-grained hallucination mitigation. BALTO localizes hallucinations at the token level and introduces a balanced credit assignment mechanism: hallucinated tokens receive negative advantages, faithful tokens receive positive compensatory advantages, and neutral tokens are excluded. By balancing the total negative and positive faithfulness-driven signals within each response, BALTO encourages the model to redistribute probability mass from hallucinated content toward faithful content, rather than suppressing the response as a whole. We provide both theoretical and empirical analysis to demonstrate the benefits of BALTO. Theo-retically, we show that response-level rewards induce spurious credit assignment under localized hallucinations, whereas balanced token-level credit assignment reduces unnecessary parametric updates and improves optimization stability and efficiency. Empirically, across ConFiQA, RAGTruth, and FinLLM-Eval with Qwen3-8B and Qwen3-4B, BALTO consistently outperforms both response-level and token-level post-training baselines in both faithfulness and Q-Score across all six model– benchmark settings. Compared with the strongest post-training baseline in each setting, BALTO improves Q-Score by 2.7 points on average and up to 4.9 points, while improving faithfulness by 3.1 points on average and up to 6.7 points. These results suggest that BALTO provides a more effective faithfulness–informativeness trade-off than prior post-training approaches, reducing hallucinations without collapsing into overly conservative generation. Our main contributions are summarized as follows: • Balanced Token-level Hallucination Mitigation. We propose BALTO, a token-level RL frame-work for fine-grained hallucination mitigation. BALTO converts claim-level factuality judgments into token-level optimization signals and uses balanced credit assignment to shift probability mass from hallucinated content toward faithful content. • Theoretical Credit Assignment Analysis. We systematically analyze the credit assignment limitations of response-level faithfulness rewards and show that balanced token-level advantages reduce unnecessary parametric updates, improving training stability and optimization efficiency. • SOTA Performance. Across ConFiQA, RAGTruth, and FinLLM-Eval with Qwen3-8B and Qwen3-4B, BALTO achieves the highest faithfulness in all six model–benchmark settings and consistently outperforms existing post-training methods in Q-Score, demonstrating a stronger faithfulness–informativeness trade-off. 
+
+## 2 Background and Motivation 
+
+2.1 Pilot Study: Hallucinations Are Token-Sparse but Response-Prevalent 
+
+Faithfulness hallucinations in RAG-style generation are often localized factual errors rather than complete response-level failures. Prior studies similarly analyze factual errors at the level of claims, atomic facts, or evidence-grounded statements [ 15 , 1 , 7, 30 , 45 ]. To quantify this locality, we conduct a pilot study on FinLLM-Eval [ 22 ], a financial QA benchmark requiring answers to be grounded in numerical evidence. As shown in Figure 1(a), hallucinated tokens account for only a small fraction of each response, with an average ratio of 2.77% and a median ratio of 1.87%. However, this token-level sparsity does not imply response-level sparsity. Figure 1(b) shows that 94.7% of rollout groups contain at least one hallucinated response, and groups with majority-hallucinating rollouts ( Kh ≥ 5) contribute 76.6% of all hallucinations. Thus, hallucinations are sparse within responses but prevalent across 20% 2% 4% 6% 8% 10% 12% 14% 16% 
+
+> Hallucination token ratio
+> 0%
+> 2%
+> 5%
+> 8%
+> 10%
+> 12%
+> 15%
+> 18%
+> Proportion of samples  Histogram
+> KDE
+> Mean = 2.77%
+> Median = 1.87%
+
+(a) Hallucinated-token ratio per response. 0/8 1/8 2/8 3/8 4/8 5/8 6/8 7/8 8/8        
+
+> Kh(# hallucinated responses among 8 rollouts)
+> 0%
+> 5%
+> 10%
+> 15%
+> 20%
+> 25%
+> 30%
+> Proportion of samples
+> 5.3 6.0
+> 4.5
+> 12.0
+> 15.8
+> 12.0 11.3
+> 18.8
+> 14.3
+> Samples (%) Hallucination share
+> 94.7% samples
+> hallucinate 1×
+> 0%
+> 10%
+> 20%
+> 30%
+> 40%
+> Hallucination share (%)
+> Kh5 contributes
+> 76.6% of hallucinations
+
+(b) Hallucinated responses among eight rollouts. 
+
+Figure 1: Pilot study on FinLLM-Eval with Qwen3-8B. Hallucinations are sparse within individual responses but prevalent across rollouts. The shaded region in (b) marks majority-hallucinating groups. sampled responses. This dual pattern makes response-level RL supervision inefficient: partially faithful responses with only a few erroneous tokens may receive the same binary penalty as severely hallucinated responses, motivating fine-grained and balanced token-level credit assignment. 
+
+2.2 Response-Level RL for Hallucination Mitigation 
+
+RL has become a common post-training paradigm for improving LLM faithfulness and alignment [ 32 ,35 , 6, 41 , 21 ]. In a RAG setting, given an input x = ( q, d ) with query q and reference documents d,the model generates a response y = ( y1, . . . , y T ) according to an autoregressive policy. In GRPO-style optimization, for each input x, a group of K responses {yi}Ki=1 is sampled from the old policy 
+
+πθold . Given a response-level reward ri = R(x, y i), GRPO computes the group-relative advantage: 
+
+Aresp  
+
+> i
+
+= ri−mean( r)std( r) , where r = {ri}Ki=1 . This scalar advantage is broadcast to all tokens in the response. The clipped GRPO objective is then 
+
+JGRPO (θ) = E{y}K ∼πθold (·| x)
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> i=1
+
+1
+
+TiTiX
+
+> t=1
+
+min 
+
+ πθ (yi,t | x, y i,<t )
+
+πθold (yi,t | x, y i,<t ) Aresp i , clip( πθ (yi,t | x, y i,<t )
+
+πθold (yi,t | x, y i,<t ) ), 1 − ϵ, 1 + ϵ)Aresp i
+
+#
+
+. (1) 
+
+This response-level assignment is problematic for localized hallucinations. Let Hi and Fi denote hallucinated and faithful factual tokens in response yi. If a few hallucinated tokens cause a low faithfulness reward, then Aresp  
+
+> i
+
+< 0, and the update is proportional to 
+
+Aresp 
+
+> i
+
+X
+
+> t∈H i
+
+∇θ log πθ (yi,t | x, y i,<t ) + X
+
+> t∈F i
+
+∇θ log πθ (yi,t | x, y i,<t )
+
+!
+
+. (2) The first term suppresses hallucinated tokens, but the second term also suppresses faithful factual tokens. Since hallucinated tokens are typically sparse, this spurious penalty can dominate the faithfulness-driven update, reducing informativeness or encouraging overly conservative responses. This motivates moving beyond response-level rewards toward fine-grained hallucination feedback. 
+
+2.3 Fine-Grained Hallucination Feedback and the Remaining Assignment Gap 
+
+A natural remedy to response-level credit mismatch is to introduce finer-grained hallucination feedback. Prior work has explored claim-level correctness, atomic fact verification, statement-level faithfulness assessment, and dense process supervision for faithfulness alignment [ 23 , 7, 12 , 30 , 45 ]. Recent RL-based hallucination mitigation methods further move toward token-level optimization. FSPO adjusts token-level advantages using step-wise faithfulness verification [ 21 ], while RLFH decomposes responses into atomic facts and converts statement-level truthfulness and informativeness feedback into token-level dense rewards [ 41 ]. We provide a broader discussion of fine-grained hallucination mitigation and process supervision in Appendix A. However, fine-grained feedback alone does not determine how policy-gradient credit should be assigned. Penalty-only token-level feedback may encourage shorter or less informative responses, while assigning fixed positive rewards to all faithful factual tokens may bias the model toward verbose 3Normalize                             
+
+> -1
+> 0
+> All tokens in correct claim
+> Hallucinated token
+> Faithfal Claim
+> Response
+> Query & Reference Documents
+> Hallucinated Claim
+> Reward model
+> Update
+> Policy model
+> Response
+> Fine-Grained Hallucination Token Detection Balanced Token-Level Credit Assignment
+> Apple's gross margin stood at 51% in 2023 ;
+> However, its total revenue declined by 11.4% in
+> 2024. Investors need to take acomprehensive view
+> and make decisions with caution.
+> -1
+> 0
+> 1
+> Token-level labels Balanced Advantage
+
+Figure 2: Overview of the BALTO framework is demonstrated. Initially, the reward model localize hallucinations at the token level. Subsequently, the balanced credit mechanism assigns token-level advantages: hallucinated tokens (red) receive -1 advantage , faithful factual tokens (green) receive positive compensatory advantages of N −/N + , where N − and N + are the numbers of hallucinated and faithful tokens respectively, and neutral tokens receive 0 advantage (white). factual padding. Similarly, token-level updates whose magnitudes remain tied to response-level advantages can still inherit noise from global response-level rewards. These limitations motivate a balanced token-level assignment principle: hallucinated factual tokens should receive localized negative feedback, faithful factual tokens should receive compensatory positive feedback, and the total faithfulness-driven signal should be balanced within each response. In the next section, we instantiate this principle as a balanced token-level policy optimization framework for hallucination mitigation. 
+
+## 3 Methodology 
+
+We propose BALTO : Bal anced Token-level Policy Optimization, a fine-grained reinforcement learning framework for hallucination mitigation. As illustrated in Figure 2, BALTO consists of two stages. First, an LLM-based faithfulness evaluator extracts and verifies checkable factual claims from each sampled response. Second, BALTO projects claim-level judgments to token-level labels, constructs balanced token-level credits, and optimizes the policy with a GRPO-style clipped objective. 
+
+3.1 Fine-Grained Hallucination Token Detection 
+
+Given an input x = ( q, d ) and a sampled response yi = ( yi, 1, . . . , y i,T i ), BALTO first identifies checkable factual claims in the response. A claim is defined as a minimal text span that expresses a verifiable factual assertion and can be independently checked against the reference document. We represent the extracted claims as Ci = {ci,m }Mi
+
+> m=1
+
+, where each ci,m ⊆ { 1, . . . , T i} denotes the token indices covered by the m-th claim. In practice, we focus on claims involving named entities, numerical values, dates, temporal expressions, attributes, and relations, which are common sources of faithfulness errors and align with atomic faithfulness evaluation [ 29 , 27 , 25 ]. The faithfulness evaluator verifies each claim against the reference document d and partitions the claims into faithful and hallucinated claim sets: 
+
+C+ 
+
+> i
+
+= {ci,m ∈ C i : ci,m is supported by d},
+
+C− 
+
+> i
+
+= {ci,m ∈ C i : ci,m is unsupported or contradicted by d}.
+
+We then project claim-level verification results back to token-level labels. For faithful claims, the projection is straightforward: all tokens covered by the claim are labeled as faithful factual tokens. For hallucinated claims, however, assigning negative feedback to the entire claim span can be overly coarse, since a claim may contain only a small erroneous part. Therefore, for each hallucinated claim 
+
+ci,m ∈ C − 
+
+> i
+
+, BALTO further localizes a minimal erroneous token subset ei,m ⊆ ci,m , where ei,m 
+
+contains the tokens directly responsible for the factual error, such as an incorrect entity, number, date, attribute, or relation. If the erroneous part cannot be reliably isolated, we conservatively set 4ei,m = ci,m . Formally, the token-level label is defined as 
+
+zi,t =
+
+
+
+−1, ∃ci,m ∈ C − 
+
+> i
+
+such that t ∈ ei,m ,
+
++1 , ∃ci,m ∈ C + 
+
+> i
+
+such that t ∈ ci,m and t / ∈ S 
+
+> ci,m ′∈C −
+> i
+
+ei,m ′ ,
+
+0, otherwise .
+
+(3) Here, zi,t = −1 indicates that token yi,t is directly responsible for a hallucinated factual claim, 
+
+zi,t = +1 indicates that it belongs to a faithful factual claim, and zi,t = 0 indicates that it is either outside checkable factual claims or is a faithful token inside a hallucinated claim. When a token is included in both faithful and hallucinated projections due to overlapping claims, the hallucination label takes precedence. Finally, we define the hallucinated factual token set, faithful factual token set, and neutral token set as 
+
+Hi = {t | zi,t = −1}, Fi = {t | zi,t = +1 }, Ni = {t | zi,t = 0 }. (4) This projection differs from statement-level reward mapping, which typically assigns feedback to a whole matched statement or sentence [ 41 ]. BALTO instead localizes the factual error within a hallucinated claim and applies negative feedback only to the minimal erroneous tokens. For the hallucinated claim in Figure 2 that “total revenue declined by 11.4% in 2024”, BALTO penalizes the token span corresponding to “11.4%” rather than the entire claim. This provides precise negative supervision while avoiding unnecessary suppression of surrounding faithful context. The resulting token sets Hi, Fi, and Ni are then used to construct balanced token-level advantages. 
+
+3.2 Balanced Token-Level Credit Assignment 
+
+BALTO directly assigns token-level advantages based on the factual status of tokens. For response 
+
+yi, let N − 
+
+> i
+
+= |H i|, N + 
+
+> i
+
+= |F i| denote the number of hallucinated factual tokens and faithful factual tokens, respectively. We define the balanced token-level advantage as 
+
+Abal  
+
+> i,t
+
+=
+
+
+
+−1, t ∈ H i,N −
+
+> i
+
+N +
+
+> i
+
+, t ∈ F i, N − 
+
+> i
+
+> 0, N + 
+
+> i
+
+> 0,
+
+0, t ∈ N i or N − 
+
+> i
+
+= 0 .
+
+(5) Thus, hallucinated factual tokens receive a negative advantage, faithful factual tokens receive a positive compensation advantage, and tokens outside checkable factual claims do not contribute to faithfulness-driven optimization 2. When both hallucinated and faithful factual tokens exist, BALTO satisfies an intra-response balance property: 
+
+> Ti
+
+X
+
+> t=1
+
+Abal  
+
+> i,t
+
+= X
+
+> t∈H i
+
+(−1) + X
+
+> t∈F i
+
+N −
+
+> i
+
+N +
+
+> i
+
+= −N − 
+
+> i
+
++ N +
+
+> i
+
+N −
+
+> i
+
+N +
+
+> i
+
+= 0 . (6) Therefore, the total negative advantage assigned to hallucinated factual tokens is exactly matched by the total positive advantage assigned to faithful factual tokens. This encourages the model to redistribute probability mass from hallucinated factual content to supported factual content, rather than suppressing the entire response. 
+
+BALTO Objective Given an input x, we sample a group of K responses {yi}Ki=1 from the old policy 
+
+πθold . For each response, we obtain token sets Hi, Fi, and Ni using the faithfulness evaluator, and assign balanced advantages according to Eq. 5. The BALTO objective is 
+
+JBALTO (θ) = E{y}K ∼πθold (·| x)
+
+ 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+1
+
+Zi
+
+X
+
+> t∈H i∪F i
+
+min 
+
+ πθ (yi,t | x, y i,<t )
+
+πθold (yi,t | x, y i,<t ) Abal i,t , clip( πθ (yi,t | x, y i,<t )
+
+πθold (yi,t | x, y i,<t ) ), 1 − ϵ, 1 + ϵ)Abal i,t 
+
+ .
+
+(7)            
+
+> 2For faithful responses, where N−
+> i= 0 , all faithfulness-driven advantages are set to zero, avoiding an incentive to generate unnecessarily long responses containing redundant safe claims. If N−
+> i>0but N+
+> i= 0 , BALTO applies only the negative correction, since no faithful factual token is available for within-response compensation.
+
+5where 
+
+Zi = max (1 , |H i| + |F i|) (8) normalizes the update over factual tokens. Since tokens in Ni have zero advantage, they do not contribute to the faithfulness-driven update. Compared with response-level GRPO, BALTO provides localized and balanced supervision even when hallucinations are widespread at the response level. Compared with unbalanced token-level rewards, BALTO explicitly controls the total positive and negative advantage mass within each response. As a result, the policy receives precise corrective signals for hallucinated content while preserving response informativeness. 
+
+## 4 Theoretical Analysis 
+
+In this section, we formally demonstrate the theoretical advantages of BALTO over standard response-level GRPO. Specifically, we prove how BALTO’s fine-grained formulation guarantees highly stable training trajectories and maximizes optimization efficiency across all training stages. To evaluate the optimization dynamics, we model the response-level reward r in GRPO as a Bernoulli variable: r ∼ B (p), where p is the probability for generating a faithful response. Here, r = 1 denotes a faithful response ( y+) and r = 0 denotes a hallucinated response ( y−). Therefore the mean and std of reward r are p and pp(1 − p). According to Section 2.2, GRPO utilizes a globally normalized advantage A = ( r − p)/pp(1 − p). In contrast, BALTO applies balanced local advantages Abal  
+
+> t
+
+as defined in Eq. 5, satisfying the intra-response zero-sum property (Eq. 6): PTt=1 Abal  
+
+> t
+
+= 0 .Let a generated response y of length T be partitioned into three disjoint sets as defined in Eq. 4: the hallucinated factual token set H (size N −), the faithful factual token set F (size N +), and the neutral token set N . We define the per-token gradient operator as gt = ∇θ log πθ (yt|y<t , x ).
+
+4.1 Enhancing Training Stability via Variance Reduction 
+
+A major cause of instability in response-level RL is the high variance induced by global rewards, where faithful and neutral tokens receive noisy updates simply due to their co-occurrence with hallucinated tokens. By assigning zero advantages to neutral tokens and distributing a weighted compensation over faithful tokens, BALTO filters out gradient noise from the vast majority of tokens, thereby ensuring the high stability of the optimization trajectory. 
+
+Theorem 1 (Stable Convergence via Variance Reduction) . Assuming local token gradients are approximately independent with covariance Σ. For response-level GRPO, the variance of the gradient estimator scales linearly with the total response length T : Var( ˆ∇Jresp ) = O(T Σ) . In contrast, BALTO restricts the variance to scale exclusively with the number of hallucinated tokens: 
+
+Var( ˆ∇JBALTO ) = O(N −Σ) . Thus, since hallucinated tokens are sparse, BALTO substantially reduces gradient variance compared with response-level optimization. Proof Sketch. In response-level GRPO, the same normalized advantage A is applied to every token in the response. Therefore, all token gradients contribute to the estimator variance: 
+
+Var( ˆ∇Jresp ) = E[A2] PTt=1 Var( gt) = T Σ. For BALTO, since E[gt] = 0, the variance formulation restricts the weights to the assigned token-level advantages: Var( ˆ∇JBALTO ) ∝
+
+(P
+
+> t∈H
+
+(−1) 2 + P 
+
+> t∈F
+
+(N −/N +)2 + P 
+
+> t∈N
+
+02)Σ = ( N − + ( N −)2/N +)Σ . Since hallucinations are sparse relative to faithful content ( N − ≪ N +), the fraction (N −)2/N + < N −. The overall variance is thus strictly compressed to O(N −Σ) .This shows that BALTO compresses the variance from scaling with the full sequence length T to scaling only with the number of hallucinated tokens 
+
+N −. Consequently, BALTO provides a more stable training signal, especially when hallucinations are sparse. (Detailed derivation in Appendix D.2). 
+
+4.2 Maximizing Optimization Efficiency across Training Stages 
+
+As training progresses, the probability of generating a faithful response, denoted by p, gradually increases. An efficient optimization method should provide strong and reliable gradients throughout this process. However, standard global normalization suffers from gradient starvation during early 6training (low p) and disproportionate penalties during late-stage convergence (high p). BALTO resolves both extremes by using bounded token-level advantages, guaranteeing efficient optimization across all stages. 
+
+Theorem 2 (High Optimization Efficiency in Asymptotic Regimes) . As p → 0, response-level GRPO suffers from vanishing expected gradients ( || E[ ˆ∇Jresp ]|| → 0), severely limiting early-stage learning efficiency. In contrast, BALTO maintains strong local learning signals to ensure efficient exploration. As p → 1, response-level GRPO triggers unbounded divergent penalties ( A− → −∞ ), destroying late-stage optimization efficiency. BALTO, however, maintains strictly bounded updates (Abal  
+
+> t
+
+∈ [−1, 1] ), ensuring efficient and stable final convergence. Proof Sketch. For response-Level GRPO, the expected gradient magnitude is bounded by the nor-malization coefficient pp(1 − p). lim p→0 || E[ ˆ∇Jresp ]|| ∝ lim p→0
+
+√p = 0 , which leads to gradient starvation when faithful responses are rare. As p → 1, the penalty A− = −pp/ (1 − p) → −∞ ,causing divergent updates. In contrast, BALTO’s expected gradient magnitude is proportional to 
+
+(1 − p). As p → 0, (1 − p) → 1, so BALTO still provides dense and strong correction signals. As 
+
+p → 1, (1 − p) → 0, naturally decaying the gradient. Meanwhile, local advantages Abal  
+
+> t
+
+remain strictly bounded in [−1, 1] preventing instability. (Detailed derivation in Appendix D.3). 
+
+## 5 Experiments 
+
+5.1 Experimental Settings Datasets. We evaluate our method on three benchmarks that cover various hallucination scenarios. 
+
+ConFiQA [ 3] is a counterfactual QA dataset constructed from conflicting evidence, and we focus on the most challenging Multi-Conflicts (MC) subset. RAGTruth [28 ] is a RAG hallucination corpus with diverse data sources and task formats. FinLLM-Eval [ 22 ] is a financial domain QA dataset containing large amounts of financial facts and numerical information. We evaluate our method on FinLLM-Eval, a high-stakes benchmark that demands precise answers, as the financial domain is particularly sensitive to hallucinations: even minor factual or numerical errors can lead to misleading analyses and consequential decision-making risks. 
+
+Baselines. We use Qwen3-4B and Qwen3-8B [ 44 ] as base models and compare with three categories of methods discussed in Appendix A. (1) Data-driven methods : we construct preference pairs and train models using SFT and DPO. (2) Response-level RL : we implement GRPO [ 32 ] with two reward designs, including a binary hallucination reward (GRPO B ) and a dense reward based on the proportion of correct claims (GRPO D ). Most existing response-level hallucination optimization methods can be viewed as variants of GRPO D . (3) Token-level RL : we compare with FSPO [ 21 ], which performs token-level advantage reshaping on the response level reward. We do not directly compare with RLFH [ 41 ], a PPO-based token-level method, due to its discrepancy on the self-assessment setting. Nevertheless, we perform RLFH-style experiments with its core components and conduct an ablation study in Section 5.3. 
+
+Evaluation. Following prior work [ 25 , 45 ], we use an LLM-based evaluation pipeline to extract claims from model responses and verify their faithfulness against reference evidence. We report 
+
+faithfulness (Faith.), which measures the proportion of responses without hallucinations, and infor-mativeness (Info.), which evaluates whether the response preserves sufficient information compared to a reference response generated by the base model. We define Q-Score = Faith. × Info. to assert the comprehensive level of faithfulness and informativeness. To further evaluate the response helpfulness, for ConFiQA, we additionally report answer accuracy (Acc.). For RAGTruth and FinLLM-Eval, following [ 20 , 7], we conduct pairwise comparisons between RL baselines and our BALTO by reporting the win rate (WR). More evaluation details are provided in Appendix E.2. 
+
+Implementation Details. We implement our method and the RL baselines using the verl [ 33 ]framework. Models are trained on the training split of each dataset and evaluated on the test set. When training, we use a batch size of 256 and a mini-batch size of 64, with 8 rollouts per prompt. The learning rate is set to 1 × 10 −6. Following DAPO [ 47 ], we use asymmetric clipping with a lower ratio of 0.2 and an upper ratio of 0.28. More details are in Appendix E. 7Table 1: Main results (%) on ConFiQA, RAGTruth, and FinLLM-Eval using Qwen3-8B and Qwen3-4B. Bold and underlined scores represent the best and second-best results. [ref.] denotes the reference method for relative metrics, with Info. computed against Base and WR computed against BALTO. Model Method ConFiQA RAGTruth FinLLM-Eval Faith. Info. Q-Score Acc. Faith. Info. Q-Score WR Faith. Info. Q-Score WR Qwen3-8B Base 68.2 [ref.] 68.2 70.6 40.4 [ref.] 40.4 - 34.6 [ref.] 34.6 -SFT 71.2 68.0 48.4 71.6 56.2 66.7 37.5 - 48.1 70.7 34.0 -DPO 72.8 84.0 61.2 62.0 52.4 11.6 6.1 - 41.4 60.2 24.9 -GRPO B 92.8 93.5 86.8 73.8 89.8 55.6 49.9 45.1 90.2 39.1 35.3 44.0 GRPO D 94.5 95.2 90.0 74.4 92.0 73.8 67.9 37.2 91.7 51.1 46.9 37.2 FSPO 94.8 97.3 92.2 66.4 73.1 84.9 62.1 34.2 59.4 82.0 48.7 46.6 BALTO 97.5 96.2 93.8 80.2 98.4 71.1 70.0 [ref.] 92.5 57.9 53.6 [ref.]                                                             
+
+> Qwen3-4B Base 80.3 [ref.] 80.3 36.8 62.2 [ref.] 62.2 -57.1 [ref.] 57.1 -GRPO B97.8 96.3 94.2 36.2 89.8 21.3 19.1 39.8 82.0 23.3 19.1 38.8 GRPO D88.0 92.8 81.7 37.8 93.1 50.9 47.4 35.2 78.2 43.6 34.1 57.7 FSPO 94.8 97.3 92.2 66.4 73.1 84.9 62.1 34.2 59.4 82.0 48.7 46.6 BALTO 99.0 96.2 95.2 38.6 94.0 56.7 53.3 [ref.] 88.7 42.1 37.3 [ref.]
+
+5.2 Main Results 
+
+Table 1 reports the main results on ConFiQA, RAGTruth, and FinLLM-Eval. Overall, BALTO achieves the highest faithfulness across all datasets and both model scales, and obtains the best Q-Score among all post-training methods. Compared with the strongest post-training baseline in each setting, BALTO improves faithfulness by 3.1 points on average and up to 6.7 points, while improving Q-Score by 2.7 points on average and up to 4.9 points. These gains are particularly pronounced over response-level RL methods (GRPO B and GRPO D ), suggesting that balanced token-level credit assignment provides more precise optimization signals for localized hallucinations. Although FSPO achieves higher informativeness on some datasets, it often does so at the cost of faithfulness, leading to a weaker overall faithfulness–informativeness trade-off. In contrast, BALTO consistently improves faithfulness while maintaining competitive informativeness, indicating that it suppresses unsupported content without simply shortening or over-conservatizing responses. Moreover, BALTO attains the highest accuracy on ConFiQA for both model scales, improving over the strongest post-training baseline by up to 5.8 points, and serves as the reference in most pairwise response comparisons on RAGTruth and FinLLM-Eval. These results show that BALTO preserves overall response quality while achieving stronger hallucination mitigation. 
+
+5.3 Further Analysis 
+
+Table 2: Ablation study on positive advantage assignment. “PA = 0” removes the positive advantage for faithful tokens, and “PA = 0.3” / “PA = 1” assign fixed positive advantage values. 
+
+Method ConFiQA RAGTruth FinLLM-Eval Faith. Info. Q-Score Faith. Info. Q-Score Faith. Info. Q-Score BALTO 97.5 96.2 93.8 98.4 71.1 70.0 92.5 57.9 53.6 
+
+PA = 0 91.3 92.2 84.2 86.0 64.0 55.0 78.2 36.1 28.2 PA = 0.3 84.0 93.2 78.3 56.0 81.3 45.5 40.6 62.4 25.3 PA = 1 76.3 90.2 68.8 72.2 89.8 64.8 49.6 77.4 38.4 
+
+Ablation Study. Table 2 presents an ablation analysis on the effect of positive advantage assignment for faithful tokens. Removing positive advantages entirely (PA = 0) results in substantial drops in both faithfulness and informativeness, confirming that penalizing hallucinated tokens alone is insufficient for stable optimization. When a partial positive advantage (PA = 0.3) is assigned, the model exhibits moderate improvements in informativeness but still suffers a notable degradation in faithfulness. Assigning full positive advantages (PA = 1) further shifts the balance toward faithful tokens, improving faithfulness in some cases but occasionally increasing verbosity. Notably, RLFH [ 41 ] relies on fixed-value rewards with strong heuristic assumptions, so the last two rows can be viewed as an adaptation of the method to our scenario. In contrast, the standard BALTO configuration, which uses the fully balanced token-level credit assignment, achieves the highest faithfulness and Q-Score across all datasets. These results highlight the importance of balanced credit assignment: providing positive reinforcement to faithful tokens while penalizing hallucinated tokens allows the model to reduce hallucinations effectively without sacrificing overall response quality. 8BALTO FSPO GRPO_B GRPO_D 
+
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Gradient Norm
+
+Figure 3: Gradient norm distribution on RAGTruth. 6 8 10 12 14 16 
+
+> Model Parameter Update (%)
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Faith.
+> BALTO
+> FSPO
+> GRPO_B
+> GRPO_D
+
+Figure 4: Faithfulness vs. model parameter up-date on RAGTruth. Curves are fitted using loga-rithmic functions y = a · ln( x + 1) + b.
+
+Training Dynamics. Figure 3 shows the distribution of policy gradient norms across training steps on the RAGTruth dataset. Compared with response-level RL methods, BALTO exhibits gradient norms that are an order of magnitude smaller (mean 0.020 vs. 0.145–0.214) and more tightly concentrated. This behavior reflects the sparse and balanced token-level advantage structure in BALTO: only hallucinated and corresponding faithful tokens receive non-zero advantages, while all other neutral tokens are ignored. By restricting gradient updates to the most relevant tokens, BALTO reduces the influence of noisy signals from neutral tokens, resulting in lower variance and more stable optimization trajectories, as theoretically predicted in Theorem 1. Figure 4 plots faithfulness against the fraction of model parameters that have updated from initial-ization [ 26 ]. BALTO achieves 0.98 accuracy with only approximately 12% of parameters updated, whereas GRPO B requires around 17% of parameters updated to reach 0.93 faithfulness. This indi-cates that token-level signals guide the optimizer to focus on a smaller and more relevant subset of parameters, specifically those that are directly responsible for generating hallucinated content, while maintaining the model’s broader capabilities acquired during pre-training. The practical implication is that BALTO can reduce hallucinations more effectively while minimizing the risk of degrading general language performance. 0 20 40 60 80 100 120 140                  
+
+> Training Step
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> 0.90
+> 0.95
+> Faith.
+> ConFiQA
+> 020 40 60 80 100 120 140
+> Training Step
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Faith.
+> RAGTruth
+> 020 40 60 80 100 120 140
+> Training Step
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> Faith.
+> FinLLM-Eval
+> BALTO FSPO GRPO_B GRPO_D
+
+Figure 5: Faithfulness improvement during training across different RL methods on three datasets. Curves are fitted using logarithmic functions y = a · ln( x + 1) + b.
+
+Efficiency. Figure 5 shows the improvement of faithfulness across training for different RL methods. BALTO consistently achieves faster early-stage gains and reaches higher final faithfulness with fewer training steps, reflecting the more informative token-level learning signals provided by balanced credit assignment. These observations align with Theorem 2, which demonstrates that BALTO maintains strong, bounded gradients across all stages of training, ensuring efficient exploration and stable convergence. In contrast, response-level methods such as GRPO B and GRPO D converge more slowly and are less effective on datasets with severe hallucinations, highlighting the advantage of fine-grained, balanced credit assignment for both performance and optimization efficiency. 
+
+## 6 Conclusion 
+
+In this work, we introduced BALTO, a balanced token-level policy optimization framework for fine-grained hallucination mitigation. Motivated by the localized nature of faithfulness hallucinations, BALTO addresses the credit assignment mismatch of response-level rewards by converting factuality 9judgments into token-level signals. By balancing positive and negative token-level credit assignment within each response, BALTO encourages probability mass to move from hallucinated content toward faithful content with unbiased policy optimization. Our theoretical analysis shows that balanced token-level credit assignment reduces unnecessary updates, lowers gradient variance, and provides bounded, stable optimization signals. Empirically, BALTO consistently improves the faithfulness–informativeness trade-off across ConFiQA, RAGTruth, and FinLLM-Eval with Qwen3-8B and Qwen3-4B, achieving stronger faithfulness and Q-Score than response-level and token-level RL baselines. These results highlight balanced fine-grained credit assignment as an effective direction for building more faithful and informative LLMs. 
+
+## References 
+
+[1] Aisha Alansari and Hamzah Luqman. Large language models hallucination: A comprehensive survey. Computer Science Review , 61:100970, 2026. [2] Patrice Béchard and Orlando Marquez Ayala. Reducing hallucination in structured outputs via retrieval-augmented generation. arXiv preprint arXiv:2404.08189 , 2024. [3] Baolong Bi, Shaohan Huang, Yiwei Wang, Tianchi Yang, Zihan Zhang, Haizhen Huang, Lingrui Mei, Junfeng Fang, Zehao Li, Furu Wei, et al. Context-dpo: Aligning language models for context-faithfulness. In Findings of the Association for Computational Linguistics: ACL 2025 ,pages 10280–10300, 2025. [4] Alex J Chan, Hao Sun, Samuel Holt, and Mihaela Van Der Schaar. Dense reward for free in reinforcement learning from human feedback. arXiv preprint arXiv:2402.00782 , 2024. [5] Hongzhan Chen, Tao Yang, Shiping Gao, Ruijun Chen, Xiaojun Quan, Hongtao Tian, and Ting Yao. Discriminative policy optimization for token-level reward models. arXiv preprint arXiv:2505.23363 , 2025. [6] M Chen, L Sun, T Li, H Sun, Y Zhou, C Zhu, H Wang, JZ Pan, W Zhang, H Chen, et al. Research: Learning to reason with search for llms via reinforcement learning. arxiv 2025. arXiv preprint arXiv:2503.19470 .[7] Xilun Chen, Ilia Kulikov, Vincent-Pierre Berges, Barlas O˘ guz, Rulin Shao, Gargi Ghosh, Jason Weston, and Wen-tau Yih. Learning to reason for factuality. arXiv preprint arXiv:2508.05618 ,2025. [8] Jie Cheng, Gang Xiong, Ruixi Qiao, Lijun Li, Chao Guo, Junle Wang, Yisheng Lv, and Fei-Yue Wang. Stop summation: Min-form credit assignment is all process reward model needs for reasoning. arXiv preprint arXiv:2504.15275 , 2025. [9] YS Chuang et al. Decoding by contrasting layers improves factuality in large language models (dola). arXiv Preprint , pages 1–8, 2024. [10] Matthew Dahl, Varun Magesh, Mirac Suzgun, and Daniel E Ho. Large legal fictions: Profiling legal hallucinations in large language models. Journal of Legal Analysis , 16(1):64–93, 2024. [11] Hanxing Ding, Liang Pang, Zihao Wei, Huawei Shen, and Xueqi Cheng. Retrieve only when it needs: Adaptive retrieval augmentation for hallucination mitigation in large language models. 
+
+arXiv e-prints , pages arXiv–2402, 2024. [12] Chengfeng Dou, Fan Yang, Fei Li, Jiyuan Jia, Qiang Ju, Shuai Wang, Tianpeng Li, Xiangrong Zeng, Yijie Zhou, Hongda Zhang, et al. Baichuan-m3: Modeling clinical inquiry for reliable medical decision-making. arXiv preprint arXiv:2602.06570 , 2026. [13] Tao He, Rongchuan Mu, Lizi Liao, Yixin Cao, Ming Liu, and Bing Qin. Good learners think their thinking: Generative prm makes large reasoning model more efficient math learner. arXiv preprint arXiv:2507.23317 , 2025. [14] Minda Hu, Bowei He, Yufei Wang, Liangyou Li, Chen Ma, and Irwin King. Mitigating large language model hallucination with faithful finetuning. arXiv preprint arXiv:2406.11267 , 2024. 10 [15] Ziwei Ji, Nayeon Lee, Rita Frieske, Tiezheng Yu, Dan Su, Yan Xu, Etsuko Ishii, Ye Jin Bang, Andrea Madotto, and Pascale Fung. Survey of hallucination in natural language generation. 
+
+ACM computing surveys , 55(12):1–38, 2023. [16] Kai Jiang, Qilai Zhang, Dongsheng Guo, Dengrong Huang, Sijia Zhang, Zizhong Wei, Fanggang Ning, and Rui Li. Ai-generated news articles based on large language models. In Proceedings of the 2023 International Conference on Artificial Intelligence, Systems and Network Security ,pages 82–87, 2023. [17] Haoqiang Kang and Xiao-Yang Liu. Deficiency of large language models in finance: An empirical examination of hallucination. arXiv preprint arXiv:2311.15548 , 2023. [18] Yubin Kim, Hyewon Jeong, Shan Chen, Shuyue Stella Li, Chanwoo Park, Mingyu Lu, Kumail Alhamoud, Jimin Mun, Cristina Grau, Minseok Jung, et al. Medical hallucinations in foundation models and their impact on healthcare. arXiv preprint arXiv:2503.05777 , 2025. [19] Jiaqi Li, Yixuan Tang, and Yi Yang. Know the unknown: An uncertainty-sensitive method for llm instruction tuning. In Findings of the Association for Computational Linguistics: ACL 2025 ,pages 2972–2989, 2025. [20] Junliang Li, Yucheng Wang, Yan Chen, Yu Ran, Ruiqing Zhang, Jing Liu, Hua Wu, and Haifeng Wang. Knowledge-level consistency reinforcement learning: Dual-fact alignment for long-form factuality, 2026. URL https://openreview.net/forum?id=Q04RwdeN9z .[21] Junyi Li and Hwee Tou Ng. Reasoning models hallucinate more: Factuality-aware reinforcement learning for large reasoning models. In The Thirty-ninth Annual Conference on Neural Informa-tion Processing Systems , 2026. URL https://openreview.net/forum?id=Igq7Dyc3OL .[22] Lichang Liang, Shaohui Wu, Yunlong Zhang, Yeyang Tang, and Fanyang Lu. finllm-eval: Evaluation methods for the logical, factual, and data accuracy of large models in the financial domain. https://www.github.com/Tencent/finLLM-Eval , 2025. [23] Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harrison Edwards, Bowen Baker, Teddy Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe. Let’s verify step by step. In The twelfth international conference on learning representations , 2023. [24] Aixin Liu, Aoxue Mei, Bangcai Lin, Bing Xue, Bingxuan Wang, Bingzheng Xu, Bochao Wu, Bowei Zhang, Chaofan Lin, Chen Dong, et al. Deepseek-v3. 2: Pushing the frontier of open large language models. arXiv preprint arXiv:2512.02556 , 2025. [25] Sewon Min, Kalpesh Krishna, Xinxi Lyu, Mike Lewis, Wen-tau Yih, Pang Koh, Mohit Iyyer, Luke Zettlemoyer, and Hannaneh Hajishirzi. Factscore: Fine-grained atomic evaluation of factual precision in long form text generation. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pages 12076–12100, 2023. [26] Sagnik Mukherjee, Lifan Yuan, Dilek Hakkani-Tur, and Hao Peng. Reinforcement learning finetunes small subnetworks in large language models. arXiv preprint arXiv:2505.11711 , 2025. [27] Feng Nan, Ramesh Nallapati, Zhiguo Wang, Cicero Nogueira dos Santos, Henghui Zhu, Dejiao Zhang, Kathleen McKeown, and Bing Xiang. Entity-level factual consistency of abstractive text summarization. In Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume , pages 2727–2733, 2021. [28] Cheng Niu, Yuanhao Wu, Juno Zhu, Siliang Xu, KaShun Shum, Randy Zhong, Juntong Song, and Tong Zhang. Ragtruth: A hallucination corpus for developing trustworthy retrieval-augmented language models. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 10862–10878, 2024. [29] Artidoro Pagnoni, Vidhisha Balachandran, and Yulia Tsvetkov. Understanding factuality in abstractive summarization with FRANK: A benchmark for factuality metrics. In Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies , pages 4812–4829, 2021. 11 [30] Baochang Ren, Shuofei Qiao, Da Zheng, Huajun Chen, and Ningyu Zhang. Knowrl: Exploring knowledgeable reinforcement learning for factuality. arXiv preprint arXiv:2506.19807 , 2025. [31] Pranab Sahoo, Ayush Kumar Singh, Sriparna Saha, Vinija Jain, Samrat Mondal, and Aman Chadha. A systematic survey of prompt engineering in large language models: Techniques and applications. arXiv preprint arXiv:2402.07927 , 1, 2024. [32] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. [33] Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng, Haibin Lin, and Chuan Wu. Hybridflow: A flexible and efficient rlhf framework. arXiv preprint arXiv: 2409.19256 , 2024. [34] Anikait Singh, Sheryl Hsu, Kyle Hsu, Eric Mitchell, Stefano Ermon, Tatsunori Hashimoto, Archit Sharma, and Chelsea Finn. Fspo: Few-shot optimization of synthetic preferences personalizes to real users. arXiv preprint arXiv:2502.19312 , 2025. [35] Huatong Song, Jinhao Jiang, Yingqian Min, Jie Chen, Zhipeng Chen, Wayne Xin Zhao, Lei Fang, and Ji-Rong Wen. R1-searcher: Incentivizing the search capability in llms via reinforcement learning. arXiv preprint arXiv:2503.05592 , 2025. [36] Wei Sun, Wen Yang, Pu Jian, Qianlong Du, Fuwei Cui, Shuo Ren, and Jiajun Zhang. Ktae: A model-free algorithm to key-tokens advantage estimation in mathematical reasoning. arXiv preprint arXiv:2505.16826 , 2025. [37] Zhongxiang Sun, Qipeng Wang, Haoyu Wang, Xiao Zhang, and Jun Xu. Mechanistic detection and mitigation of hallucination in large reasoning models. In The Fourteenth International Conference on Learning Representations .[38] Manveer Singh Tamber, Forrest Bao, Chenyu Xu, Ge Luo, Suleman Kazi, Minseok Bae, Miaoran Li, Ofer Mendelevitch, Renyi Qu, and Jimmy Lin. Benchmarking llm faithfulness in rag with evolving leaderboards. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: Industry Track , pages 799–811, 2025. [39] Hongze Tan, Zihan Wang, Jianfei Pan, Jinghao Lin, Hao Wang, Yifan Wu, Tao Chen, Zhihang Zheng, Zhihao Tang, and Haihua Yang. Gtpo and grpo-s: Token and sequence-level reward shaping with policy entropy. arXiv preprint arXiv:2508.04349 , 2025. [40] Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed Chi, Sharan Narang, Aakanksha Chowdhery, and Denny Zhou. Self-consistency improves chain of thought reasoning in language models. arXiv preprint arXiv:2203.11171 , 2022. [41] Xueru Wen, Jie Lou, Xinyu Lu, Yuqiu Ji, Xinyan Guan, Yaojie Lu, Hongyu Lin, Ben He, Xianpei Han, Debing Zhang, et al. On-policy self-alignment with fine-grained knowledge feedback for hallucination mitigation. In Findings of the Association for Computational Linguistics: ACL 2025 , pages 5215–5231, 2025. [42] Guofu Xie, Yunsheng Shi, Hongtao Tian, Ting Yao, and Xiao Zhang. Capo: Towards enhancing llm reasoning through generative credit assignment. arXiv preprint arXiv:2508.02298 , 2025. [43] Guangzhi Xiong, Eric Xie, Corey Williams, Myles Kim, Amir Hassan Shariatmadari, Sikun Guo, Stefan Bekiranov, and Aidong Zhang. Toward reliable scientific hypothesis generation: Evaluat-ing truthfulness and hallucination in large language models. arXiv preprint arXiv:2505.14599 ,2025. [44] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. [45] Taoye Yin, Haoyuan Hu, Yaxin Fan, Xinhao Chen, Xinya Wu, Kai Deng, Kezun Zhang, and Feng Wang. Mitigating hallucination in financial retrieval-augmented generation via fine-grained knowledge verification. arXiv preprint arXiv:2602.05723 , 2026. 12 [46] Eunseop Yoon, Hee Suk Yoon, SooHwan Eom, Gunsoo Han, Daniel Nam, Daejin Jo, Kyoung-Woon On, Mark Hasegawa-Johnson, Sungwoong Kim, and Chang Yoo. Tlcr: Token-level continuous reward for fine-grained reinforcement learning from human feedback. In Findings of the Association for Computational Linguistics: ACL 2024 , pages 14969–14981, 2024. [47] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian Fan, Gaohong Liu, Lingjun Liu, et al. Dapo: An open-source llm reinforcement learning system at scale. arXiv preprint arXiv:2503.14476 , 2025. [48] Kechi Zhang, Jia Li, Ge Li, Xianjie Shi, and Zhi Jin. Codeagent: Enhancing code generation with tool-integrated agent systems for real-world repo-level coding challenges. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 13643–13658, 2024. [49] Yuxin Zhang, Meihao Fan, Ju Fan, Mingyang Yi, Yuyu Luo, Jian Tan, and Guoliang Li. Reward-sql: Boosting text-to-sql via stepwise reasoning and process-supervised rewards. arXiv preprint arXiv:2505.04671 , 2025. [50] Xufeng Zhao, Mengdi Li, Wenhao Lu, Cornelius Weber, Jae-Hee Lee, Kun Chu, and Stefan Wermter. Enhancing zero-shot chain-of-thought reasoning in large language models through logic. In Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024) , pages 6144–6166, 2024. [51] Chunting Zhou, Pengfei Liu, Puxin Xu, Srinivasan Iyer, Jiao Sun, Yuning Mao, Xuezhe Ma, Avia Efrat, Ping Yu, Lili Yu, et al. Lima: Less is more for alignment. Advances in Neural Information Processing Systems , 36:55006–55021, 2023. 13 A Related Work 
+
+A.1 Hallucination 
+
+In LLMs, hallucinations refer to syntactically fluent outputs that contain factual errors or contradict source materials [ 15 , 1]. Prior mitigation strategies are primarily data-centric or model-centric. Data-centric approaches optimize curation quality [ 51 ], employ specialized prompting [ 16 , 31 ], or utilize RAG [ 11 , 2] and reasoning techniques like Chain-of-Thought or self-consistency[ 40 , 50 ]. Conversely, model-centric methods refine internal mechanisms through faithful fine-tuning [14, 19] and contrastive decoding [ 9]. More recently, RL has emerged as a significant direction [ 41 , 21 ], which we detail below. 
+
+A.2 RL for Faithfulness Alignment 
+
+While RL is critical for model alignment, prior approaches often employ coarse-grained rewards [ 6, 35 ], which may suffer from sparsity and imprecise guidance [ 23 ]. This has driven a shift towards fine-grained faithfulness alignment, where models are evaluated using claim-level correctness [ 7, 12 ] or atomic facts [ 30 , 45 ]. However, these methods typically lack token-level precision or are constrained to specific domains. Furthermore, existing approaches that claim to utilize token-level rewards [ 37 , 34 , 41 ] either still depend on response-level signals or lack an effective credit balancing mechanism. 
+
+A.3 Fine-Grained Rewards and Process Supervision 
+
+To address the sparse reward issue inherent in traditional outcome-based models [ 23 ], recent literature has shifted towards fine-grained process supervision, primarily integrating intermediate signals into PPO or GRPO frameworks. Within PPO, approaches assign credit at the step-level to reinforce error localization [ 8 ], or at the token-level utilizing mechanisms such as attention distributions, edit distances, or discriminative optimization [ 4, 46 , 5]. Parallelly, GRPO-based methods explore diverse advantage estimation techniques, ranging from stepwise dynamic scaling and generative credit assignment [ 49 , 42 ] to token-level advantage computation via decaying accumulation, entropy-based shaping, or statistical measures [ 13 , 39 , 36 ]. Despite these significant algorithmic advancements, gen-uinely integrating token-level rewards specifically for hallucination mitigation remains underexplored [41], a critical gap that our work directly addresses. 
+
+## B Limitations 
+
+Despite its effectiveness, BALTO has several limitations. First, our method relies on an LLM-based faithfulness evaluator to extract and verify factual claims, and thus its performance is bounded by the accuracy and consistency of this evaluator. Errors in claim extraction, evidence matching, or token-level projection may introduce noisy advantage assignments, especially for implicit claims, long-range reasoning dependencies, or ambiguous evidence. Second, BALTO is primarily designed for retrieval-grounded faithfulness alignment, where reference documents are available for verification. Its applicability to open-domain generation without explicit evidence, or to tasks involving subjective, creative, or preference-based outputs, remains less explored. 
+
+## C Broader Impact 
+
+A key positive impact of BALTO is its ability to provide more precise supervision for hallucination mitigation. This may improve the usefulness of retrieval-augmented systems, financial assistants, medical question-answering systems, and other applications where factual precision is critical. In addition, BALTO’s variance-reduction properties and efficient optimization behavior may reduce training instability and computational waste during RL-based alignment. At the same time, our method also introduces risks. BALTO relies on an external faithfulness evaluator to identify hallucinated and faithful tokens. If the evaluator itself contains biases, factual inaccuracies, or systematic verification errors, these imperfections may propagate into the optimization process and reinforce incorrect supervision signals. 14 D Complete Mathematical Proofs for Theoretical Analysis 
+
+In this appendix, we provide the complete mathematical derivations for the theorems presented in Section 4. We first establish the rigorous foundations of the policy gradient estimators used in our analysis. 
+
+D.1 Preliminaries and Definition of Policy Gradient Estimators 
+
+Let y = ( y1, y 2, . . . , y T ) be a response of length T generated by a language model policy πθ (·| x)
+
+given prompt x. The trajectory generation probability is given by πθ (y|x) = QTt=1 πθ (yt|x, y <t ).We define the per-token score function (the gradient of the log-probability) as: 
+
+gt = ∇θ log πθ (yt|x, y <t ) (9) According to the log-derivative trick, the expectation of the score function over the action space is strictly zero: Eyt∼πθ [gt] = 0 .The response-level score function, representing the gradient of the entire response, is the sum of the per-token score functions: 
+
+G(y) = ∇θ log πθ (y|x) = 
+
+> T
+
+X
+
+> t=1
+
+∇θ log πθ (yt|x, y <t ) = 
+
+> T
+
+X
+
+> t=1
+
+gt (10) 
+
+Bernoulli Reward Setting. To evaluate the optimization dynamics, we model the generation process as yielding two distinct types of trajectories: • Faithful response ( y+): Generated with probability p, yielding a reward r = 1 . It contains no hallucinations. We denote its response-level score function as G(y+) = PT + 
+
+> t=1
+
+g+ 
+
+> t
+
+.• Hallucinated response ( y−): Generated with probability 1 − p, yielding a reward r = 0 . It contains at least one hallucination. We denote its response-level score function as G(y−) = 
+
+PT − 
+
+> t=1
+
+g− 
+
+> t
+
+.Following our methodology, the token indices of any response are partitioned into three disjoint sets: the hallucinated factual token set H (size N −), the faithful factual token set F (size N +), and the neutral token set N . For y+, N − = 0 . For y−, N − ≥ 1.
+
+Derivation of the Response-Level GRPO Estimator. The standard RL objective maximizes the expected reward: Jresp (θ) = Ey∼πθ [R(y)] . Using the REINFORCE algorithm and incorporating the GRPO normalization baseline, the gradient of the objective is: 
+
+∇θ Jresp (θ) = Ey∼πθ [A · ∇ θ log πθ (y|x)] = Ey∼πθ [A · G(y)] (11) where A = r−μσ is the normalized global advantage. Given μ = p and σ = pp(1 − p), the respective advantages for y+ and y− are: 
+
+A+ =
+
+r 1 − pp , A− = −
+
+r p
+
+1 − p (12) Thus, the unbiased policy gradient estimator for a single sampled response in standard GRPO is: 
+
+ˆ∇Jresp = A
+
+> T
+
+X
+
+> t=1
+
+gt (13) 
+
+Derivation of the BALTO Estimator. BALTO optimizes a fine-grained objective where advantages are assigned at the token level. The gradient of the BALTO objective can be expressed as: 
+
+∇θ JBALTO (θ) = Ey∼πθ
+
+" TX
+
+> t=1
+
+Abal  
+
+> t
+
+∇θ log πθ (yt|x, y <t )
+
+#
+
+= Ey∼πθ
+
+" TX
+
+> t=1
+
+Abal  
+
+> t
+
+gt
+
+#
+
+(14) where the token-level advantages Abal  
+
+> t
+
+strictly follow the balanced assignment in Eq. 5. The corre-sponding policy gradient estimator for a single sampled response in BALTO is: 
+
+ˆ∇JBALTO =
+
+> T
+
+X
+
+> t=1
+
+Abal  
+
+> t
+
+gt (15) 15 D.2 Proof of Theorem 1: Stable Convergence via Variance Reduction 
+
+In policy gradient methods, optimization stability is inversely proportional to the variance of the gradient estimator. We evaluate the trace of the second-moment matrix of the gradient, E[|| ˆ∇J|| 2],which dominates the variance near a local optimum. We assume the covariance matrix of local token gradients is approximately identical and isotropic: 
+
+E[gtg⊤ 
+
+> t
+
+] = Σ . Given that E[gt] = 0 , gradients at different time steps are orthogonal in expectation: 
+
+E[gig⊤ 
+
+> j
+
+] = 0 for i̸ = j.
+
+Variance of Response-Level GRPO: 
+
+Var( ˆ∇Jresp ) ≈ E
+
+A2
+
+> T
+
+X
+
+> t=1
+
+gt
+
+! TX
+
+> t=1
+
+gt
+
+!⊤ (16) Expanding the outer product and eliminating the orthogonal cross-terms ( E[gig⊤ 
+
+> j
+
+] = 0 ): 
+
+Var( ˆ∇Jresp ) ≈ E[A2]
+
+> T
+
+X
+
+> t=1
+
+E[gtg⊤ 
+
+> t
+
+] = E[A2] · T Σ (17) We calculate the expected squared advantage E[A2] over the Bernoulli distribution using Eq. 12: 
+
+E[A2] = p(A+)2 + (1 − p)( A−)2 = p
+
+ 1 − pp
+
+
+
++ (1 − p)
+
+ p
+
+1 − p
+
+
+
+= (1 − p) + p = 1 (18) Thus, the variance of the standard GRPO estimator is strictly proportional to the full response length: 
+
+Var( ˆ∇Jresp ) ≈ 1 · T Σ = O(T Σ) (19) 
+
+Variance of BALTO: For BALTO, the second moment of the estimator is: 
+
+Var( ˆ∇JBALTO ) ≈ E
+
+
+
+> T
+
+X
+
+> t=1
+
+Abal  
+
+> t
+
+gt
+
+! TX
+
+> t=1
+
+Abal  
+
+> t
+
+gt
+
+!⊤ = E
+
+" TX
+
+> t=1
+
+(Abal  
+
+> t
+
+)2gtg⊤
+
+> t
+
+#
+
+= E
+
+" TX
+
+> t=1
+
+(Abal  
+
+> t
+
+)2
+
+#
+
+Σ
+
+(20) For faithful responses y+ (which occur with probability p), there are no hallucinations ( N − = 0 ), and BALTO assigns Abal  
+
+> t
+
+= 0 for all t. The variance only accumulates from hallucinated trajectories 
+
+y− (which occur with probability 1 − p). Applying the specific advantage definitions from Eq. 5 across the three disjoint token sets ( H, F, N )within y−:
+
+Var( ˆ∇JBALTO ) = (1 − p) · Ey−
+
+"X
+
+> t∈H
+
+(−1) 2 + X
+
+> t∈F
+
+ N −
+
+N +
+
+2
+
++ X
+
+> t∈N
+
+(0) 2
+
+#
+
+Σ= (1 − p) · Ey−
+
+
+
+N − · 1 + N + · (N −)2
+
+(N +)2 + |N | · 0
+
+
+
+Σ= (1 − p) · Ey−
+
+
+
+N − + (N −)2
+
+N +
+
+
+
+Σ (21) By deliberately assigning zero advantages to the neutral set N , BALTO entirely eliminates the noise contribution from tokens irrelevant to factual checkability. Furthermore, in practical LLM generation, hallucinated tokens are sparse relative to the faithful content ( N − ≪ N +). Consequently, the fractional term (N −)2  
+
+> N+
+
+< N −. The overall variance thus tightly compresses to: 
+
+Var( ˆ∇JBALTO ) ≈ (1 − p)E[N −]Σ = O(N −Σ) (22) This rigorous derivation proves that BALTO completely decouples the gradient variance from the total response length T , bounding it exclusively to the size of the localized hallucination span N −,which ensures highly stable optimization. ■
+
+16 D.3 Proof of Theorem 2: High Optimization Efficiency in Asymptotic Regimes 
+
+Optimization efficiency relies on the expected magnitude of the policy gradient providing a strong, informative signal. We analyze this expectation at the two extremes of alignment training: p → 0
+
+(cold-start) and p → 1 (late-stage convergence). 
+
+Part I: Gradient Starvation in the Cold-Start Regime ( p → 0)
+
+For Response-Level GRPO, we expand the expected gradient over the Bernoulli outcomes using the predefined response-level score functions G(y+) and G(y−):
+
+E[ ˆ∇Jresp ] = p · Ey+
+
+A+G(y+) + (1 − p) · Ey−
+
+A−G(y−)
+
+= p
+
+r 1 − pp Ey+ [G(y+)] − (1 − p)
+
+r p
+
+1 − p Ey− [G(y−)] = pp(1 − p)
+
+
+
+Ey+ [G(y+)] − Ey− [G(y−)] 
+
+
+
+(23) The overall magnitude of the learning signal is constrained by the global normalization coefficient pp(1 − p). Taking the limit as the faithful rate p → 0:
+
+lim  
+
+> p→0
+
+|| E[ ˆ∇Jresp ]|| ∝ lim 
+
+> p→0
+
+pp(1 − p) = 0 (24) This mathematically demonstrates gradient starvation : when a task is exceedingly difficult and global rewards are uniformly 0, standard GRPO normalizes the advantages to zero, providing no effective optimization signal to correct errors. Conversely, for BALTO, faithful responses y+ yield zero advantage. The gradient expectation strictly depends on the hallucinated responses y−:
+
+E[ ˆ∇JBALTO ] = p · 0 + (1 − p) · Ey−
+
+" TX
+
+> t=1
+
+Abal  
+
+> t
+
+gt
+
+#
+
+(25) The magnitude of BALTO’s expected gradient is governed by the pre-factor (1 − p). Taking the limit as p → 0:
+
+lim  
+
+> p→0
+
+|| E[ ˆ∇JBALTO ]|| ∝ lim 
+
+> p→0
+
+(1 − p) = 1 (26) BALTO achieves its theoretical maximum expected gradient magnitude precisely when the model’s performance is at its lowest, guaranteeing highly efficient exploration and parameter updates during the cold-start phase. 
+
+Part II: Divergent Penalties in the Convergence Regime ( p → 1)
+
+We now analyze the penalty assigned to a rare, hallucinated trajectory y− as the model approaches near-perfect alignment ( p → 1). For standard GRPO, the penalty is determined by A−:
+
+lim  
+
+> p→1
+
+A− = lim  
+
+> p→1
+
+−
+
+r p
+
+1 − p = −∞ (27) This divergence reveals a critical instability: a singular, rare mistake triggers an infinitely large negative update applied globally across the entire response. This disproportionate penalty destroys late-stage optimization efficiency by destabilizing previously well-aligned parameters. In stark contrast, the advantages in BALTO are deterministically assigned based on local token sets according to Eq. 5: 
+
+Abal  
+
+> t
+
+∈
+
+
+
+−1, N −
+
+N + , 0
+
+
+
+(28) Because hallucinations are a sparse minority of the response ( N − ≪ N +), the compensation advantage N −/N + is a small positive fraction. Thus, all local advantages strictly remain bounded within [−1, 1] , entirely independent of the global faithful rate p.Furthermore, analyzing the expected gradient magnitude for BALTO as p → 1:
+
+lim  
+
+> p→1
+
+|| E[ ˆ∇JBALTO ]|| ∝ lim 
+
+> p→1
+
+(1 − p) = 0 (29) This proves that BALTO ensures efficient and graceful final convergence: as the model ceases to hallucinate, the gradient expectation naturally decays to zero without ever triggering extreme penalties or gradient explosion. ■
+
+17 E Implementation Details 
+
+E.1 Baselines. Surprised Fine-Tuning (SFT). When constructing the SFT dataset, we first generated responses using the base model. We then employed Qwen3.5-35B-A3B as a reward model to detect hallucina-tions within these responses, with the prompt in Appendix F.1. For responses identified as containing hallucinations, we further used Qwen3.5-35B-A3B guided by the detection results to correct the original outputs, aiming to preserve the original content structure as much as possible. The prompt used for this correction process is provided in Appendix F.2. Both the original correct responses and the corrected responses were subsequently used as the training data for supervised fine-tuning. 
+
+Direct Preference Optimization (DPO). We constructed preference pairs using the SFT dataset: the negative samples were generated by the base model during the SFT data construction process, while the positive samples were obtained from the corrected responses. These preference pairs were then used to train the model with the DPO objective. 
+
+Group Relative Policy Optimization (GRPO). In the training process, we employed Qwen3.5-35B-A3B as a reward model to detect hallucinations within responses, with the prompt in Appendix F.1. For GRPO B , it gives a 0/1 reward to indicate if the response has hallucination. For GRPO D , we calculate the ratio of faithful claims as the reward. 
+
+FSPO. Similar to GRPO D , we calculate the ratio of faithful claims as the reward to calculate the advantage. The advantage of the faithful claims in responses with negative advantage will be inverted. Similarily, The advantage of the hallucinated claims in responses with positive advantage will be inverted. 
+
+BALTO. As the same setting, we use the reward model to detect hallucination tokens within responses, with the prompt in Appendix F.1. 
+
+E.2 Evaluation LLM-based Evaluation. We use Qwen3.5-35B-A3B as the evaluator to extract claims from model responses and determine whether each claim is supported by the reference evidence. The detailed prompts used for claim extraction and hallucination detection are provided in Appendix F.1. 
+
+Faithfulness. Faithfulness (Faith.) is calculated as the proportion of responses without hallucinated claims over the test set. 
+
+Informativeness. Informativeness (Info.) measures whether a response preserves sufficient in-formation compared to a reference response (generated by the base model). For each example, a response receives a score of 1 if it contains at least as many claims as the reference; otherwise, it receives a score of 0. The final Info. score is averaged over the test set. 
+
+Q-Score. To jointly evaluate faithfulness and informativeness, we define: Q-Score = Faith. ×
+
+Info., which reflects the overall response quality by jointly considering correctness and completeness. The multiplicative form explicitly penalizes responses that achieve high performance on only one dimension. 
+
+ConFiQA Accuracy. For ConFiQA, the paper [ 3] provides two metrics: Pc is the frequency of responses matching the context-faithful answer (excluding negations or the original answer), and Po
+
+is the frequency of responses matching the original factual answer. We calculate the accuracy (Acc.) as: Acc. = Pc − Po,. A higher Acc. indicates better performance. 
+
+Win Rate. We follow prior work [ 20 , 7] to compute the win rate (WR) using LLM-based pairwise comparison. We use DeepSeek-v3.2 [ 24 ] as the judge model with the prompt in Appendix F.3. For each prompt, responses from two models are compared twice with reversed ordering to mitigate 18 position bias. Let Win (1) and Win (2) denote whether the candidate model is preferred in each ordering. The instance-level win indicator is defined as: Win = Win (1) + Win (2) 2 .
+
+The overall win rate over a test set of size N is: WR = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+Win i.
+
+A win rate greater than 0.5 indicates that the candidate model is preferred over the compared model. 
+
+E.3 Experiments Compute Resources 
+
+We use 2x8 Nvidia H20 to conduct the experiments. The training time of Qwen3-8B and Qwen3-4B in one epoch is around 30 minites. 
+
+## F Prompts 
+
+F.1 Hallucination Detection Hallucination Detection 
+
+# Role You are a strict auditor of response accuracy. Your core competency lies in meticulously cross-referencing statements within a response text against provided reference materials. Your objective is to verify whether every informational statement in the response text aligns with the reference materials, and to precisely pinpoint any specific erroneous segments. # Task I will provide a "Response Text" and a set of "Reference Materials." Your task is to verify, sentence by sentence, every informational statement within the Response Textspecifically validating whether its assertions are consistent with the content found in the Reference Materialsand to precisely identify any specific erroneous segments. # Input Data ## [User Query & Reference Materials] {{user_prompt}} ## [Response Text] {{response}} # Workflow 1. **Extraction:** Extract all informational sentences from the "Response Text." - Extracted sentences typically contain specific data pointssuch as figures ( dates, times, and various other numerical values), entities (people, places, venues, etc.), and logical relationships (e.g., whether a cause-and-effect link holds true). 2. **Localization:** Locate the corresponding paragraphs within the "Reference Materials." 3. **Comparison:** Compare the statements made in the response against the original wording found in the reference materials. 4. **Verdict:** - **Correct:** The statement aligns perfectly with the content found in the reference materials. - **Incorrect:** A corresponding statement exists in the reference materials, but the response’s phrasing does not match it; *or* the statement cannot be found within the specified reference materials (i.e., it is fabricated/ hallucinated). 
+
+19 5. **Error Localization:** For every incorrect item, further pinpoint the specific "erroneous segment" (‘error_spans‘) within the "Response Text" itself, to facilitate subsequent token-level penalties. - For each incorrect item, you must identify the minimal erroneous segment within the [Response Text] and output it to the ‘error_spans‘ list. - Each entry in ‘error_spans‘ must be a contiguous substring taken directly from the original Response Text. - If a single error spans multiple non-contiguous segments, split them into separate elements and add each to the ‘error_spans‘ list. - Avoid marking entire sentences as erroneous segments; instead, identify only the minimal, specific error fragments. - If no errors are detected, the ‘error_spans‘ list must be empty. # Possible Errors All possible data accuracy error types: - conflict: Factual contradiction (the model generates information that contradicts facts in the references, such as misattribution of dates, metrics , entities, etc.) - fabrication: Fabrication (the model generates information that is not mentioned in the original text/context) - no_error: No error # Output Format Please analyze carefully. The output should be in the following format. Strictly adhere to the format and do not output any extra symbols: ### Information Accuracy Analysis {"details": [ {"claim_text": "The extracted sentence containing the information", "source_text": "The corresponding sentence in the references", "analysis": "Analyze whether there is a match or whether the calculation result is correct", "error_type": "One of the error types in Possible Errors: conflict/fabrication/ no_error", "judgment_result": "Correct/Incorrect", "error_spans": ["Error Span 1", "Error Span 2", ...] }, { "claim_text": "The extracted sentence containing the information", "source_text": "The corresponding sentence from the references", "analysis": "Analysis of whether a match is found or whether the calculation result is correct", "error_type": "One of the error types in Possible Errors: conflict/fabrication/ no_error", "judgment_result": "Correct/Incorrect", "error_spans": ["Error Span 1", "Error Span 2", ...] },... 
+
+20 ]}### Summary of Response Accuracy The response contains X claims, of which Y are correct matches and Z are incorrect matches (Note that this summary must strictly adhere to the format; do not output any extra symbols). If illusions exist, summarize the illusion points. 
+
+F.2 Response Correction Response Correction 
+
+# Role You are a rigorous text proofreading and fact-checking expert. Your task is to verify and correct numerical or factual errorsidentified in the [ Hallucination Detection Report]within the [Original Reasoning Process] and [ Original Answer], based on the provided [Reference Materials]. # Rules When making modifications, please strictly adhere to the following workflow and editing principles: ## Step 1: Verify the Accuracy of Hallucination Detection Before making any changes, you must first cross-reference the [Reference Materials] to determine whether the errors flagged in the [Hallucination Detection Report] actually exist. - If the [Hallucination Detection Report] is accurate (i.e., the original text is indeed incorrect), proceed to Step 2 to make the necessary corrections. - If the [Hallucination Detection Report] is a false positive (i.e., the original text actually aligns with the reference materials), retain the original text and do not make that specific correction. ## Step 2: Apply the "Minimal Change" Principle If you confirm that the original text contains an error, you must correct it in both the [Original Reasoning Process] and the [Original Answer]. When making corrections, strictly follow the priority order below (from highest to lowest ): 1. **Precise Numerical Replacement (Primary Choice)**: Modify only the incorrect number (e.g., ‘17.96%‘ ‘12.08%‘). 2. **Precise Entity Replacement (Secondary Choice)**: If changing only the number results in a semantic contradiction (e.g., a subject mismatch), make minor adjustments to the local subject entity name or qualifier (e.g., ‘Bond D‘ ‘ Bond A‘). 3. **Local Refinement (Tertiary Choice)**: If simply replacing the number or entity leads to grammatical errors, semantic incoherence, or logical conflicts within the context, you are permitted to make minor additions, deletions, or stylistic tweaks to the specific sentenceor its immediate contextto ensure it reads smoothly. 4. **Full Sentence Deletion (Last Resort)**: If the erroneous information is a complete fabrication (a "hallucination") that cannot be factually corrected through simple editsor if correcting it would cause the logic of the entire paragraph to collapsedirectly delete the entire sentence containing the error .## Step 3: Formatting Requirements - Preserve the original text structure, tone, and formatting (e.g., Markdown headings, lists, etc.). - The citation markers in the original text (such as ‘[12](@ref)‘) must remain accurate after modification. If a sentence is deleted, please also delete the citation markers that belong to that sentence .
+
+21 ---# Input Data ### [References] ${user_prompt} ### [Hallucination Detection Results] ${detect_result} ### [Original Reasoning Process] ${reasoning_content} ### [Original Answer] ${answer} ---# Output Format Please output your results in the following structure: ### 1. Verification and Modification Explanation (Briefly explain your verification results of the [Hallucination Identification Report] and what level of modification strategy you adopted: replacement/fine -tuning/deletion.) ### 2. Modified Reasoning Process (Output the corrected complete reasoning_content) ### 3. Modified Answer (Output the corrected complete answer) 
+
+F.3 Response Comparison Response Comparison 
+
+You are a helpful assistant, that ranks models by the quality of their answers. I want you to create a leaderboard of different of large-language models. To do so, I will give you the instructions (prompts) given to the models, and the responses of two models. Please rank the models based on which responses would be preferred by humans. All inputs and outputs should be python dictionaries. Here is the prompt: {"instruction": """{{instruction}}""" }Here are the outputs of the models: [{"model": "model_1", "answer": """{{output_1}}""" 
+
+22 }, {"model": "model_2", "answer": """{{output_2}}""" }]Now please analyze the two models’ answers and return the better model. Output format: ### Analysis xxx (your analysis) ### Better Model model_1 / model_2 / tie (The model you think is better. If you think they are equally good, return "tie") 
+
+23
