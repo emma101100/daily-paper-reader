@@ -1,0 +1,319 @@
+Title: Sparsity, Superposition, and Forgetting: A Mechanistic Study of Representation Retention in Continual Learning
+
+URL Source: https://arxiv.org/pdf/2606.20431v1
+
+Published Time: Fri, 19 Jun 2026 01:22:24 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Sparsity, Superposition, and Forgetting: A Mechanistic Study of Representation Retention in Continual Learning 
+
+# Jan Wasilewski Rochester Institute of Technology Rochester NY, USA 
+
+> jw7630@rit.edu
+
+# Jedrzej Kozal Wrocław University of Science and Technology Wrocław, Poland 
+
+> jedrzej.kozal@pwr.edu.pl
+
+# Michał Wo´ zniak Wrocław University of Science and Technology Wrocław, Poland 
+
+> michal.wozniak@pwr.edu.pl
+
+# Bartosz Krawczyk Rochester Institute of Technology Rochester NY, USA 
+
+> bxkcis@rit.edu
+
+# Abstract 
+
+Continual learning (CL) systems often forget previously ac-quired knowledge, yet the mechanisms driving forgetting re-main hard to isolate in practice because real datasets entan-gle many factors. We present a controlled, toy-world frame-work that makes these mechanisms observable and testable. Using a synthetic generator–separator pipeline, we de-fine ground-truth latent “features,” build tasks with tunable sparsity and overlap, and introduce measurable quantities for representation strength and superposition (directional overlap among features). We then study retention dynam-ics—the temporal change of representation strength—by fit-ting sparse dynamical relations (via SINDy) between reten-tion, superposition, and exposure history. A complemen-tary task-level analysis based on effective rank character-izes how representational capacity is allocated across tasks. Our controlled experiments yield three takeaways. (1) Su-perposition tends to increase over time with transient dips at task boundaries, suggesting boundary-specific interfer-ence rather than steady drift. (2) Higher feature sparsity induces more superposition yet does not inevitably cause forgetting; when representations remain strong, forgetting can be reduced despite overlap. (3) Task-level effective rank grows with sparsity, indicating broader capacity usage un-der sparse regimes. Together, these results nuance the com-mon intuition that more superposition leads to more forget-ting by showing that overlap interacts with representation strength and capacity allocation. Our toy analysis provides falsifiable hypotheses and diagnostic tools for CL. 
+
+# 1. Introduction 
+
+Artificial intelligence (AI) models deployed in non-stationary environments routinely face performance degra-dation. Continual learning (CL) aims to counter this by enabling models to acquire new skills without eras-ing prior knowledge, yet catastrophic forgetting remains a central obstacle: adapting to incoming tasks perturbs ear-lier representations and decision boundaries. While replay and regularization can mitigate forgetting, the underlying mechanisms—which features are overwritten, when, and why—are still not well understood. Prior evidence sug-gested that representational drift has only a limited im-pact on aggregate forgetting [9], reinforcing the view that changes in the classifier dominate [23]. More recent anal-yses challenge this picture, indicating that representational forgetting does occur but is harder to detect and quantify [16]. Complementary studies on the “tunnel effect” in CL further show that early layers disproportionately shape rep-resentation quality, out-of-distribution generalization, and forgetting, with top layers playing a smaller role [15, 19]. In parallel, mechanistic interpretability has highlighted how networks compress multiple concepts into limited re-sources via superposition—overlapping feature directions that arise when features co-occur sparsely. Superposition can be efficient, but may also increase interference across tasks. The resulting open question for CL is whether over-lapping (polysemantic) features are intrinsically more prone to forgetting than disentangled ones, and how this depends on representation strength and capacity allocation. Address-ing this requires isolating confounds that are ubiquitous in real data. 
+
+Scope and approach. We take a deliberately controlled route and introduce a toy-world framework that makes su-1
+
+> arXiv:2606.20431v1 [cs.LG] 18 Jun 2026
+
+perposition and forgetting observable and testable. A syn-thetic generator–separator pipeline defines ground-truth la-tent “features,” tasks with tunable sparsity and overlap, and class labels via a fixed process. This setup lets us: (i) track single-feature dynamics—representation strength and over-lap with other features; and (ii) study task-level allocation of latent capacity (effective rank) as tasks arrive. To connect dynamics with explanatory structure, we fit sparse differen-tial relations (SINDy) that relate feature retention (temporal change of representation strength) to superposition and ex-posure history. 
+
+Contributions. Our work offers: • A controlled experimental framework that jointly lever-ages ideas from mechanistic interpretability and continual learning, enabling precise measurement of superposition and retention without real-data confounds. • Formalizations of feature , representation strength , super-position , feature retention , and task embedding into a uni-fied dramework suited to sequential learning analysis. • Empirical evidence that sparser signals are represented with higher overlap and that superposition grows with new tasks; we also observe that sparser features tend to yield stronger representations. • A quantitative study of the interaction between repre-sentation strength, superposition, and retention; using SINDy, we find that features with weak representations under high overlap are especially vulnerable to forgetting. • A task-level analysis showing that tasks built from sparser features exhibit higher effective rank, indicating broader latent capacity usage. 
+
+Findings at a glance. In this controlled setting, we ob-serve: (1) superposition generally rises over time with tran-sient dips at task boundaries, suggesting boundary-specific interference rather than uniform drift; (2) higher feature sparsity induces more overlap, yet forgetting is not in-evitable—features that maintain strong representations are more resistant even under high overlap; and (3) tasks com-posed of sparser signals occupy more latent “volume,” re-flected by increased effective rank. These results nuance the common intuition that “more superposition means more forgetting” by showing that overlap interacts with represen-tation strength and capacity allocation. By cleanly separating causes from correlations in a toy world, our analysis surfaces falsifiable hypotheses and di-agnostics for CL—tools that can guide principled algorithm design and targeted evaluations before scaling to complex, real-world settings. 
+
+# 2. Motivation 
+
+CL raises a mechanistic question that typical end-to-end evaluations cannot answer: which representations are over-written, when, and why ? To study this, we need (i) a pre-cise notion of a “feature,” (ii) a way to quantify when fea-tures are stored in overlapping directions ( superposition ), and (iii) an experimental lens that isolates these factors from real-data confounds. This section motivates our choices along these three axes and lays the groundwork for the con-trolled setup in Sec. 3. 
+
+2.1. What do we call a feature? 
+
+Deep models extract intermediate signals that researchers variously call “features.” Dreyer et al. [10] treat the activa-tions of deep neurons in CLIP models as features. Madry et al. [18] adopt a broader definition, considering any function of the input as a feature. However, this definition presents challenges, as it does not naturally support semantically meaningful operations. Another perspective defines fea-tures as interpretable concepts [11], but this approach is in-herently constrained by human interpretability, potentially excluding useful representations that lack direct semantic meaning. Because this work studies superposition, we adopt a def-inition of feature grounded in the linear representation hy-pothesis. Under this hypothesis, a feature corresponds to a direction, or more generally an approximately linear sub-space, in a model’s activation space. This geometric view is central to the toy models of superposition introduced by Elhage et al. [11], where features are modeled as latent vari-ables that the network represents using directions in a lower-dimensional hidden space. In that setting, superposition arises when the number of features exceeds the available representational dimensions and the model encodes mul-tiple features using non-orthogonal directions. Thus, su-perposition is not simply a property of neurons or human-interpretable concepts; it is a property of the geometry of feature representations. This distinction is important for our continual-learning analysis. We distinguish between ground-truth generative features and learned representational features . In our con-trolled toy world, a ground-truth feature is a coordinate of the sparse concept vector f ∈ [0 , 1] N . The i-th feature can be isolated by the canonical basis vector ei, and the gener-ator maps this pure feature to an observable signal Φ( ei).After training, we probe the encoder with this signal and define 
+
+wi(t) = Eθ (Φ( ei)) ∈ Rm,
+
+where t indexes training time. Following the linear rep-resentation hypothesis, we interpret wi(t) as the learned representational direction associated with ground-truth fea-ture i. This gives us a controlled bridge between known latent features in the data-generating process and their geo-metric realization inside the model. 22.2. Why superposition and why measure it di-rectly? 
+
+Modern networks compress many potential features into limited latent capacity. When only a few features are ac-tive per input, overlapping directions can be an efficient coding strategy—superposition—where multiple concepts share non-orthogonal representations [20]. While efficiency is beneficial, overlap also creates the potential for interfer-ence: updates that strengthen one direction may inadver-tently perturb another. In realistic datasets, however, super-position is difficult to quantify because the feature set itself is unknown and entangled with data semantics. Our con-trolled setting removes this ambiguity by fixing the feature basis a priori. This lets us track (i) single-feature dynam-ics—how a feature’s representation strength evolves and how much it overlaps with others—and (ii) task-level al-location of latent capacity—how many effective directions are devoted to a collection of features. Together these views connect a mechanistic quantity (overlap) to a phenomenon of interest (forgetting) in a way that is otherwise inaccessi-ble. 
+
+2.3. Why the continual learning lens? 
+
+In non-stationary streams, neural networks tend to lose per-formance on earlier tasks, a phenomenon known as catas-trophic forgetting [7, 13]. CL studies how to learn sequen-tially while retaining past knowledge [7]. Among mitiga-tion strategies, experience replay is both simple and widely used: it periodically revisits a small buffer of past samples (or their synthetic variants) during training [6]. We focus on replay for two reasons. First, it provides a stable training protocol that minimizes confounds from stronger regular-izers or architectural changes, allowing us to attribute ob-served effects to representation dynamics rather than to the mitigation method itself. Second, replay exposes a natural tension between efficiency and retention: as tasks accumu-late, latent capacity pressure increases and superposition is expected to grow, making it an informative regime in which to study when overlap correlates with forgetting. 
+
+# 3. Controlled Experimental Setup 
+
+Measuring superposition in neural networks remains unset-tled—there is no widely accepted, model-agnostic metric. We therefore introduce a controlled framework that lets us operationally define a feature , its representation strength ,
+
+superposition strength , a task embedding , and feature reten-tion . The framework has two components: (i) Data Gener-ation , a synthetic pipeline that produces labeled examples with known latent features and tunable sparsity/overlap; and (ii) Neural Network Processing , a replay-trained classifier whose internal representations we analyze. Figure 1 sum-marizes the setup; formal definitions follow in Secs. 3.1– 3.3. 
+
+3.1. Data Generation 
+
+Objects and notation. Let N denote the feature (con-cept) dimension, D the signal dimension, K the number of classes, and T the number of sequential tasks. Each da-tum is produced from a sparse nonnegative feature vector 
+
+f ∈ [0 , 1] N with support S(f ) = {i : fi > 0} and sparsity 
+
+∥f ∥0 ≤ s.
+
+Generator and separator. A fixed generator Φ :[0 , 1] N → RD maps features to an observable signal, and a fixed separator Ψ : [0 , 1] N → { 1, . . . , K } assigns labels in feature space :
+
+X = Φ( f ), y = Ψ( f ). (1) In our instantiation, Φ and Ψ are randomly initialized and kept frozen throughout all experiments; Ψ implements a predetermined linear rule followed by a softmax, while Φ
+
+is a feed-forward mapping. Features f are sampled by first drawing a support of size s and then i.i.d. amplitudes on 
+
+[0 , 1] for indices in the support, with zeros elsewhere. 
+
+Tasks as distributions. Continual learning is simulated by presenting tasks {D t}Tt=1 sequentially. Task t activates a designated index set It ⊆ [N ] and draws samples with 
+
+S(f ) ⊆ I t. Unless otherwise specified, the sets {I t} are disjoint, yielding task-specific subspaces in feature space while leaving the generator and separator fixed across all tasks. Concrete architecture and sampling choices appear in the Appendix. 
+
+3.2. Modeling        
+
+> Figure 1. Diagram of the experimental setup. The generator and
+> separator are randomly initialized frozen neural networks () that generate data sample and label. The encoder ,classifier , and de-coder modules are trainable (), and learning is performed sequen-tially with a replay buffer.
+
+3Network. The trainable model comprises an encoder Eθ :
+
+RD → Rm and a classifier Cθ : Rm → { 1, . . . , K }. We in-tentionally choose m < |I t| (per-task concept count) to en-force a latent bottleneck and induce representational pres-sure. The overall predictor is x 7 → Cθ
+
+ Eθ (x).
+
+Training protocol. Tasks arrive in order t = 1 , . . . , T .We train with standard experience replay: a bounded buffer 
+
+B stores a subset of past samples, and each update mixes the current task minibatch with items from B. This provides a stable, widely used baseline and limits confounds intro-duced by stronger regularizers or architectural changes. Ad-ditional training details (optimizer, buffer size, schedules) are given in the Appendix. 
+
+3.3. Single-feature perspective 
+
+> Figure 2. Heatmap of superposition and representation of the fea-tures evolution in time for feature sparsity 0.15 (top) and 0.2 (bot-tom)
+
+To make feature-level measurements well-posed, we probe the model with pure features . This follows from the linear representation hypothesis introduced above: if a ground-truth feature is represented approximately linearly by the encoder, then activating that feature in isolation should reveal its corresponding direction in representation space. Let ei denote the i-th canonical basis vector in fea-ture space. The corresponding pure-feature signal is Φ( ei),and its feature embedding at training time t is 
+
+wi(t) = Eθ
+
+ Φ( ei) ∈ Rm,
+
+where t indexes training time (or updates). We define: 
+
+Representation strength. The representation strength of feature i at time t is the embedding norm 
+
+R(i, t ) = wi(t) 2. (2) 
+
+Superposition strength. Let vi(t) = wi(t)/∥wi(t)∥2 be the unit direction. The superposition strength of feature i
+
+aggregates how much other features project onto vi(t):
+
+S(i, t ) = X 
+
+> j̸=i
+
+ wj (t)⊤vi(t)2. (3) Intuitively, large S(i, t ) indicates that i shares its latent direction with many other features (overlap), while small 
+
+S(i, t ) suggests relative disentanglement. 
+
+Feature retention. We study retention dynamics via the temporal derivative of representation strength: 
+
+F (i, t ) = ∂∂t R(i, t ). (4) Our goal is to relate F (i, t ) to quantities available from the single-feature probe, namely R(i, t ), S(i, t ), and the time since feature i first appeared in training, tsince (i, t ). Con-cretely, we posit 
+
+∂R ∂t = g R, S, t since 
+
+, (5) and identify g from data using Sparse Identification of Non-linear Dynamical Systems (SINDy) [3]. 
+
+Estimating g with SINDy. We construct a library of can-didate interactions (polynomials up to degree 10), standard-ize the inputs (R, S, t since ), and estimate the sparse coef-ficients with thresholded least squares. To avoid leakage from untrained features, we apply an upper-triangular mask aligned to feature/task introduction times so that deriva-tives are fit only where the feature has been observed. The learned differential relation reveals how superposition and representation jointly govern retention/forgetting. 
+
+3.4. Task-related set of features perspective 
+
+We next move from individual features to task embeddings .For task t, we consider two complementary constructions: 1. Pure-feature stack. Stack embeddings of pure features for indices in It: T pure  
+
+> t
+
+(t′) = [ wi(t′) ] i∈I t ∈ Rm×|I t|.2. Data-driven stack. Stack embeddings of observed samples from task t at time t′: T data  
+
+> t
+
+(t′) =[ Eθ (Φ( f (n))) ] n: ( f (n),y (n))∼D t .These matrices summarize the region of latent space cur-rently allocated to task t.4Figure 3. Dynamics of superposition and representation in time 
+
+Figure 4. Evolution of feature retention as a function of representation strength and superposition. 
+
+Task volume via effective rank. We quantify the volume 
+
+a task occupies with the effective rank [21] of its embedding matrix T :
+
+EffRank( T ) = exp 
+
+
+
+− X
+
+> i
+
+pi log pi
+
+
+
+, pi = σi
+
+P 
+
+> j
+
+σj
+
+,
+
+(6) 5where (σi) are the singular values of T . Effective rank captures the number of energetically significant directions (spectral entropy) and is robust to small singular values: low values indicate heavy compression/overlap (consistent with strong superposition), whereas higher values indicate more directions devoted to representing the task. We track 
+
+EffRank  T pure  
+
+> t
+
+(t′) and EffRank  T data  
+
+> t
+
+(t′) over time to study how latent capacity is reallocated as new tasks arrive. 
+
+> Figure 5. Sum of effective dimensions of all the tasks in time vs sparsity
+
+# 4. Experiments 
+
+In this section we address three research questions that guide our analysis: • RQ 1 Do sparser feature signals produce more superpo-sition in continual learning? 
+
+• RQ 2 Are features stored in superposition more suscep-tible to forgetting than features with more disentangled representations? 
+
+• RQ 3 What is the relation between feature sparsity and the effective dimension of task embeddings in sequential learning (i.e., how the model allocates latent capacity across tasks)? 
+
+Unless otherwise noted, the architectures and training protocol follow Table 1 and Sec. 3. Additional settings and standard performance metrics (e.g., task-wise accura-cies over time) are included in the Appendix. 
+
+RQ 1: Sparsity vs. superposition over time. Figure 2 vi-sualizes the joint evolution of superposition strength S(i, t )
+
+and representation strength R(i, t ) for pure features across sparsity regimes, and Figure 3 shows their dynamics over time. Three consistent observations emerge: 1. Sparser features exhibit higher overlap. As sparsity in-creases, features are encoded with more directional shar-ing in the latent space, reflected by systematically larger 
+
+S(i, t ) in Figure 2. This indicates that limited latent ca-pacity is economized via overlap when only a few fea-tures are active per input. 2. Superposition rises gradually but dips at task bound-aries. Across settings, Figure 3 shows a characteris-tic pattern: a pronounced transient dip in S(i, t ) when a new task starts, followed by a gradual recovery and continued growth . The boundary dip is consistent with boundary-specific interference and rapid re-alignment as the model accommodates new features, while the subse-quent growth reflects slow consolidation of shared direc-tions. 3. Representation and superposition co-evolve. Features with stronger representations R(i, t ) tend to stabilize into persistent directions even as S(i, t ) increases. The heatmaps reveal that high-R regions are not necessar-ily low-S; instead, they tend to occupy intermediate-to-high S with reduced volatility, suggesting that overlap and strength are not strictly antagonistic. Overall, these patterns indicate that sparsity pushes the net-work toward overlapping codes, but the time course of su-perposition is structured: boundary-induced reconfiguration followed by consolidation. 
+
+RQ 2: Are overlapping features more prone to forget-ting? We study feature retention F (i, t ) = ∂tR(i, t ) as a function of R(i, t ), S(i, t ), and the time since first expo-sure tsince (i, t ). Figure 4 summarizes the learned dynami-cal relation using SINDy (Eq. (5)) and yields the following insights: 1. Vulnerability concentrates in the low-R, high-S regime. 
+
+The most negative retention (largest drops in R) consis-tently occurs when a feature is weakly represented yet 
+
+highly overlapped . Intuitively, weak signals that share a direction are easily overwritten by updates driven by other features occupying the same subspace. 2. Strong representations buffer the effect of overlap. As 
+
+R increases, the dependence of F on S becomes less adverse and can even invert locally (flat or slightly posi-tive slopes in the high-R band). This indicates that over-lap alone does not determine forgetting; representation strength is a critical moderator. 3. Time-since-first-seen acts as a consolidation variable. 
+
+Conditioning on (R, S ), tsince reduces volatility in 
+
+F —early after first exposure, F is more negative in high-
+
+S regions (boundary fragility), whereas later it becomes closer to zero (or slightly positive) as shared directions stabilize. This aligns with the dip-then-recover behavior at task onsets observed in Figure 3. Taken together, the results nuance the common intuition “more superposition ⇒ more forgetting.” Overlap increases vulnerability when representations are weak and fresh; once a feature has accumulated sufficient strength, its direction becomes more resilient even within a shared subspace. 
+
+RQ 3: How does sparsity affect task-level capacity allo-cation? We examine task embeddings using the effective rank (Eq. (6)). Figure 5 tracks the sum of effective ranks across tasks over time; Figure 6 reports per-task effective rank. 1. Sparser regimes increase effective rank. Both the aggre-gate (Figure 5) and per-task (Figure 6) curves rise with 6Figure 6. Evolution of effective dimensions of tasks embeddings. The task is mapped into region with similar effective rank no matter if the model was trained on it or not. 
+
+sparsity, indicating that sparser signals occupy a broader set of latent directions. This suggests the network allo-cates more “volume” to encode tasks built from sparser features, even as feature-level overlap increases. 2. Task-wise rank is surprisingly uniform across seen and unseen tasks (early on). Figure 6 shows that, at the mo-ment a new task arrives, the effective rank for its em-bedding region is comparable to that of previously seen tasks. This early uniformity implies that the encoder maintains a relatively stable latent scaffold into which new features are mapped, before fine-grained adjustment occurs as training proceeds. 3. Boundary effects mirror feature-level dynamics. Con-sistent with RQ 1, we observe small rank contractions at task transitions followed by recovery. This “contrac-tion–expansion” behavior suggests transient compres-sion of directions to accommodate new features, then re-spreading as representations consolidate. 
+
+Additional settings and robustness. We evaluate alterna-tive settings in the Appendix (Figures 7–10). The qualita-tive conclusions above persist across these variants: (i) spar-sity increases superposition, with boundary dips and grad-ual recovery; (ii) low-R/high-S regions concentrate reten-tion loss, while high-R features are comparatively robust; and (iii) effective rank increases with sparsity and exhibits consistent boundary transients. We also report SINDy sta-bility analyses (Figures 11–12), noting that while coeffi-cient selection can vary across runs, the sign structure of the dominant interactions (negative dependence on S at low 
+
+R, moderating with R and tsince ) is stable and aligns with the empirical dynamics seen in Figures 2–3. 
+
+# 5. Key Findings 
+
+What we learned. Our controlled study reveals a structured relationship between sparsity, overlapping representations, and forgetting. First, as inputs activate fewer ground–truth features, the encoder systematically economizes latent capacity via increased superposition . This growth is not monotone: superposition exhibits transient dips at task boundaries followed by consolidation–driven recovery. Second, overlap is conditionally harmful. The most vul-nerable regime combines low representation strength with 
+
+high overlap ; once a feature accumulates sufficient strength, its embedding remains comparatively stable even within shared subspaces. Third, at the task level, sparser regimes occupy more latent “volume,” reflected by higher effec-tive rank of task embeddings, indicating broader allocation of directions to encode task structure despite greater fea-ture–level sharing. Taken together, these findings refine the common intuition that “more superposition ⇒ more forget-ting,” highlighting representation strength and capacity al-location—not overlap alone—as the primary moderators of retention in continual learning. 
+
+Why a toy world—and why it matters. Real data en-tangle concept frequency, co–occurrence statistics, and la-bel structure, making it difficult to attribute forgetting to specific representational mechanisms. Our toy genera-tor–separator pipeline provides ground–truth features, tun-able sparsity/overlap, and a fixed labeling rule, which jointly (i) make superposition and retention measurable ,(ii) enable time–resolved probes of single–feature dynam-ics (strength, overlap, retention) and task–level capacity (ef-fective rank), and (iii) surface falsifiable hypotheses—e.g., boundary dips, low– R/high– S vulnerability—that can be tested on richer architectures and datasets. This controlled lens complements conventional accuracy curves by expos-ing how internal representations stretch, compress, and sta-bilize as tasks arrive, thereby turning vague narratives about “interference” into concrete, testable mechanisms. 
+
+Impact for the CL community. Mechanistic summaries like ours help translate representation dynamics into action-able guidance. The results suggest capacity–aware evalua-tion protocols that track effective rank alongside accuracy; 7retention–oriented diagnostics that flag low– R/high– S re-gions as early–warning indicators of forgetting; and algo-rithmic hypotheses (e.g., prioritizing consolidation of weak, overlapped features; scheduling replay to smooth bound-ary dips; or explicitly budgeting latent directions per task). More broadly, the framework provides a reusable set of probes—pure–feature embeddings, overlap metrics, and ef-fective–rank traces—that can be layered onto standard CL benchmarks to advance a mechanistic understanding of the interplay between internal representations and forgetting in neural networks. 
+
+# 6. Related works 
+
+6.1. Continual learning 
+
+Continual Learning [7] is a Machine Learning area, where data distribution is not stationary. Without access to prior tasks catastrophic forgetting occurs [13]. Several studies have tried to explain how representations change over time when we train in a Continuous setting. In [9] it was shown that the effect of forgetting in representations is minimal even without any forgetting prevention. This led to several works, that focused primarily on changing classifier [8, 23] to address forgetting. Recent study [16] challenges these findings by examining linear probe accuracy before and af-ter training with a given task. When we compare this accu-racy, we can find that forgetting in representations does take place. Rype´ s´ c et al. [22] studies the shift in representations during knowledge distillation from the past model. Their findings seem to align with ours, as they show that the rank of the covariance matrix of classes gradually rises with each task. This work focused on the setting based on experience re-play [6], as it is the most popular method for catastrophic forgetting prevention [7]. The impact of feature representa-tion on training continually with rehearsal was studied be-fore. In [4] the impact of abrupt representation change after introducing new classes is examined. 
+
+6.2. Mechanistic interpretability 
+
+Mechanistic interpretability seeks to reverse-engineer neu-ral networks into human-understandable algorithms, a crit-ical challenge in trustworthy computer vision [2]. Recent advances focus on decomposing model computations into interpretable subcomponents. Foundational approaches in-clude Network Dissection [1], quantitatively aligning con-volutional filters with semantic concepts in datasets; as well as circuits [20] as functional units in vision models, linking neurons to hierarchical visual features through activation vi-sualization and ablation studies. For transformer-based ar-chitectures [12] formalized attention head dynamics mathe-matically, revealing specialized roles in spatial and semantic processing. Another important work [14] identified ”vision neurons” in CLIP that activate for abstract visual motifs, while [5] demonstrated how polysemantic neurons compli-cate interpretability in vision tasks. 
+
+# 7. Limitations 
+
+Our study isolates mechanisms in a controlled setting, which necessarily introduces simplifying assumptions. We summarize key limitations and how they bound the scope of our conclusions. (L1) Uniform feature sparsity. We assume a fixed spar-sity level across features (each feature is equally sparse). Real data rarely follow such homogene-ity; activation frequencies are typically uneven or heavy–tailed. Extending the analysis to heteroge-neous sparsity patterns would better reflect practical distributions. (L2) Disjoint task supports. Tasks are constructed from disjoint subsets of the feature space. This simplifies attribution but under–represents settings where tasks 
+
+share features. Our disjoint–support design is clos-est to scenarios where classes are cleanly separated along specific attributes (cf. fine–grained setups [17]), whereas in many applications a single feature can con-tribute to examples across multiple tasks. A controlled overlap parameter would allow interpolation between these extremes. (L3) Model class for dynamics (SINDy). We identify re-tention dynamics using a polynomial library of de-gree ≤ 10 . While expressive, this family cannot cap-ture all possible relationships and risks misspecifica-tion for highly non–polynomial interactions. Library ablations or alternative function classes (e.g., rational terms, kernels, or neural bases) would test robustness of the learned relations. (L4) Retention metric vs. end performance. Our fea-ture–level forgetting proxy tracks changes in repre-sentation strength, offering insight into where and when embeddings erode. However, it does not di-rectly measure classifier performance. Establish-ing tighter links—e.g., systematic correlations with task accuracies and standard CL forgetting met-rics—remains important future work. These limitations are by design: they trade realism for measurability. Future work will relax these assumptions (heterogeneous sparsity, shared/overlapping task features, richer dynamic families) and more directly connect reten-tion signals to downstream accuracy and standard contin-ual–learning metrics. 
+
+# 8. Conclusions and future work 
+
+Conclusions. This work examined how feature sparsity ,
+
+superposition , and feature retention interact in a controlled 8continual–learning (CL) setting. Our toy–world framework makes otherwise latent mechanisms observable: we probe single features through pure–feature inputs, quantify direc-tional overlap, and track retention dynamics over training time, while also monitoring task–level capacity through ef-fective rank. Three conclusions stand out. First, spar-sity reliably drives overlap: when inputs activate fewer ground–truth features, the encoder economizes latent ca-pacity via increased superposition, with a structured tem-poral profile—transient dips at task boundaries followed by consolidation–driven growth. Second, overlap is not uni-formly harmful. The most vulnerable regime is low rep-resentation strength under high overlap ; once a feature ac-cumulates sufficient strength, its embedding remains com-paratively stable even within a shared subspace. In short, forgetting depends on the interaction between overlap and strength rather than on overlap alone. Third, at the task level, sparser regimes yield higher effective ranks for task embeddings, indicating a broader allocation of latent direc-tions to encode task structure despite greater feature–level sharing. Taken together, these findings refine the common intuition that “more superposition ⇒ more forgetting,” and instead highlight representation strength and capacity allo-cation as primary moderators of retention in CL. 
+
+Future works. Several extensions follow naturally from our framework. A first step is to relax the disjoint–support design by introducing a tunable overlap parameter so that features can participate in multiple tasks; this more closely reflects realistic scenarios where classes share attributes and will test whether boundary dips and consolidation dynam-ics persist when interference is intrinsic to the task graph. We also plan to move beyond uniform sparsity by modeling heterogeneous, long–tailed feature frequencies, enabling analysis of how rarely used features accumulate strength, whether they suffer disproportionate forgetting, and how replay affects minority features over long horizons. To strengthen practical relevance, we will connect the retention proxy more directly to end performance by correlating fea-ture–level dynamics with classwise accuracy and canonical CL forgetting measures, and by supplementing norm–based retention with alignment–based (directional) stability. On the modeling side, we will broaden the SINDy function library beyond degree–limited polynomials (e.g., rational terms, kernels, or neural bases). Finally, while our study intentionally uses a toy world for measurability, the same probes—pure–feature embeddings, overlap metrics, and ef-fective–rank traces—can be layered onto richer architec-tures and datasets, creating a principled bridge from con-trolled mechanisms to realistic CL benchmarks. 
+
+# References 
+
+[1] David Bau, Bolei Zhou, Aditya Khosla, Aude Oliva, and Antonio Torralba. Network dissection: Quantifying inter-pretability of deep visual representations, 2017. [2] Leonard Bereska and Efstratios Gavves. Mechanistic inter-pretability for ai safety – a review, 2024. [3] Steven L. Brunton, Joshua L. Proctor, and J. Nathan Kutz. Discovering governing equations from data by sparse identi-fication of nonlinear dynamical systems. Proceedings of the National Academy of Sciences , 113(15):3932–3937, March 2016. [4] Lucas Caccia, Rahaf Aljundi, Nader Asadi, Tinne Tuyte-laars, Joelle Pineau, and Eugene Belilovsky. New insights on reducing abrupt representation change in online continual learning, 2022. [5] Nick Cammarata, Gabriel Goh, Shan Carter, Ludwig Schu-bert, Michael Petrov, and Chris Olah. Curve detectors. Dis-till , 2020. https://distill.pub/2020/circuits/curve-detectors. [6] Arslan Chaudhry, Marcus Rohrbach, Mohamed Elhoseiny, Thalaiyasingam Ajanthan, Puneet Kumar Dokania, Philip H. S. Torr, and Marc’Aurelio Ranzato. Continual learning with tiny episodic memories. CoRR , abs/1902.10486, 2019. [7] Zhiyuan Chen and B. Liu. Lifelong machine learning, sec-ond edition. Synthesis Lectures on Artificial Intelligence and Machine Learning , 2018. [8] Aristotelis Chrysakis and Marie-Francine Moens. Online bias correction for task-free continual learning. In The Eleventh International Conference on Learning Representa-tions , 2023. [9] MohammadReza Davari, Nader Asadi, Sudhir Mudur, Rahaf Aljundi, and Eugene Belilovsky. Probing representation for-getting in supervised and unsupervised continual learning, 2022. [10] Maximilian Dreyer, Erblina Purelku, Johanna Vielhaben, Wojciech Samek, and Sebastian Lapuschkin. Pure: Turn-ing polysemantic neurons into pure features by identifying relevant circuits. arXiv preprint arXiv:2404.06453 , 2024. [11] Nelson Elhage, Tristan Hume, Catherine Olsson, Nicholas Schiefer, Tom Henighan, Shauna Kravec, Zac Hatfield-Dodds, Robert Lasenby, Dawn Drain, Carol Chen, Roger Grosse, Sam McCandlish, Jared Kaplan, Dario Amodei, Martin Wattenberg, and Christopher Olah. Toy models of superposition, 2022. [12] Nelson Elhage, Neel Nanda, Catherine Olsson, Tom Henighan, Nicholas Joseph, Ben Mann, Amanda Askell, Yuntao Bai, Anna Chen, Tom Conerly, Nova Das-Sarma, Dawn Drain, Deep Ganguli, Zac Hatfield-Dodds, Danny Hernandez, Andy Jones, Jackson Kernion, Liane Lovitt, Kamal Ndousse, Dario Amodei, Tom Brown, Jack Clark, Jared Kaplan, Sam McCandlish, and Chris Olah. A mathematical framework for transformer circuits. 
+
+Transformer Circuits Thread , 2021. https://transformer-circuits.pub/2021/framework/index.html. [13] Robert French. Catastrophic forgetting in connectionist net-works. Trends in cognitive sciences , 3:128–135, 05 1999. [14] Gabriel Goh, Nick Cammarata †, Chelsea Voss †, Shan Carter, Michael Petrov, Ludwig Schubert, Alec Radford, and Chris Olah. Multimodal neurons in artificial neural net-works. Distill , 2021. https://distill.pub/2021/multimodal-neurons. 
+
+9[15] Md Yousuf Harun, Kyungbok Lee, Jhair Gallardo, Giri Kr-ishnan, and Christopher Kanan. What variables affect out-of-distribution generalization in pretrained models?, 2024. [16] Timm Hess, Eli Verwimp, Gido M van de Ven, and Tinne Tuytelaars. Knowledge accumulation in continually learned representations and the issue of feature forgetting, 2024. [17] Yuqi Huo, Yao Lu, Yulei Niu, Zhiwu Lu, and Ji-Rong Wen. Coarse-to-fine grained classification. In Proceedings of the 42nd International ACM SIGIR Conference on Research and Development in Information Retrieval , SIGIR’19, page 1033–1036, New York, NY, USA, 2019. Association for Computing Machinery. [18] Andrew Ilyas, Shibani Santurkar, Dimitris Tsipras, Logan Engstrom, Brandon Tran, and Aleksander Madry. Adversar-ial examples are not bugs, they are features. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alch´ e-Buc, E. Fox, and R. Garnett, editors, Advances in Neural Information Process-ing Systems , volume 32. Curran Associates, Inc., 2019. [19] Wojciech Masarczyk, Mateusz Ostaszewski, Ehsan Imani, Razvan Pascanu, Piotr Miło´ s, and Tomasz Trzci´ nski. The tunnel effect: Building data representations in deep neural networks, 2023. [20] Christopher Olah, Nick Cammarata, Ludwig Schubert, Gabriel Goh, Michael Petrov, and Shan Carter. Zoom in: An introduction to circuits. 2020. [21] Olivier Roy and Martin Vetterli. The effective rank: A mea-sure of effective dimensionality. In 2007 15th European Sig-nal Processing Conference , pages 606–610, 2007. [22] Grzegorz Rype´ s´ c, Sebastian Cygert, Tomasz Trzci´ nski, and Bartł omiej Twardowski. Task-recency bias strikes back: Adapting covariances in exemplar-free class incremental learning. In A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang, editors, Advances in Neural Information Processing Systems , volume 37, pages 63268–63289. Curran Associates, Inc., 2024. [23] Yue Wu, Yinpeng Chen, Lijuan Wang, Yuancheng Ye, Zicheng Liu, Yandong Guo, and Yun Fu. Large scale in-cremental learning, 2019. 
+
+10 9. Appendix 
+
+9.1. SINDy 
+
+Sparse Identification of Nonlinear Dynamical Systems (SINDy) is a data-driven method for discovering governing equations from time-series data. Given a system with state variables x(t), SINDy assumes that their evolution follows a sparse set of nonlinear interactions: 
+
+dx
+
+dt = f (x). (7) To identify f (x), SINDy constructs a library of candi-date functions (e.g., polynomials, trigonometric terms) and applies sparse regression to select only the most relevant terms, enforcing model interpretability. The method is for-mulated as: 
+
+˙X = Θ( X)Ξ , (8) where ˙X represents the time derivatives of the system states, Θ( X) is a library of nonlinear candidate functions, and Ξ is a matrix of sparse coefficients indicating which terms are active. By iteratively refining Ξ using thresholded least squares, SINDy finds a compact mathematical repre-sentation of the system dynamics. In this study, SINDy is applied to learn differential equa-tions that govern the forgetting dynamics of features in con-tinual learning, relating representation strength, superposi-tion, and time since training. 
+
+9.2. Results for different settings 
+
+In this section, we present results for different settings. The details of the architectures can be found in tables 1 2. Component Architecture Generator ReLU(Linear(50, 1500)), ReLU(Linear(1500, 1500), Linear(1500, 2000) 
+
+Separator Softmax(Linear(50, 25)) 
+
+Encoder ReLU(Linear(2000, 1500)), ReLU(Linear(1500, 1500), Linear(1500, 9) 
+
+Classifier Softmax(Linear(9, 25)), 
+
+> Table 1. Architectures of the components of the controlled frame-work - setting 2
+
+Component Architecture Generator ReLU(Linear(50, 1500)), ReLU(Linear(1500, 1500), Linear(1500, 2000) 
+
+Separator Softmax(Linear(50, 25)) 
+
+Encoder ReLU(Linear(2000, 1500)), ReLU(Linear(1500, 1500), Linear(1500, 5) 
+
+Classifier Softmax(Linear(5, 25)),   
+
+> Table 2. Architectures of the components of the controlled frame-work - setting 3
+> Figure 7. Dynamics of superposition and representation in time for setting 2
+> Figure 8. Dynamics of superposition and representation in time for setting 3
+> Figure 9. Effective dimensions of tasks vs sparsity-settings 2
+> Figure 10. Effective dimensions of tasks vs sparsity-settings 3
+
+11 Figure 11. Instability of the method. 
+
+Figure 12. Instability of the method. 
+
+12
